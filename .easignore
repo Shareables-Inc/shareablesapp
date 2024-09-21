@@ -1,0 +1,30 @@
+# Exclude node_modules except for certain packages
+node_modules/*
+!node_modules/@firebase
+!node_modules/react-native
+!node_modules/@expo
+
+# Exclude build directories
+build/
+dist/
+coverage/
+
+# Exclude other unnecessary files
+*.log
+*.tmp
+*.lock
+
+# Exclude local config files
+.env
+.local
+.DS_Store
+
+# Exclude test files
+__tests__/
+*.test.js
+*.spec.js
+*.test.ts
+*.spec.ts
+
+functions
+   

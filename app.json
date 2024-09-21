@@ -1,0 +1,82 @@
+{
+  "expo": {
+    "name": "ShareablesApp",
+    "slug": "shareablesapp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "light",
+    "plugins": [
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "sk.eyJ1Ijoic2hpcndhMjU2IiwiYSI6ImNtMGc4c2dkODE4d3oycW9odTdmcWthcmEifQ.vvw2WhkwG6aZVKFY3QbtoA",
+          "RNMapboxMapsVersion": "11.4.0"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Shareables to use your location."
+        }
+      ]
+    ],
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["assets/images/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.shareablesinc.shareables",
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": ["maps", "comgooglemaps", "waze"],
+        "NSContactsUsageDescription": "This app uses contacts to invite friends.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select photos.",
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
+        "UIBackgroundModes": ["fetch", "remote-notification"],
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow Shareables to use your location.",
+        "NSLocationAlwaysUsageDescription": "Allow Shareables to access your location",
+        "NSLocationWhenInUseUsageDescription": "Allow Shareables to access your location"
+      },
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "scheme": "shareablesapp"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.shareablesinc.shareables",
+      "permissions": [
+        "READ_CONTACTS",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "CAMERA",
+        "INTERNET",
+        "VIBRATE",
+        "WAKE_LOCK"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "useNextNotificationsApi": true,
+      "notification": {
+        "icon": "./assets/images/icon.png",
+        "color": "#ffffff",
+        "sound": true,
+        "vibrationPattern": [0, 250, 250, 250]
+      },
+      "scheme": "shareablesapp"
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ef6370a3-a025-4a4c-920d-69ff87de0a82"
+      }
+    },
+    "owner": "shareablesapp"
+  }
+}

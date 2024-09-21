@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-native",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": false,
+    "baseUrl": ".",
+    "paths": {
+      "@firebase/auth": ["./node_modules/@firebase/auth/dist/index.rn.d.ts"],
+      "*": ["node_modules/*"]
+    }
+  },
+  "include": ["components/**/*", "firebase/**/*", "navigation/**/*", "screens/**/*", "tabs/**/*", "utils/**/*", "*.d.ts"],
+  "extends": "expo/tsconfig.base"
+}
