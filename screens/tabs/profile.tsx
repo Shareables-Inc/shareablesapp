@@ -168,7 +168,7 @@ const ProfileScreen = () => {
 
   // Custom Masonry Grid layout
   const columnCount = 2;
-  const columnWidth = (width * 0.93) / columnCount;
+  const columnWidth = (width * 0.89) / columnCount;
   const columnItems = Array.from({ length: columnCount }, () => []);
 
   recentPosts.forEach((post, index) => {
@@ -220,10 +220,6 @@ const ProfileScreen = () => {
     );
   };
   
-  
-    
-
-
   if (posts.isLoading || !userProfile) {
     return <SkeletonUserProfile />;
   }
@@ -368,16 +364,16 @@ const styles = StyleSheet.create({
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     marginBottom: height * 0.03,
     marginTop: height * 0.135,
-    paddingHorizontal: width * 0.1,
+    paddingLeft: width * 0.05,
   },
   profilePic: {
     width: width * 0.28,
     height: width * 0.28,
     borderRadius: 90,
-    marginRight: 10,
+    marginRight: width * 0.03,
     borderColor: Colors.profileBorder,
     borderWidth: 4,
   },
@@ -413,13 +409,15 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     backgroundColor: Colors.background,
-    width: width * 0.77,
-    alignSelf: "center",
+    width: width * 0.8,
+    alignSelf: "flex-start",
+    marginLeft: width * 0.07,
   },
   bioText: {
     fontSize: width * 0.037,
     color: Colors.text,
     fontFamily: Fonts.Regular,
+    alignSelf: "center",
   },
   featuredGalleryContainer: {
     marginTop: "5%",
@@ -429,7 +427,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "3%",
+    marginLeft: "5%",
   },
   separator: {
     borderBottomColor: Colors.placeholderText,
@@ -441,7 +439,7 @@ const styles = StyleSheet.create({
   },
   galleryScrollView: {
     marginTop: height * 0.015,
-    paddingLeft: "3%",
+    paddingLeft: "5%",
   },
   galleryImage: {
     width: width * 0.37,
@@ -462,7 +460,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "3%",
+    marginLeft: "5%",
   },
   imageGalleryContainer: {
     flexDirection: "column",
@@ -492,7 +490,7 @@ const styles = StyleSheet.create({
   },
   gridGallery: {
     flexDirection: "row",
-    marginHorizontal: "1%",
+    marginHorizontal: "2.5%",
     marginTop: "3%",
   },
   gridColumn: {

@@ -8,9 +8,6 @@ import {
   Animated,
   Linking,
   Dimensions,
-  TouchableWithoutFeedback,
-  TextInput,
-  Keyboard,
   StyleSheet,
   Alert,
   FlatList,
@@ -40,10 +37,7 @@ import {
 import { Post } from "../../models/post";
 import {
   ArrowLeft,
-  Clock,
-  Earth,
   MapPin,
-  Search,
   MessageCircle,
   Bookmark,
   Globe,
@@ -61,7 +55,7 @@ import { SkeletonRestaurantProfile } from "../../components/skeleton/skeletonRes
 
 const { width, height } = Dimensions.get("window");
 
-const HEADER_HEIGHT = height * 0.11;
+const HEADER_HEIGHT = height * 0.12;
 
 type RestaurantProfileScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -87,8 +81,6 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const userSaves = useGetUserSaves(user!.uid);
   const location = useLocationStore();
-
-  const [searchText, setSearchText] = useState<string>("");
   const {
     data: establishmentData,
     refetch,
@@ -229,34 +221,6 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
     }
   };
 
-  const toggleModal = () => {
-    if (!isModalVisible) {
-      setModalVisible(true);
-      Animated.timing(modalHeight, {
-        toValue: Dimensions.get("window").height * 0.55,
-        duration: 350,
-        useNativeDriver: false,
-      }).start();
-    }
-  };
-
-  const handlePressOutside = () => {
-    Keyboard.dismiss();
-    if (isModalVisible) {
-      Animated.timing(modalHeight, {
-        toValue: 0,
-        duration: 350,
-        useNativeDriver: false,
-      }).start(() => {
-        setModalVisible(false);
-      });
-    }
-  };
-
-  const handleInvitePress = () => {
-    toggleModal();
-  };
-
   const handleLetsGoPress = async () => {
     const address = `${establishmentData!.name}, ${establishmentData!.city}, ${
       establishmentData!.country
@@ -322,63 +286,74 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
     });
   };
 
-  const handleSendInvite = async (inviteeId) => {
-    const inviterId = auth.currentUser?.uid;
-    if (!inviterId) {
-      console.error("User ID is undefined");
-      return;
-    }
-
-    // Check if there is already a pending invite
-    const pendingInviteQuery = query(
-      collection(db, "invites"),
-      where("inviterId", "==", inviterId),
-      where("inviteeId", "==", inviteeId),
-      where("status", "==", "pending")
-    );
-
-    const pendingInviteSnapshot = await getDocs(pendingInviteQuery);
-
-    if (!pendingInviteSnapshot.empty) {
-      Alert.alert("Error", "You have already sent an invite to this user.");
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "invites"), {
-        inviterId,
-        inviteeId,
-        status: "pending",
-        establishmentId,
+  const handleInvite = () => {
+    const message = `Go checkout ${establishmentData?.name} on Shareables!`;
+    const url = `sms:?body=${encodeURIComponent(message)}`;
+  
+    Linking.canOpenURL(url)
+      .then((supported) => {
+        if (supported) {
+          return Linking.openURL(url);
+        } else {
+          Alert.alert("Error", "Messaging app is not available.");
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to open messaging app:", err);
+        Alert.alert("Error", "Failed to open messaging app.");
       });
-      Alert.alert("Success", "Invite sent successfully");
-    } catch (error) {
-      console.error("Error sending invite:", error);
-      Alert.alert("Error", "There was an error sending the invite");
-    }
   };
+  
+  const posts = establishmentData?.fewImagePostReview || [];
 
-  const renderItem = ({ item, index }: { item: Post; index: number }) => {
-    const heights = [150, 200];
-    const rowIndex = Math.floor(index / 2); // Assuming 2 columns
-    const height =
-      rowIndex % 2 === 0 ? heights[index % 2] : heights[(index + 1) % 2];
+  const columnCount = 2; // Number of columns in the grid
+  const columnWidth = (width * 0.89) / columnCount; // Width of each column
+  const columnItems = Array.from({ length: columnCount }, () => []); // Array to store column data
 
+  posts.forEach((post, index) => {
+    columnItems[index % columnCount].push(post); // Distribute posts across columns
+  });
+
+  const renderColumn = (items, columnIndex) => {
     return (
-      <TouchableOpacity
-        style={styles.gridItem}
-        onPress={() => handleReviewPress(item.id)}
-      >
-        <FastImage
-          source={{
-            uri: item.imageUrls[0],
-            priority: FastImage.priority.normal,
-            cache: FastImage.cacheControl.immutable,
-          }}
-          style={[styles.gridImage, { height: height }]}
-        />
-        <Text style={styles.gridText}>@{item.username}</Text>
-      </TouchableOpacity>
+      <View style={{ flex: 1, marginHorizontal: 5 }}>
+        {items.map((post, index) => {
+          const isOddColumn = columnIndex % 2 !== 0;
+          const imageHeight = isOddColumn
+            ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
+            : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
+
+          return (
+            <TouchableOpacity
+              key={index}
+              style={{ marginBottom: 10 }}
+              onPress={() => handleReviewPress(post.id)}
+              activeOpacity={1}
+            >
+              <FastImage
+                source={{ uri: post.imageUrls[0] }}
+                style={{
+                  width: columnWidth,
+                  height: imageHeight,
+                  borderRadius: 10,
+                  marginTop: 5,
+                }}
+              />
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  style={styles.restaurantNameReview}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  @{post.username}
+                </Text>
+                <Text style={styles.dash}> - </Text>
+                <Text style={styles.scoreReview}>{post.ratings?.overall}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     );
   };
 
@@ -447,22 +422,8 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
           </View>
           <Text style={styles.tags}>{establishmentData?.tags.join(" • ")}</Text>
           <View style={styles.buttonContainer}>
-            {/* {currentStatus && (
-              <TouchableOpacity style={styles.button}>
-                <Clock size={20} color={Colors.text} />
-                <Text style={styles.buttonText}>{currentStatus}</Text>
-              </TouchableOpacity>
-            )} */}
-            {establishmentData?.website && (
-              <TouchableOpacity style={styles.button}>
-                <Globe size={20} color={Colors.text} />
-                <Text style={styles.buttonText}>
-                  {establishmentData?.website}
-                </Text>
-              </TouchableOpacity>
-            )}
             <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity style={styles.actionButton}>
+              <TouchableOpacity style={styles.actionButton} onPress={handleInvite} activeOpacity={1}>
                 <MessageCircle size={20} color={Colors.text} />
                 <Text style={styles.actionButtonText}>Invite</Text>
               </TouchableOpacity>
@@ -528,172 +489,46 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
             {establishmentData?.postCount || 0} Reviews
           </Text>
 
-          <FlatList
-            data={establishmentData?.fewImagePostReview}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.gridContainer}
-            numColumns={2}
-            showsHorizontalScrollIndicator={false}
-          />
+          <View style={styles.gridGallery}>
+          {columnItems.map((items, index) => (
+            <View key={index} style={styles.gridColumn}>
+              {renderColumn(items, index)}
+            </View>
+          ))}
+        </View>
         </View>
       </ScrollView>
-
-      {isModalVisible && (
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback onPress={handlePressOutside}>
-            <View style={styles.modalBackground} />
-          </TouchableWithoutFeedback>
-
-          <Animated.View style={[styles.modal, { height: modalHeight }]}>
-            <View style={styles.modalIndicator} />
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Find a friend..."
-                placeholderTextColor={Colors.charcoal}
-                value={searchText}
-                onChangeText={setSearchText}
-              />
-              <Search style={styles.searchIcon} />
-            </View>
-          </Animated.View>
-        </View>
-      )}
     </>
   );
 };
 
 const styles = StyleSheet.create({
+  stickyHeader: {
+    position: "absolute",
+    top: 0,
+    width: "100%",
+    height: HEADER_HEIGHT,
+    backgroundColor: Colors.header,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  stickyHeaderText: {
+    fontFamily: Fonts.SemiBold,
+    fontSize: width * 0.05,
+    position: "absolute",
+    bottom: 12,
+  },
   container: {
     flex: 1,
     backgroundColor: Colors.background,
   },
-  restaurantHeaderContainer: {
-    padding: 16,
-  },
-  distance: {
-    color: Colors.highlightText,
-    fontSize: 14,
-    fontFamily: Fonts.SemiBold,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    flexWrap: "wrap", // Allow wrapping
-    marginBottom: 16,
-  },
-  titleContainer: {
-    flex: 1, // Allow the title container to take up available space
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    fontFamily: Fonts.Bold,
-    flexWrap: "wrap", // Allow text to wrap
-  },
-  ratingContainer: {
-    backgroundColor: Colors.rating,
-    width: 50,
-    height: 50,
-    borderRadius: 30,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  rating: {
-    color: "white",
-    fontWeight: "bold",
-    fontFamily: Fonts.Bold,
-    fontSize: 18,
-  },
-  location: {
-    color: Colors.text,
-    fontSize: 14,
-    marginTop: 4,
-    fontFamily: Fonts.Light,
-  },
-  tags: {
-    color: Colors.tags,
-    marginBottom: 16,
-    marginTop: -10,
-    fontSize: 12,
-  },
-  buttonContainer: {
-    flexDirection: "column",
-    marginBottom: 16,
-  },
-  button: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: Colors.inputBackground,
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginBottom: 8,
-  },
-  buttonText: {
-    marginLeft: 8,
-    fontSize: 12,
-    color: Colors.text,
-    fontFamily: Fonts.SemiBold,
-  },
-  actionButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  actionButton: {
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: Colors.inputBackground,
-    borderRadius: 16,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  actionButtonText: {
-    marginTop: 4,
-    fontSize: 12,
-    color: Colors.text,
-    fontFamily: Fonts.SemiBold,
-    textAlign: "center",
-  },
-  bookmarkContainer: {
-    position: "relative",
-    paddingBottom: 16,
-  },
   imageBackground: {
-    width: width * 1,
-    height: height * 0.2,
-  },
-  gridContainer: {
-    paddingHorizontal: 16,
-  },
-  gridItem: {
-    flex: 1,
-    marginVertical: 8,
-    borderRadius: 12,
-    padding: 4,
-    overflow: "hidden",
-    backgroundColor: "white",
-  },
-  gridImage: {
     width: "100%",
-    borderRadius: 12,
-  },
-  gridText: {
-    padding: 8,
-    textAlign: "center",
-    color: Colors.highlightText,
-    fontFamily: Fonts.Light,
+    height: height * 0.17,
   },
   gradient: {
-    width: width * 1,
+    width: "100%",
     height: height * 0.2,
     justifyContent: "space-between",
     alignItems: "center",
@@ -716,356 +551,110 @@ const styles = StyleSheet.create({
     width: width * 0.07,
     height: width * 0.07,
   },
-  restaurantLocation: {
-    color: Colors.text,
-    fontSize: 15,
-    fontFamily: Fonts.Medium,
+  restaurantHeaderContainer: {
+    padding: width * 0.05,
+    marginTop: height * 0.01,
   },
-  restaurantName: {
+  bookmarkContainer: {
+    position: "relative",
+    paddingBottom: height * 0.01,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flexWrap: "wrap",
+    marginBottom: height * 0.02,
+  },
+  titleContainer: {
+    flex: 1, 
+  },
+  title: {
+    fontSize: width * 0.06,
+    fontFamily: Fonts.Bold,
+    flexWrap: "wrap", 
+  },
+  location: {
     color: Colors.text,
-    fontSize: 26,
+    fontSize: width * 0.04,
+    marginTop: height * 0.005,
+    fontFamily: Fonts.Regular,
+  },
+  distance: {
+    color: Colors.highlightText,
+    fontSize: width * 0.04,
     fontFamily: Fonts.SemiBold,
   },
-  infoBoxesContainer: {
-    flexDirection: "row",
-    marginLeft: width * 0.05,
-  },
-  infoBox: {
-    backgroundColor: Colors.charcoal,
-    padding: width * 0.01,
-    borderRadius: 5,
-    marginRight: width * 0.04,
-    justifyContent: "center",
-  },
-  infoBoxStatus: {
-    backgroundColor: Colors.charcoal,
-    padding: width * 0.02,
-    borderRadius: 5,
-    marginRight: width * 0.04,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignSelf: "center",
-  },
-  scoreContainer: {
-    width: width * 0.09,
-    height: width * 0.09,
-    borderRadius: 90,
-    backgroundColor: Colors.highlightText,
+  ratingContainer: {
+    backgroundColor: Colors.rating,
+    width: width * 0.13,
+    height: width * 0.13,
+    borderRadius: 30,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     justifyContent: "center",
     alignItems: "center",
   },
-  scoreText: {
+  rating: {
+    color: "white",
+    fontWeight: "bold",
     fontFamily: Fonts.Bold,
-    fontSize: 16,
-    color: Colors.background,
+    fontSize: width * 0.045,
   },
-  clockIcon: {
-    width: width * 0.05,
-    height: width * 0.05,
-    justifyContent: "center",
-    alignSelf: "center",
+  tags: {
+    color: Colors.tags,
+    marginBottom: height * 0.03,
+    marginTop: -height * 0.015,
+    fontSize: width * 0.035,
   },
-  infoBoxText: {
-    fontSize: 18,
-    color: Colors.background,
-    fontFamily: Fonts.Regular,
-    marginHorizontal: width * 0.015,
+  buttonContainer: {
+    flexDirection: "column",
   },
-  restaurantTagsContainer: {
-    marginLeft: width * 0.05,
-    marginTop: height * 0.015,
-  },
-  restaurantTags: {
-    color: Colors.highlightText,
-    fontSize: 18,
-    fontFamily: Fonts.Medium,
-  },
-  dotStyle: {
-    color: Colors.highlightText,
-    fontSize: 18,
-    fontFamily: Fonts.Medium,
-  },
-  linksContainer: {
-    marginTop: height * 0.02,
-    backgroundColor: Colors.profileActivity,
-    padding: 10,
-    justifyContent: "center",
-    alignSelf: "flex-start",
-    borderRadius: 10,
+  actionButtonsContainer: {
     flexDirection: "row",
-    marginLeft: width * 0.05,
+    justifyContent: "space-between",
   },
-  linkItem: {
+  actionButton: {
+    flexDirection: "column",
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    flex: 1,
     marginHorizontal: width * 0.02,
   },
-  linkIcon: {
-    width: width * 0.05,
-    height: width * 0.05,
-    marginRight: width * 0.015,
-  },
-  linkIconLetsGo: {
-    width: width * 0.06,
-    height: width * 0.06,
-    marginRight: width * 0.007,
-  },
-  pipeStyle: {
-    marginHorizontal: width * 0.025,
+  actionButtonText: {
+    marginTop: width * 0.01,
+    fontSize: width * 0.035,
     color: Colors.text,
-    fontSize: 17,
-    fontFamily: Fonts.Light,
-    alignSelf: "center",
-  },
-  pipeStyle2: {
-    marginLeft: width * 0.025,
-    marginRight: width * 0.015,
-    color: Colors.text,
-    fontSize: 17,
-    fontFamily: Fonts.Light,
-    alignSelf: "center",
-  },
-  linksText: {
-    color: Colors.text,
-    fontSize: 16,
-    fontFamily: Fonts.Medium,
+    fontFamily: Fonts.SemiBold,
     textAlign: "center",
   },
   featuredGalleryContainer: {
     paddingHorizontal: width * 0.05,
-    marginTop: height * 0.025,
   },
   featuredGalleryText: {
     color: Colors.text,
-    fontSize: 22,
+    fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
-    marginLeft: width * 0.05,
-    marginBottom: height * 0.015,
-  },
-  separator: {
-    borderBottomColor: Colors.placeholderText,
-    borderBottomWidth: 1,
-    width: width * 0.5,
-    alignSelf: "center",
-    opacity: 0.2,
-    marginTop: height * 0.03,
-    marginBottom: height * 0.005,
-  },
-  galleryScrollView: {
-    paddingLeft: width * 0.05,
-  },
-  remainingReviewsContainer: {
-    marginTop: height * 0.02,
-    backgroundColor: Colors.background,
-    width: width * 1,
-    justifyContent: "center",
-    alignSelf: "center",
-    borderRadius: 10,
-  },
-  remainingReviewsText: {
-    color: Colors.highlightText,
-    fontSize: 22,
-    fontFamily: Fonts.SemiBold,
-    marginLeft: width * 0.05,
-    marginBottom: height * 0.015,
-  },
-  imageGalleryContainer: {
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  profileDetails: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    marginTop: height * 0.01,
-    width: width * 0.37,
-  },
-  profileImage: {
-    width: width * 0.08,
-    height: width * 0.08,
-    borderRadius: 90,
-    marginRight: width * 0.015,
-  },
-  profileUserName: {
-    color: Colors.highlightText,
-    fontSize: 14,
-    fontFamily: Fonts.Medium,
-  },
-  gridGallery: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginHorizontal: width * 0.03,
-  },
-  gridColumn: {
-    flexDirection: "column",
-    position: "relative",
-    width: "48.5%",
-  },
-
-  stickyHeader: {
-    position: "absolute",
-    top: height * 0,
-    width: width * 1,
-    height: HEADER_HEIGHT,
-    backgroundColor: Colors.header,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  stickyHeaderText: {
-    fontFamily: Fonts.SemiBold,
-    fontSize: 22,
-    position: "absolute",
-    bottom: 10,
-  },
-  profileUserNameReview: {
-    color: Colors.charcoal,
-    fontSize: 15,
-    fontFamily: Fonts.Medium,
-    marginTop: -(height * 0.015),
-    marginBottom: height * 0.02,
-  },
-  profileUserNameReviewScore: {
-    color: Colors.highlightText,
-    fontSize: 15,
-    fontFamily: Fonts.Medium,
-  },
-  modalOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
-  modalBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "transparent",
-  },
-  modal: {
-    backgroundColor: "white",
-    paddingTop: height * 0.02,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    width: width * 1,
-  },
-  modalIndicator: {
-    alignSelf: "center",
-    width: width * 0.11,
-    height: 5,
-    backgroundColor: Colors.placeholderText,
-    borderRadius: 90,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: Colors.background,
-    alignSelf: "center",
-    padding: width * 0.03,
-  },
-  searchInput: {
-    height: height * 0.045,
-    paddingLeft: width * 0.11,
-    paddingRight: width * 0.05,
-    backgroundColor: Colors.inputBackground,
-    fontSize: 16,
-    borderRadius: 18,
-    width: "95%",
-    alignSelf: "center",
-    color: Colors.text,
-    fontFamily: Fonts.Medium,
-  },
-  searchIcon: {
-    position: "absolute",
-    left: width * 0.07,
-    width: width * 0.05,
-    height: width * 0.05,
-  },
-  friendsContainer: {
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: width * 0.06,
-    paddingBottom: height * 0.03,
-  },
-  profileDetailsInvite: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    marginVertical: height * 0.015,
-    width: "100%",
-  },
-  userInfo: {
-    flex: 1,
-    marginLeft: width * 0.025,
-  },
-  userName: {
-    fontFamily: Fonts.Medium,
-    fontSize: 20,
-    color: Colors.text,
-  },
-  restaurantInfo: {
-    fontSize: 16,
-    fontFamily: Fonts.Regular,
-    color: Colors.text,
-  },
-  inviteButton: {
-    backgroundColor: Colors.highlightText,
-    paddingVertical: width * 0.023,
-    paddingHorizontal: width * 0.055,
-    borderRadius: 10,
-  },
-  inviteText: {
-    color: Colors.background,
-    fontSize: 16,
-    fontFamily: Fonts.Medium,
-  },
-  scoreContainerGallery: {
-    width: width * 0.075,
-    height: width * 0.075,
-    borderRadius: 20,
-    backgroundColor: Colors.highlightText,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    top: width * 0.013,
-    right: width * 0.045,
-    opacity: 0.95,
-  },
-  scoreTextGallery: {
-    fontFamily: Fonts.Bold,
-    fontSize: 15,
-    color: Colors.background,
-  },
-
-  galleryTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: "1%",
   },
   galleryContainer: {
-    marginTop: 10,
-    overflow: "visible", // Ensure the container allows overflow
+    marginTop: height * 0.01,
+    overflow: "visible",
   },
   galleryItemContainer: {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 10,
+    marginRight: width * 0.01,
   },
   galleryItem: {
     position: "relative",
-    width: width * 0.4, // Keep the width of the gallery item the same
-    height: width * 0.5, // Keep the height of the gallery item the same
+    width: width * 0.4,
+    height: width * 0.5,
     borderRadius: 12,
     overflow: "hidden",
   },
@@ -1074,7 +663,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   galleryUserImageContainer: {
-    bottom: 20, // Adjusted to align with the design
+    bottom: 30,
     left: 0,
     right: 0,
     alignItems: "center",
@@ -1082,10 +671,57 @@ const styles = StyleSheet.create({
   galleryUserImage: {
     borderWidth: 3,
     borderColor: "white",
-    width: 60, // Keep the size of the profile image the same
-    height: 60, // Keep the size of the profile image the same
-    borderRadius: 30,
+    width: width * 0.14,
+    height: width * 0.14,
+    borderRadius: 90,
+  },
+  separator: {
+    borderBottomColor: Colors.placeholderText,
+    borderBottomWidth: 1,
+    width: "40%",
+    alignSelf: "center",
+    opacity: 0.2,
+  },
+  remainingReviewsContainer: {
+    marginTop: "4%",
+    backgroundColor: Colors.background,
+    width: "100%",
+    justifyContent: "center",
+    alignSelf: "center",
+    borderRadius: 10,
+  },
+  remainingReviewsText: {
+    color: Colors.highlightText,
+    fontSize: width * 0.055,
+    fontFamily: Fonts.SemiBold,
+    marginTop: "1%",
+    marginLeft: "5%",
+  },
+  gridGallery: {
+    flexDirection: "row",
+    marginHorizontal: "2.5%",
+    marginTop: "3%",
+  },
+  gridColumn: {
+    flex: 1,
+  },
+  restaurantNameReview: {
+    fontSize: width * 0.037,
+    fontFamily: Fonts.Medium,
+    color: Colors.text,
+    maxWidth: "70%",
+  },
+  dash: {
+    fontSize: width * 0.037,
+    fontFamily: Fonts.Medium,
+    color: Colors.text,
+  },
+  scoreReview: {
+    fontSize: width * 0.037,
+    fontFamily: Fonts.Medium,
+    color: Colors.highlightText,
   },
 });
+
 
 export default RestaurantProfileScreen;

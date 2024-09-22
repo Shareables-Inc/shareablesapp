@@ -62,3 +62,18 @@ export interface PostNotification extends Notification {
     profilePicture: string;
   };
 }
+
+export interface InviteNotification extends Notification {
+  to: string;
+  sound: string;
+  title: string;
+  body: string;
+  data: {
+    id: string;
+    screen: string;
+    establishmentId: string;
+    inviteId: string;
+    profilePicture: string;
+  };
+}
+

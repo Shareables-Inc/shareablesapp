@@ -15,6 +15,7 @@ import { Likes } from "./likes";
 import { Follower } from "./follower";
 import { UserProfile } from "./user";
 import { Post } from "./post";
+import { Invite } from "./invite";
 import { v4 as uuidv4 } from "uuid";
 import { sendPushNotifications } from "./api/expo.api";
 // Initialize Firebase Admin SDK
@@ -386,3 +387,47 @@ export const decrementLikeCount = onDocumentDeleted(
     }
   }
 );
+
+export const sendInviteNotification = onDocumentCreated(
+  "invites/{inviteId}",
+  async (event: any) => {
+    const inviteData = event.data?.data() as Invite | undefined;
+
+    if (!inviteData) {
+      logger.error("No invite data found");
+      return;
+    }
+
+    try {
+      // Fetch the invited user's FCM token
+      const userRef = admin.firestore().collection("users").doc(inviteData.userId);
+      const userDoc = await userRef.get();
+      const userData = userDoc.data();
+
+      if (!userData || !userData.fcmToken) {
+        logger.error("User data or FCM token not found");
+        return;
+      }
+
+      // Prepare the notification message
+      const message: InviteNotification = {
+        to: userData.fcmToken,
+        sound: "default",
+        title: "New Restaurant Invite",
+        body: `${inviteData.userName} invited you to check out ${inviteData.establishmentName}`,
+        data: {
+          id: uuidv4(),
+          screen: "RestaurantProfile", // The screen you want to open
+          establishmentId: inviteData.establishmentId, // ID of the restaurant
+        },
+      };
+
+      // Send the notification
+      const response = await sendPushNotifications(message);
+      logger.info("Invite notification sent successfully", response);
+    } catch (error) {
+      logger.error("Error sending invite notification", error);
+    }
+  }
+);
+
