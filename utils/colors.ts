@@ -1,6 +1,6 @@
 export const Colors = {
   text: "#000000",
-  highlightText: "#FF4C14",
+  highlightText: "#FF2F07",
   inputBackground: "#E2E2E2",
   profileActivity: "#F3F3F3",
   profileTopPlaces: "#C9C9C9",
