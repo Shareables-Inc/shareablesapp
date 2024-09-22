@@ -102,15 +102,7 @@ const PostScreen = () => {
     async (suggestion: Suggestion) => {
       setSelectedSuggestion(suggestion);
       try {
-        // check if the establishment already exists in the database from 
-
-        if (establishment) {
-          Alert.alert(
-            "Error",
-            "This restaurant already exists in the database."
-          );
-          return;
-        }
+        // check if the establishment already exists in the database from
 
         const retrieveResponse = await retrieveSearchResult(
           suggestion.mapbox_id,
