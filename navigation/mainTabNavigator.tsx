@@ -22,11 +22,29 @@ import { useAuth } from "../context/auth.context";
 import HomeStack from "./homeStack";
 
 import SearchScreen from "../screens/tabs/search";
+import FastImage from "react-native-fast-image";
 
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator = () => {
   const { userProfile } = useAuth();
+  const [profilePicture, setProfilePicture] = useState(
+    userProfile?.profilePicture || ""
+  );
+
+  // setup a listener to update the user profile picture when the userProfile changes in firebase
+  useEffect(() => {
+    console.log("LISTER", userProfile?.id);
+    if (userProfile?.id) {
+      const unsubscribe = onSnapshot(
+        doc(db, "users", userProfile.id),
+        (doc) => {
+          setProfilePicture(doc.data()?.profilePicture);
+        }
+      );
+      return () => unsubscribe();
+    }
+  }, [userProfile?.id]);
 
   return (
     <Tab.Navigator
@@ -62,9 +80,10 @@ const MainTabNavigator = () => {
                 : Colors.placeholderText,
             };
             icon = userProfile?.profilePicture ? (
-              <Image
-                source={{ uri: userProfile.profilePicture }}
+              <FastImage
+                source={{ uri: profilePicture }}
                 style={iconStyle}
+                resizeMode={FastImage.resizeMode.cover}
               />
             ) : (
               <UserCircle size={iconSize} color={color} />

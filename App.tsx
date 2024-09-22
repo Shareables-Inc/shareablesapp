@@ -122,7 +122,15 @@ const App = () => {
     <AuthProvider>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister: asyncStoragePersister }}
+        persistOptions={{
+          persister: asyncStoragePersister,
+          dehydrateOptions: {
+            shouldDehydrateQuery: (query) => {
+              // Ignore userPosts query from cache
+              return !query.queryKey.includes("userPosts");
+            },
+          },
+        }}
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetModalProvider>

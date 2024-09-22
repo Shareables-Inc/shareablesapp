@@ -1,30 +1,29 @@
-import { FirebasePost, Post } from "../models/post";
-import { db, storage } from "../firebase/firebaseConfig";
+import {FirebasePost, Post} from "../models/post";
+import {db, storage} from "../firebase/firebaseConfig";
 import {
-  collection,
   addDoc,
-  updateDoc,
+  arrayRemove,
+  arrayUnion,
+  collection,
   deleteDoc,
   doc,
+  DocumentData,
   getDoc,
-  query,
-  where,
   getDocs,
   increment,
-  arrayUnion,
-  arrayRemove,
-  orderBy,
   limit,
-  startAfter,
+  orderBy,
+  query,
   QueryDocumentSnapshot,
-  DocumentData,
-  Timestamp,
-  setDoc,
-  serverTimestamp,
   runTransaction,
+  serverTimestamp,
+  startAfter,
+  Timestamp,
+  updateDoc,
+  where,
 } from "firebase/firestore";
-import { PostComment } from "../models/postComments";
-import { getDownloadURL, ref } from "firebase/storage";
+import {PostComment} from "../models/postComments";
+import {getDownloadURL, ref} from "firebase/storage";
 
 export interface TopPoster {
   userId: string;
@@ -38,13 +37,8 @@ export interface TopPoster {
   };
 }
 
-type WeightedTags = {
-  [key: string]: number;
-};
-
 export class PostService {
   private postsCollection = collection(db, "posts");
-  private commentsCollection = collection(db, "comments");
   private establishmentsCollection = collection(db, "establishments");
   private userCollection = collection(db, "users");
 
@@ -210,38 +204,6 @@ export class PostService {
     return posts;
   }
 
-  async likePost(postId: string, userId: string): Promise<void> {
-    const docRef = doc(this.postsCollection, postId);
-    await updateDoc(docRef, {
-      "likes.count": increment(1),
-      "likes.userIds": arrayUnion(userId),
-    });
-  }
-
-  async unlikePost(postId: string, userId: string): Promise<void> {
-    const docRef = doc(this.postsCollection, postId);
-    await updateDoc(docRef, {
-      "likes.count": increment(-1),
-      "likes.userIds": arrayRemove(userId),
-    });
-  }
-
-  async savePost(postId: string, userId: string): Promise<void> {
-    const docRef = doc(this.postsCollection, postId);
-    await updateDoc(docRef, {
-      "saves.count": increment(1),
-      "saves.userIds": arrayUnion(userId),
-    });
-  }
-
-  async unsavePost(postId: string, userId: string): Promise<void> {
-    const docRef = doc(this.postsCollection, postId);
-    await updateDoc(docRef, {
-      "saves.count": increment(-1),
-      "saves.userIds": arrayRemove(userId),
-    });
-  }
-
   async getMostRecentPosts(userId: string): Promise<Post[]> {
     const q = query(
       this.postsCollection,
@@ -284,41 +246,39 @@ export class PostService {
         .map(([userId]) => userId);
 
       // Fetch user details for top posters
-      const topPosters: TopPoster[] = await Promise.all(
-        topUserIds.map(async (userId) => {
-          const userDoc = await getDoc(doc(this.userCollection, userId));
-          const userData = userDoc.data();
+      return await Promise.all(
+          topUserIds.map(async (userId) => {
+            const userDoc = await getDoc(doc(this.userCollection, userId));
+            const userData = userDoc.data();
 
-          // Fetch profile picture
-          const storageRef = ref(storage, `profilePictures/${userId}`);
-          const profilePicture = await getDownloadURL(storageRef);
+            // Fetch profile picture
+            const storageRef = ref(storage, `profilePictures/${userId}`);
+            const profilePicture = await getDownloadURL(storageRef);
 
-          const mostLikedPost = userMostLikedPosts.get(userId);
-          let mostLikedPostData = {
-            id: "",
-            imageUrl: "",
-            likeCount: 0,
-          };
-
-          if (mostLikedPost) {
-            mostLikedPostData = {
-              id: mostLikedPost.id,
-              imageUrl: mostLikedPost.imageUrls[0] || "",
-              likeCount: mostLikedPost.likeCount || 0,
+            const mostLikedPost = userMostLikedPosts.get(userId);
+            let mostLikedPostData = {
+              id: "",
+              imageUrl: "",
+              likeCount: 0,
             };
-          }
 
-          return {
-            userId,
-            username: userData?.username || "Unknown User",
-            profilePicture,
-            postCount: userPostCounts.get(userId) || 0,
-            mostLikedPost: mostLikedPostData,
-          };
-        })
+            if (mostLikedPost) {
+              mostLikedPostData = {
+                id: mostLikedPost.id,
+                imageUrl: mostLikedPost.imageUrls[0] || "",
+                likeCount: mostLikedPost.likeCount || 0,
+              };
+            }
+
+            return {
+              userId,
+              username: userData?.username || "Unknown User",
+              profilePicture,
+              postCount: userPostCounts.get(userId) || 0,
+              mostLikedPost: mostLikedPostData,
+            };
+          })
       );
-
-      return topPosters;
     } catch (error) {
       console.error("Error fetching top posters:", error);
       return [];
@@ -339,27 +299,6 @@ export class PostService {
     );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(this.documentToPost);
-  }
-
-  async getCommentsByPostId(postId: string): Promise<PostComment[]> {
-    const q = query(this.commentsCollection, where("postId", "==", postId));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(this.documentToPostComment);
-  }
-
-  async createComment(commentData: PostComment): Promise<string> {
-    const newComment: Omit<PostComment, "id"> = {
-      ...commentData,
-      createdAt: new Date(),
-    };
-    const docRef = await addDoc(this.commentsCollection, newComment);
-
-    // add postCommentID to comments collection
-    await updateDoc(doc(this.commentsCollection, docRef.id), {
-      id: docRef.id,
-    });
-
-    return docRef.id;
   }
 
   private documentToPost(doc: QueryDocumentSnapshot<DocumentData>): Post {

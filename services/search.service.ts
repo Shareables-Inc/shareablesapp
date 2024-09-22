@@ -1,4 +1,9 @@
-import { SEARCH_URL, ACCESS_TOKEN, RETRIEVE_URL } from "../config/config";
+import {
+  SEARCH_URL,
+  ACCESS_TOKEN,
+  RETRIEVE_URL,
+  PERMANENT_GEOCODING_URL,
+} from "../config/config";
 import { SuggestionsResponse, RetrieveResponse } from "../types/mapbox.types";
 interface SuggestedSearchParams {
   query: string;
@@ -69,4 +74,21 @@ export const retrieveSearchResult = async (
   const response = await fetch(`${RETRIEVE_URL}/${mapboxId}?${params}`);
   if (!response.ok) throw new Error("Failed to retrieve search result");
   return response.json();
+};
+
+export const permanentGeocodingSearch = async (
+  longitude: number,
+  latitude: number,
+  permanent: boolean
+) => {
+  const params = new URLSearchParams({
+    access_token: ACCESS_TOKEN ?? "",
+    longitude: longitude.toString(),
+    latitude: latitude.toString(),
+    permanent: permanent.toString(),
+  });
+
+  const response = await fetch(`${PERMANENT_GEOCODING_URL}?${params}`);
+  const data = await response.json();
+  return data;
 };

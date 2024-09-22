@@ -45,6 +45,26 @@ export class EstablishmentService {
     return establishmentDoc.id;
   }
 
+  async getEstablishmentByMapboxId(
+    mapboxId: string
+  ): Promise<Establishment | null> {
+    const establishmentsQuery = query(
+      this.establishmentsCollection,
+      where("mapboxId", "==", mapboxId)
+    );
+    const establishmentsSnapshot = await getDocs(establishmentsQuery);
+
+    if (establishmentsSnapshot.empty) {
+      return null;
+    }
+
+    if (establishmentsSnapshot.docs.length > 1) {
+      return null;
+    }
+
+    return establishmentsSnapshot.docs[0].data() as Establishment;
+  }
+
   async getEstablishmentByNameAndAddress(
     name: string,
     address: string
@@ -83,7 +103,6 @@ export class EstablishmentService {
     selectedTag?: string
   ): Promise<FeaturedEstablishment[]> {
     try {
-      console.log(`Starting getFeaturedEstablishments for city: ${city}`);
       return await runTransaction(db, async () => {
         const now = Timestamp.now();
         const thirtyDaysInSeconds = 30 * 24 * 60 * 60;
@@ -91,7 +110,6 @@ export class EstablishmentService {
           now.seconds - thirtyDaysInSeconds,
           now.nanoseconds
         );
-        console.log(`Thirty days ago: ${thirtyDaysAgo.toDate()}`);
 
         let establishmentsQuery: Query;
         if (selectedTag) {
@@ -114,15 +132,12 @@ export class EstablishmentService {
         }
 
         const establishmentsSnapshot = await getDocs(establishmentsQuery);
-        console.log(`Found ${establishmentsSnapshot.size} establishments`);
 
         const establishmentIds = establishmentsSnapshot.docs.map(
           (doc) => doc.id
         );
-        console.log(`Establishment IDs: ${JSON.stringify(establishmentIds)}`);
 
         if (establishmentIds.length === 0) {
-          console.log("No establishments found, returning empty array");
           return []; // No establishments found
         }
 
@@ -135,7 +150,6 @@ export class EstablishmentService {
         );
 
         const postsSnapshot = await getDocs(postsQuery);
-        console.log(`Found ${postsSnapshot.size} posts`);
 
         // Process posts and associate them with establishments
         const uniqueEstablishments = new Map();
@@ -149,10 +163,6 @@ export class EstablishmentService {
             });
           }
         });
-        console.log(
-          `Processed ${uniqueEstablishments.size} unique establishments from posts`
-        );
-
         // Combine establishment data with post data
         const result = establishmentsSnapshot.docs.map((doc) => {
           const establishment = doc.data() as Establishment;
@@ -163,11 +173,6 @@ export class EstablishmentService {
           );
 
           const postData = uniqueEstablishments.get(establishment.id) || {};
-          console.log(
-            `Processing establishment: ${
-              establishment.id
-            }, Tags: ${JSON.stringify(sortedTags)}`
-          );
 
           return {
             ...establishment,
@@ -176,11 +181,9 @@ export class EstablishmentService {
           } as FeaturedEstablishment;
         });
 
-        console.log(`Returning ${result.length} featured establishments`);
         return result;
       });
     } catch (error) {
-      console.error("Error fetching featured establishments:", error);
       return [];
     }
   }
@@ -192,7 +195,6 @@ export class EstablishmentService {
     );
     const establishmentSnapshot = await getDoc(establishmentDoc);
 
-    console.log("establishmentSnapshot", establishmentSnapshot);
     return establishmentSnapshot.data() as Establishment;
   }
 

@@ -61,6 +61,7 @@ export function usePostsByUser(userId: string): UseQueryResult<Post[], Error> {
     queryKey: ["userPosts", userId],
     queryFn: () => postService.getPostsByUser(userId),
     enabled: !!userId,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -73,7 +74,7 @@ export function useCreatePost(): UseMutationResult<string, Error, Post> {
       // Update the cache with the new post
       queryClient.invalidateQueries({ queryKey: ["posts", newPostId] });
       queryClient.invalidateQueries({ queryKey: ["infinitePosts"] });
-      queryClient.invalidateQueries({ queryKey: ["userPosts", newPostId] });
+      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
     },
   });
 }
@@ -91,7 +92,7 @@ export function useUpdatePost(): UseMutationResult<
       queryClient.invalidateQueries({ queryKey: ["posts", id] });
       queryClient.invalidateQueries({ queryKey: ["post", id] });
       queryClient.invalidateQueries({ queryKey: ["infinitePosts"] });
-      queryClient.invalidateQueries({ queryKey: ["userPosts", id] });
+      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
       queryClient.invalidateQueries({ queryKey: ["userLikes", id] });
     },
   });

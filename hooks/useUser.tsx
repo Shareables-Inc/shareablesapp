@@ -1,7 +1,6 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { UserService } from "../services/user.service";
-import { UserProfile } from "../models/userProfile";
-import { queryClient } from "../utils/query.client";
+import {useMutation, useQuery} from "@tanstack/react-query";
+import {UserService} from "../services/user.service";
+import {queryClient} from "../utils/query.client";
 
 const userService = new UserService();
 
@@ -26,11 +25,11 @@ export const useUserGetByUsername = (username: string) => {
 };
 
 export const useUserUpdatePreferences = () => {
-  const mutation = useMutation({
+  return useMutation({
     mutationFn: ({
-      uid,
-      preferences,
-    }: {
+                   uid,
+                   preferences,
+                 }: {
       uid: string;
       preferences: {
         notifications: boolean;
@@ -51,6 +50,4 @@ export const useUserUpdatePreferences = () => {
       console.error("Error updating preferences", error);
     },
   });
-
-  return mutation;
 };
