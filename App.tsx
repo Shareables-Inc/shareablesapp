@@ -22,6 +22,7 @@ import {
   updatePushNotificationTokenFirebase,
   scheduleWeeklyRestaurantNotification,
 } from "./services/pushNotification.service";
+import { QueryKey } from "@tanstack/react-query";
 
 interface CustomManifest {
   extra?: {
@@ -117,12 +118,20 @@ const AppContent = () => {
   return <MainApp />;
 };
 
+const doNotPersistQueries: QueryKey[] = [["userPosts"]];
 const App = () => {
   return (
     <AuthProvider>
       <PersistQueryClientProvider
         client={queryClient}
-        persistOptions={{ persister: asyncStoragePersister }}
+        persistOptions={{
+          persister: asyncStoragePersister,
+          dehydrateOptions: {
+            shouldDehydrateQuery: (query) => {
+              return !doNotPersistQueries.includes(query.queryKey as QueryKey);
+            },
+          },
+        }}
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetModalProvider>
