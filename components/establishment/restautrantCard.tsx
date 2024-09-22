@@ -42,11 +42,6 @@ interface RestaurantCardProps {
   onOpenReviewPost: (post: Post) => void;
 }
 
-type RootStackParamList = {
-  ExpandedPost: { post: Post };
-  // ... other screen definitions
-};
-
 const RestaurantCard = ({
   restaurant,
   userLocation,

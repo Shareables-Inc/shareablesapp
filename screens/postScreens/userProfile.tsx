@@ -23,7 +23,7 @@ import Colors from "../../utils/colors";
 import { StatusBar } from "expo-status-bar";
 import { Fonts } from "../../utils/fonts";
 import { auth, db } from "../../firebase/firebaseConfig";
-import { ArrowLeft, CircleCheck, Search } from "lucide-react-native";
+import { CircleArrowLeft, CircleCheck } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import {
   useFollowingActions,
@@ -105,7 +105,7 @@ const UserProfileScreen = () => {
 
     // Custom Masonry Grid layout
     const columnCount = 2;
-    const columnWidth = (width * 0.93) / columnCount;
+    const columnWidth = (width * 0.89) / columnCount;
     const columnItems = Array.from({ length: columnCount }, () => []);
   
     recentPosts.forEach((post, index) => {
@@ -181,10 +181,7 @@ const UserProfileScreen = () => {
 
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <ArrowLeft color={Colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Search color={Colors.text} />
+            <CircleArrowLeft color={Colors.text} size={28} />
           </TouchableOpacity>
         </View>
 
@@ -236,9 +233,8 @@ const UserProfileScreen = () => {
         </View>
 
         <View style={styles.bioContainer}>
-          <Text style={styles.bioText}>
-            This is a placeholder bio. You can update this bio from your
-            settings.
+        <Text style={styles.bioText}>
+            {userData?.bio ? userData.bio : ""}
           </Text>
         </View>
 
@@ -269,9 +265,13 @@ const UserProfileScreen = () => {
                   </View>
                 </TouchableOpacity>
                 <View style={styles.profileDetails}>
-                  <Text style={styles.restaurantTopPicks}>
-                    {post.establishmentDetails.name}
-                  </Text>
+                <Text
+                style={styles.restaurantTopPicks}
+                numberOfLines={1} 
+                ellipsizeMode="tail" 
+              >
+                {post.establishmentDetails.name}
+              </Text>
                 </View>
               </View>
             ))}
@@ -305,27 +305,24 @@ const styles = StyleSheet.create({
   topBar: {
     position: "absolute",
     top: height * 0.08,
-    right: width * 0.07,
+    left: width * 0.07,
     flexDirection: "row",
     justifyContent: "space-between",
     flex: 1,
   },
-  settingsIcon: {
-    marginRight: width * 0.05,
-  },
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     marginBottom: height * 0.03,
     marginTop: height * 0.135,
-    paddingHorizontal: width * 0.01
+    marginLeft: width * 0.05,
   },
   profileImageContainer: {
     alignItems: "center",
     justifyContent: "center",
     position: "relative", 
-    marginRight: width * 0.02,
+    marginRight: width * 0.03,
   },
   followButton: {
     backgroundColor: Colors.inputBackground,
@@ -386,8 +383,9 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     backgroundColor: Colors.background,
-    width: width * 0.77,
-    alignSelf: "center",
+    width: width * 0.8,
+    alignSelf: "flex-start",
+    marginLeft: width * 0.07,
   },
   bioText: {
     fontSize: width * 0.037,
@@ -402,7 +400,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "3%",
+    marginLeft: "5%",
   },
   separator: {
     borderBottomColor: Colors.placeholderText,
@@ -414,7 +412,7 @@ const styles = StyleSheet.create({
   },
   galleryScrollView: {
     marginTop: height * 0.015,
-    paddingLeft: "3%",
+    paddingLeft: "5%",
   },
   galleryImage: {
     width: width * 0.37,
@@ -435,7 +433,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "3%",
+    marginLeft: "5%",
   },
   imageGalleryContainer: {
     flexDirection: "column",
@@ -465,7 +463,7 @@ const styles = StyleSheet.create({
   },
   gridGallery: {
     flexDirection: "row",
-    marginHorizontal: "1%",
+    marginHorizontal: "2.5%",
     marginTop: "3%",
   },
   gridColumn: {
