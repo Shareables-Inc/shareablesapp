@@ -99,9 +99,62 @@ const UserProfileScreen = () => {
   };
 
   const followButtonText = useMemo(() => {
-    if (isToggling) return "";
-    return isFollowing ? "Following" : "Follow";
+    if (isToggling) return null;
+    return isFollowing ? <CircleCheck color={Colors.background} size={22} /> : <Text style={styles.followButtonText}>Follow</Text>;
   }, [isFollowing, isToggling]);
+
+    // Custom Masonry Grid layout
+    const columnCount = 2;
+    const columnWidth = (width * 0.93) / columnCount;
+    const columnItems = Array.from({ length: columnCount }, () => []);
+  
+    recentPosts.forEach((post, index) => {
+      columnItems[index % columnCount].push(post);
+    });
+  
+    const renderColumn = (items, columnIndex) => {
+      return (
+        <View style={{ flex: 1, marginHorizontal: 5 }}>
+          {items.map((post, index) => {
+            const isOddColumn = columnIndex % 2 !== 0;
+            const imageHeight = isOddColumn
+              ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
+              : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
+  
+            return (
+              <TouchableOpacity
+                key={index}
+                style={{ marginBottom: 10 }}
+                onPress={() => navigateToExpandedPost(post)}
+                activeOpacity={1}
+              >
+                <FastImage
+                  source={{ uri: post.imageUrls[0] }}
+                  style={{
+                    width: columnWidth,
+                    height: imageHeight,
+                    borderRadius: 10,
+                    marginTop: 5,
+                  }}
+                />
+                {/* Inline layout for trimming and score alignment */}
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text
+                    style={styles.restaurantNameReview}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {post.establishmentDetails.name}
+                  </Text>
+                  <Text style={styles.dash}> - </Text>
+                  <Text style={styles.scoreReview}>{post.ratings.overall}</Text>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      );
+    };
 
   // Loading states
   if (userDataLoading) {
@@ -155,12 +208,12 @@ const UserProfileScreen = () => {
                 disabled={isToggling}
               >
                 {isToggling ? (
-                  <ActivityIndicator color={Colors.background} size="small" />
+                  <ActivityIndicator color={Colors.background} />
+                ) : isFollowing ? (
+                  <CircleCheck color={Colors.background} size={22} />
                 ) : (
-                  <Text style={styles.followButtonText}>
-                    {followButtonText}
-                  </Text>
-                )}
+                  <Text style={styles.followButtonText}>Follow</Text>
+                              )}
               </TouchableOpacity>
             )}
           </View>
@@ -231,33 +284,12 @@ const UserProfileScreen = () => {
           <Text style={styles.remainingReviewsText}>All Reviews</Text>
         </View>
 
+        {/* Render masonry grid layout for recent posts */}
         <View style={styles.gridGallery}>
-          {recentPosts?.map((post, index) => (
-            <TouchableOpacity
-              key={index}
-              activeOpacity={1}
-              style={styles.gridColumn}
-              onPress={() => navigateToExpandedPost(post)}
-            >
-              <FastImage
-                source={{
-                  uri: post.imageUrls[0],
-                  priority: FastImage.priority.normal,
-                  cache: FastImage.cacheControl.immutable,
-                }}
-                style={[
-                  styles.gridImage,
-                  {
-                    height: index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150,
-                    width: "100%",
-                  },
-                ]}
-              />
-              <Text style={styles.restaurantNameReview}>
-                {post.establishmentDetails.name} -{" "}
-                <Text style={styles.scoreReview}>{post.ratings.overall}</Text>
-              </Text>
-            </TouchableOpacity>
+          {columnItems.map((items, index) => (
+            <View key={index} style={styles.gridColumn}>
+              {renderColumn(items, index)}
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -273,19 +305,12 @@ const styles = StyleSheet.create({
   topBar: {
     position: "absolute",
     top: height * 0.08,
-    right: width * 0.02,
+    right: width * 0.07,
     flexDirection: "row",
     justifyContent: "space-between",
     flex: 1,
   },
-  backIcon: {
-    width: 27,
-    height: 27,
-    marginRight: width * 0.71,
-  },
   settingsIcon: {
-    width: 27,
-    height: 27,
     marginRight: width * 0.05,
   },
   profileSection: {
@@ -294,88 +319,90 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: height * 0.03,
     marginTop: height * 0.135,
-    paddingHorizontal: width * 0.1,
+    paddingHorizontal: width * 0.01
   },
   profileImageContainer: {
     alignItems: "center",
+    justifyContent: "center",
+    position: "relative", 
+    marginRight: width * 0.02,
+  },
+  followButton: {
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 30,
+    paddingVertical: 5,
+    paddingHorizontal: 15,
+    position: "absolute",
+    bottom: -10,
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+  },
+  followingButton: {
+    backgroundColor: Colors.followed,
+    borderRadius: 30,
+  },
+  followButtonText: {
+    color: Colors.text,
+    fontSize: width * 0.035,
+    fontFamily: Fonts.Medium,
   },
   profilePic: {
     width: width * 0.28,
     height: width * 0.28,
     borderRadius: 90,
-    borderColor: Colors.highlightText,
+    borderColor: Colors.profileBorder,
     borderWidth: 4,
   },
-  followButton: {
-    backgroundColor: Colors.inputBackground,
-    borderRadius: 90,
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    position: "absolute",
-    bottom: -5,
-  },
-  followingButton: {
-    backgroundColor: Colors.followed,
-  },
-  followButtonText: {
-    color: Colors.text,
-    fontSize: 14,
-    fontFamily: Fonts.Regular,
-  },
-  followingIcon: {
-    width: 15,
-    height: 15,
-  },
   detailsSection: {
-    marginLeft: width * 0.055,
+    marginLeft: width * 0.035,
   },
   ovalsContainer: {
     flexDirection: "row",
-    marginBottom: 4,
   },
   followerOval: {
     backgroundColor: Colors.inputBackground,
-    paddingHorizontal: 13,
-    paddingVertical: 5,
-    borderRadius: 8,
-    marginRight: 8,
+    paddingHorizontal: width * 0.035,
+    paddingVertical: height * 0.007,
+    borderRadius: 7,
+    marginRight: width * 0.02,
     justifyContent: "center",
   },
   ovalText: {
     color: Colors.text,
-    fontSize: 14,
+    fontSize: width * 0.036,
     fontFamily: Fonts.Regular,
   },
   name: {
-    fontSize: 26,
+    fontSize: width * 0.065,
     color: Colors.text,
     fontFamily: Fonts.Medium,
   },
   username: {
-    fontSize: 18,
+    fontSize: width * 0.045,
     color: Colors.text,
     fontFamily: Fonts.Medium,
     marginBottom: height * 0.01,
   },
   bioContainer: {
-    paddingHorizontal: width * 0.1,
     backgroundColor: Colors.background,
+    width: width * 0.77,
+    alignSelf: "center",
   },
   bioText: {
-    fontSize: 15,
+    fontSize: width * 0.037,
     color: Colors.text,
     fontFamily: Fonts.Regular,
-    textAlign: "center",
   },
   featuredGalleryContainer: {
     marginTop: "5%",
   },
   featuredGalleryText: {
     color: Colors.text,
-    fontSize: 22,
+    fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "5%",
+    marginLeft: "3%",
   },
   separator: {
     borderBottomColor: Colors.placeholderText,
@@ -386,13 +413,13 @@ const styles = StyleSheet.create({
     marginTop: "8%",
   },
   galleryScrollView: {
-    marginTop: 10,
-    paddingLeft: "5%",
+    marginTop: height * 0.015,
+    paddingLeft: "3%",
   },
   galleryImage: {
-    width: 140,
-    height: 180,
-    marginRight: 12,
+    width: width * 0.37,
+    height: width * 0.47,
+    marginRight: width * 0.03,
     borderRadius: 10,
   },
   remainingReviewsContainer: {
@@ -405,10 +432,10 @@ const styles = StyleSheet.create({
   },
   remainingReviewsText: {
     color: Colors.text,
-    fontSize: 22,
+    fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "5%",
+    marginLeft: "3%",
   },
   imageGalleryContainer: {
     flexDirection: "column",
@@ -423,34 +450,26 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   profileImage: {
-    width: 30,
-    height: 30,
+    width: width * 0.075,
+    height: width * 0.075,
     borderRadius: 90,
-    marginRight: 5,
+    marginRight: width * 0.015,
   },
   restaurantTopPicks: {
     color: Colors.highlightText,
-    fontSize: 14,
+    fontSize: width * 0.036,
     fontFamily: Fonts.Medium,
     textAlign: "left",
+    flexShrink: 1,
+    maxWidth: "90%",
   },
   gridGallery: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginLeft: "3%",
-    marginRight: "3%",
-    marginTop: "5%",
+    marginHorizontal: "1%",
+    marginTop: "3%",
   },
   gridColumn: {
-    flexDirection: "column",
-    position: "relative",
-    width: "48.5%",
-    marginBottom: 15,
-  },
-  gridImage: {
-    borderRadius: 10,
-    resizeMode: "cover",
+    flex: 1,
   },
   stickyHeader: {
     position: "absolute",
@@ -464,27 +483,30 @@ const styles = StyleSheet.create({
   },
   stickyHeaderText: {
     fontFamily: Fonts.SemiBold,
-    fontSize: 22,
+    fontSize: width * 0.055,
     position: "absolute",
-    bottom: 10,
+    bottom: height * 0.02,
   },
   restaurantNameReview: {
-    color: Colors.charcoal,
-    fontSize: 15,
+    fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    marginTop: 4,
-    textAlign: "left",
-    width: "80%",
+    color: Colors.text,
+    maxWidth: "70%",
+  },
+  dash: {
+    fontSize: width * 0.037,
+    fontFamily: Fonts.Medium,
+    color: Colors.text,
   },
   scoreReview: {
-    color: Colors.highlightText,
-    fontSize: 15,
+    fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
+    color: Colors.highlightText,
   },
   scoreContainer: {
     width: width * 0.075,
     height: width * 0.075,
-    borderRadius: 20,
+    borderRadius: 90,
     backgroundColor: Colors.highlightText,
     justifyContent: "center",
     alignItems: "center",
@@ -495,9 +517,9 @@ const styles = StyleSheet.create({
   },
   scoreText: {
     fontFamily: Fonts.Bold,
-    fontSize: 15,
+    fontSize: width * 0.037,
     color: Colors.background,
   },
-});
+  });
 
 export default UserProfileScreen;

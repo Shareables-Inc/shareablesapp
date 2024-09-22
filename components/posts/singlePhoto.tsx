@@ -1,35 +1,27 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
   Image,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import Colors from "../utils/colors";
-import { Fonts } from "../utils/fonts";
-import { RootStackParamList } from "../types/stackParams.types";
-import { Post } from "../models/post";
+import Colors from "../../utils/colors";
+import { Fonts } from "../../utils/fonts";
+import { Post } from "../../models/post";
+import { RootStackParamList } from "../../types/stackParams.types";
 import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");
 
-interface ThreePhotoScrollProps {
+interface SinglePhotoProps {
   post: Post;
 }
 
-const ThreePhotoScroll: React.FC<ThreePhotoScrollProps> = ({ post }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+const SinglePhoto: React.FC<SinglePhotoProps> = ({ post }) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-
-  const handleScroll = (event: any) => {
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffsetX / width);
-    setCurrentIndex(index);
-  };
 
   const handleImagePress = () => {
     navigation.navigate("ExpandedPost", { postId: post.id });
@@ -42,19 +34,21 @@ const ThreePhotoScroll: React.FC<ThreePhotoScrollProps> = ({ post }) => {
   return (
     <View
       style={[styles.postCard, { width: width * 0.97, height: width * 1.3625 }]}
+      key={post.id}
     >
       <TouchableOpacity activeOpacity={1} onPress={handleProfilePress}>
         <View style={styles.userContainer}>
-          <TouchableOpacity activeOpacity={1}>
-            <Image
-              source={{ uri: post.profilePicture }}
-              style={styles.userImage}
-            />
-          </TouchableOpacity>
+          <FastImage
+            source={{
+              uri: post.profilePicture,
+              priority: FastImage.priority.normal,
+            }}
+            style={styles.userImage}
+          />
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{post.username} reviewed</Text>
             
-            {/* Split the establishment name and location */}
+            {/* Separate the establishment name and the location info */}
             <View style={styles.locationContainer}>
               <Text
                 style={styles.restaurantName}
@@ -74,45 +68,15 @@ const ThreePhotoScroll: React.FC<ThreePhotoScrollProps> = ({ post }) => {
           </View>
         </View>
       </TouchableOpacity>
-      <View style={styles.imageContainerUnder}>
-        <ScrollView
-          horizontal
-          pagingEnabled
-          onScroll={handleScroll}
-          showsHorizontalScrollIndicator={false}
-          scrollEventThrottle={16}
-          onMomentumScrollEnd={handleScroll}
-          bounces={false}
-        >
-          {post.imageUrls.map((photo, index) => (
-            <TouchableOpacity
-              key={index}
-              activeOpacity={1}
-              onPress={handleImagePress}
-            >
-              <FastImage
-                source={{
-                  uri: photo,
-                  priority: FastImage.priority.normal,
-                  cache: FastImage.cacheControl.immutable,
-                }}
-                style={styles.fullWidthImage}
-              />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-        <View style={styles.dotsContainer}>
-          {post.imageUrls.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                currentIndex === index ? styles.activeDot : styles.inactiveDot,
-              ]}
-            />
-          ))}
-        </View>
-      </View>
+      <TouchableOpacity activeOpacity={1} onPress={handleImagePress}>
+        <FastImage
+          source={{
+            uri: post.imageUrls[0],
+            priority: FastImage.priority.normal,
+          }}
+          style={styles.restaurantImage}
+        />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -164,6 +128,12 @@ const styles = StyleSheet.create({
   pipe: {
     color: Colors.charcoal,
   },
+  restaurantImage: {
+    resizeMode: "cover",
+    borderRadius: 18,
+    width: width * 0.97,
+    height: width * 1.2125,
+  },
   scoreContainer: {
     width: width * 0.09,
     height: width * 0.09,
@@ -177,39 +147,6 @@ const styles = StyleSheet.create({
     fontSize: width * 0.04,
     color: Colors.background,
   },
-  imageContainerUnder: {
-    width: width * 0.97,
-    height: width * 1.2125,
-    overflow: "hidden",
-    borderRadius: 18,
-  },
-  fullWidthImage: {
-    height: width * 1.2125,
-    width: width * 0.97,
-    resizeMode: "cover",
-  },
-  dotsContainer: {
-    position: "absolute",
-    bottom: height * 0.015,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  dot: {
-    width: width * 0.02,
-    height: width * 0.02,
-    borderRadius: 30,
-    marginHorizontal: width * 0.013,
-    backgroundColor: "lightgray",
-  },
-  activeDot: {
-    backgroundColor: Colors.background,
-  },
-  inactiveDot: {
-    backgroundColor: Colors.scrollDots,
-  },
 });
 
-export default React.memo(ThreePhotoScroll);
+export default React.memo(SinglePhoto);

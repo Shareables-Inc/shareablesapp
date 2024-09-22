@@ -7,8 +7,8 @@ import {
   Animated,
   Dimensions,
 } from "react-native";
-import Colors from "../utils/colors";
-import { Fonts } from "../utils/fonts";
+import Colors from "../../utils/colors";
+import { Fonts } from "../../utils/fonts";
 
 const { width, height } = Dimensions.get("window");
 

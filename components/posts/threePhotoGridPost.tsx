@@ -6,7 +6,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import Colors from "../utils/colors";
+import Colors from "../../utils/colors";
 import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");
@@ -15,12 +15,15 @@ interface Post {
   photos: string[];
 }
 
-interface TwoPhotoGridProps {
+interface ThreePhotoGridProps {
   post: Post;
   onRePick: () => void;
 }
 
-const TwoPhotoGridPost: React.FC<TwoPhotoGridProps> = ({ post, onRePick }) => (
+const ThreePhotoGridPost: React.FC<ThreePhotoGridProps> = ({
+  post,
+  onRePick,
+}) => (
   <TouchableOpacity
     onPress={onRePick}
     activeOpacity={1}
@@ -65,18 +68,25 @@ const styles = StyleSheet.create({
     alignContent: "center",
   },
   topLeftImage: {
-    width: "42%", // Adjusted width to maintain the separation
-    height: height * 0.35 * 0.5, // 4:5 aspect ratio
+    width: "42.5%", // Adjusted width to maintain the separation
+    height: height * 0.35 * 0.47, // 4:5 aspect ratio
     resizeMode: "cover",
     borderRadius: 10,
     marginRight: "2%",
   },
   topRightImage: {
-    width: "55%", // Adjusted width to maintain the separation
-    height: height * 0.35 * 0.5, // 4:5 aspect ratio
+    width: "55.5%", // Adjusted width to maintain the separation
+    height: height * 0.35 * 0.47, // 4:5 aspect ratio
     resizeMode: "cover",
     borderRadius: 10,
   },
+  largeBottomImage: {
+    width: "100%",
+    height: height * 0.35 * 0.53, // Remaining height
+    resizeMode: "cover",
+    borderRadius: 10,
+    marginTop: "2%",
+  },
 });
 
-export default TwoPhotoGridPost;
+export default ThreePhotoGridPost;

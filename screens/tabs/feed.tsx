@@ -14,11 +14,11 @@ import {
 } from "react-native";
 import { Fonts } from "../../utils/fonts";
 import { useNavigation } from "@react-navigation/native";
-import SinglePhoto from "../../components/singlePhoto";
-import TwoPhotoScroll from "../../components/twoPhotoScroll";
-import TwoPhotoGrid from "../../components/twoPhotoGrid";
-import ThreePhotoScroll from "../../components/threePhotoScroll";
-import ThreePhotoGrid from "../../components/threePhotoGrid";
+import SinglePhoto from "../../components/posts/singlePhoto";
+import TwoPhotoScroll from "../../components/posts/twoPhotoScroll";
+import TwoPhotoGrid from "../../components/posts/twoPhotoGrid";
+import ThreePhotoScroll from "../../components/posts/threePhotoScroll";
+import ThreePhotoGrid from "../../components/posts/threePhotoGrid";
 import Colors from "../../utils/colors";
 import { usePostPaginated } from "../../hooks/usePost";
 import type { RootStackParamList } from "../../types/stackParams.types";

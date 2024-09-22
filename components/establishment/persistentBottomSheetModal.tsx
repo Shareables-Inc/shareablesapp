@@ -12,7 +12,7 @@ interface PersistentBottomSheetModalProps {
 
 export const PersistentBottomSheetModal = forwardRef<Ref, PersistentBottomSheetModalProps>(
   ({ children }, ref) => {
-    const snapPoints = useMemo(() => ["10%", "50%", "85%"], []); 
+    const snapPoints = useMemo(() => ["10%", "56%"], []); 
 
     return (
       <BottomSheet

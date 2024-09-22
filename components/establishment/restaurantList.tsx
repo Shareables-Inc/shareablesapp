@@ -5,11 +5,11 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import { MapPin, Bookmark, User } from "lucide-react-native"; // Use the Flame icon instead of User for trending
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
-import { EstablishmentCard } from "../../models/establishment";
 import { MarkerType } from "../discover/MapViewWithMarkers";
 
 interface RestaurantListProps {
@@ -19,6 +19,8 @@ interface RestaurantListProps {
   selectedFilter: "save" | "post" | "following" | null;
   onItemSelect: (restaurant: MarkerType) => void;
 }
+
+const { width, height } = Dimensions.get("window");
 
 const RestaurantList = ({
   restaurants,
@@ -91,11 +93,15 @@ const RestaurantList = ({
         <TouchableOpacity onPress={() => onItemSelect(restaurant)}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-              <Text style={styles.title}>
-                {restaurant.establishmentName || "Unknown Name"}
-              </Text>
+            <Text
+              style={styles.title}
+              numberOfLines={1}  
+              ellipsizeMode="tail"  
+            >
+              {restaurant.establishmentName || "Unknown Name"}
+            </Text>
               <Text style={styles.location}>
-                {restaurant.establishmentName || "Unknown City"} •{" "}
+                {restaurant.city || "Unknown City"} •{" "}
                 {restaurant.priceRange || "No Price Range"} •{" "}
                 <Text style={styles.distance}>{distanceText}</Text>
               </Text>
@@ -176,81 +182,84 @@ const RestaurantList = ({
         keyExtractor={(item) => item.establishmentId}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ItemSeparatorComponent={() => <View style={styles.separator} />} 
       />
+
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 8,
-    backgroundColor: "white",
-    marginBottom: 10,
+    backgroundColor: Colors.background,
+    marginBottom: height * 0.01,
     borderRadius: 10,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
   },
   titleContainer: {
     flex: 1,
   },
   title: {
-    fontSize: 18,
+    fontSize: width * 0.045,
     fontWeight: "bold",
     fontFamily: Fonts.Bold,
+    width: width * 0.75
   },
   ratingContainer: {
     backgroundColor: Colors.rating,
-    width: 40,
-    height: 40,
+    width: width * 0.1,
+    height: width * 0.1,
     borderRadius: 90,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 8,
+    marginTop: height * 0.015,
   },
   rating: {
-    color: "white",
-    fontWeight: "bold",
-    fontSize: 16,
+    color: Colors.background,
+    fontFamily: Fonts.Bold,
+    fontSize: width * 0.045,
   },
   location: {
     color: Colors.text,
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: width * 0.04,
+    fontFamily: Fonts.Regular,
+    marginTop: height * 0.001,
   },
   distance: {
     color: Colors.highlightText,
-    fontSize: 12,
-    fontWeight: "bold",
+    fontSize: width * 0.04,
+    fontFamily: Fonts.Regular,
   },
   tags: {
     color: Colors.tags,
-    fontSize: 12,
+    fontSize: width * 0.035,
+    fontFamily: Fonts.Regular,
+    marginTop: -height * 0.007,
   },
   listContainer: {
-    padding: 16,
+    padding: width * 0.035,
   },
   filterSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center", // Align items horizontally
-    paddingHorizontal: 20,
-    marginBottom: 5,
-    marginTop: 10,
+    alignItems: "center", 
+    paddingHorizontal: width * 0.05,
+    marginBottom: height * 0.01,
   },
   filterContainer: {
     flexDirection: "row",
   },
   filterIcon: {
-    padding: 8,
     borderRadius: 90,
-    marginHorizontal: 7,
+    marginHorizontal: width * 0.01,
     backgroundColor: Colors.inputBackground,
-    width: 32,
-    height: 32,
+    width: width * 0.09,
+    height: width * 0.09,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -259,10 +268,19 @@ const styles = StyleSheet.create({
     borderColor: Colors.placeholderText,
   },
   filterLabelText: {
-    fontSize: 18,
+    fontSize: width * 0.045,
     fontFamily: Fonts.Medium,
     color: Colors.text,
-    paddingLeft: 3,
+    paddingLeft: width * 0.01,
+  },
+  separator: {
+    borderBottomColor: Colors.placeholderText,
+    borderBottomWidth: 1,
+    marginBottom: height * 0.015,
+    marginTop: height * 0.01,
+    width: "100%",
+    alignSelf: "center",
+    opacity: 0.2,
   },
 });
 
