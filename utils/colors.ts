@@ -23,6 +23,7 @@ export const Colors = {
   rating: "#FF2F07",
   tags: "#FF0040",
   filterBox: "#3F3333",
+  profileBorder: "#DFDFDF"
 };
 
 export default Colors;

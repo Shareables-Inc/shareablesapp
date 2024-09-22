@@ -34,6 +34,8 @@ export type MarkerType = {
   latitude: number;
   longitude: number;
   establishmentName: string;
+  city: string;
+  country: string;
   username?: string;
   averageRating: string;
   tags: string[];

@@ -6,7 +6,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import Colors from "../utils/colors";
+import Colors from "../../utils/colors";
 import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");

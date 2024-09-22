@@ -1,27 +1,35 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   Image,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
   Dimensions,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import Colors from "../utils/colors";
-import { Fonts } from "../utils/fonts";
-import { Post } from "../models/post";
-import { RootStackParamList } from "../types/stackParams.types";
+import Colors from "../../utils/colors";
+import { Fonts } from "../../utils/fonts";
+import { RootStackParamList } from "../../types/stackParams.types";
+import { Post } from "../../models/post";
 import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");
 
-interface SinglePhotoProps {
+interface TwoPhotoScrollProps {
   post: Post;
 }
 
-const SinglePhoto: React.FC<SinglePhotoProps> = ({ post }) => {
+const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+
+  const handleScroll = (event: any) => {
+    const contentOffsetX = event.nativeEvent.contentOffset.x;
+    const index = Math.round(contentOffsetX / width);
+    setCurrentIndex(index);
+  };
 
   const handleImagePress = () => {
     navigation.navigate("ExpandedPost", { postId: post.id });
@@ -34,7 +42,6 @@ const SinglePhoto: React.FC<SinglePhotoProps> = ({ post }) => {
   return (
     <View
       style={[styles.postCard, { width: width * 0.97, height: width * 1.3625 }]}
-      key={post.id}
     >
       <TouchableOpacity activeOpacity={1} onPress={handleProfilePress}>
         <View style={styles.userContainer}>
@@ -42,13 +49,14 @@ const SinglePhoto: React.FC<SinglePhotoProps> = ({ post }) => {
             source={{
               uri: post.profilePicture,
               priority: FastImage.priority.normal,
+              cache: FastImage.cacheControl.immutable,
             }}
             style={styles.userImage}
           />
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{post.username} reviewed</Text>
             
-            {/* Separate the establishment name and the location info */}
+            {/* Split the establishment name and the location info */}
             <View style={styles.locationContainer}>
               <Text
                 style={styles.restaurantName}
@@ -68,15 +76,38 @@ const SinglePhoto: React.FC<SinglePhotoProps> = ({ post }) => {
           </View>
         </View>
       </TouchableOpacity>
-      <TouchableOpacity activeOpacity={1} onPress={handleImagePress}>
-        <FastImage
-          source={{
-            uri: post.imageUrls[0],
-            priority: FastImage.priority.normal,
-          }}
-          style={styles.restaurantImage}
-        />
-      </TouchableOpacity>
+      <View style={styles.imageContainerUnder}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          onScroll={handleScroll}
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={16}
+          onMomentumScrollEnd={handleScroll}
+          bounces={false}
+        >
+          {post.imageUrls.map((photo, index) => (
+            <TouchableOpacity
+              key={index}
+              activeOpacity={1}
+              onPress={handleImagePress}
+            >
+              <Image source={{ uri: photo }} style={styles.fullWidthImage} />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        <View style={styles.dotsContainer}>
+          {post.imageUrls.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                currentIndex === index ? styles.activeDot : styles.inactiveDot,
+              ]}
+            />
+          ))}
+        </View>
+      </View>
     </View>
   );
 };
@@ -110,7 +141,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
   },
   locationContainer: {
-    flexDirection: "row", 
+    flexDirection: "row",
     alignItems: "center",
   },
   restaurantName: {
@@ -128,12 +159,6 @@ const styles = StyleSheet.create({
   pipe: {
     color: Colors.charcoal,
   },
-  restaurantImage: {
-    resizeMode: "cover",
-    borderRadius: 18,
-    width: width * 0.97,
-    height: width * 1.2125,
-  },
   scoreContainer: {
     width: width * 0.09,
     height: width * 0.09,
@@ -147,6 +172,39 @@ const styles = StyleSheet.create({
     fontSize: width * 0.04,
     color: Colors.background,
   },
+  imageContainerUnder: {
+    width: width * 0.97,
+    height: width * 1.2125,
+    overflow: "hidden",
+    borderRadius: 18,
+  },
+  fullWidthImage: {
+    height: width * 1.2125,
+    width: width * 0.97,
+    resizeMode: "cover",
+  },
+  dotsContainer: {
+    position: "absolute",
+    bottom: height * 0.015,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dot: {
+    width: width * 0.02,
+    height: width * 0.02,
+    borderRadius: 30,
+    marginHorizontal: width * 0.013,
+    backgroundColor: "lightgray",
+  },
+  activeDot: {
+    backgroundColor: Colors.background,
+  },
+  inactiveDot: {
+    backgroundColor: Colors.scrollDots,
+  },
 });
 
-export default React.memo(SinglePhoto);
+export default React.memo(TwoPhotoScroll);

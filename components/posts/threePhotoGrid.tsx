@@ -8,10 +8,10 @@ import {
   Dimensions,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import Colors from "../utils/colors";
-import { Fonts } from "../utils/fonts";
-import { RootStackParamList } from "../types/stackParams.types";
-import { Post } from "../models/post";
+import Colors from "../../utils/colors";
+import { Fonts } from "../../utils/fonts";
+import { RootStackParamList } from "../../types/stackParams.types";
+import { Post } from "../../models/post";
 import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");
