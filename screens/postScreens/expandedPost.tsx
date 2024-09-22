@@ -54,7 +54,7 @@ import {
 import ExpandedPostSkeleton from "../../components/skeleton/expandedPostSkeleton";
 
 const { width, height } = Dimensions.get("window");
-const HEADER_HEIGHT = height * 0.14;
+const HEADER_HEIGHT = height * 0.13;
 
 type ExpandedPostScreenRouteProp = RouteProp<
   RootStackParamList,
@@ -145,6 +145,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       }
     }
   };
+
 
   const handleScroll = (event: {
     nativeEvent: { contentOffset: { x: any } };
@@ -261,19 +262,24 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   const handleAddComment = async () => {
     try {
+      if (comment.trim() === "") {
+        // Prevent adding empty comments
+        return;
+      }
+  
       if (user?.uid && postId) {
         const commentData = {
           postId: postId,
           userId: user.uid,
           userName: userProfile!.username,
           userProfilePicture: userProfile!.profilePicture,
-          comment: comment,
+          comment: comment.trim(), // Trim the comment to remove extra spaces
           createdAt: new Date(),
         };
-
+  
         await addDoc(collection(db, "comments"), commentData);
         setComments([...comments, commentData]);
-        setComment("");
+        setComment(""); // Clear the input after adding the comment
       } else {
         console.error("Post ID or currentUser is undefined");
       }
@@ -281,10 +287,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       console.error("Error adding comment:", error);
     }
   };
-
-  if (isLoading || isUserLikesLoading) {
-    return <ExpandedPostSkeleton />;
-  }
+  
 
   return (
     <>
@@ -301,33 +304,51 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       >
         <StatusBar style="auto" />
 
-        <Modal
-          isVisible={fullscreenImageVisible}
-          backdropOpacity={1}
-          onBackdropPress={closeFullscreenImage}
-          onBackButtonPress={closeFullscreenImage}
-          style={styles.fullscreenModal}
-        >
-          <View style={styles.fullscreenContainer}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={closeFullscreenImage}
-              activeOpacity={1}
-            >
-              <X style={styles.closeIcon} color={Colors.background} size={30} />
-            </TouchableOpacity>
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-            >
-              <Image
-                source={{ uri: selectedImage || "" }}
-                style={styles.fullscreenImage}
-              />
-            </ScrollView>
-          </View>
-        </Modal>
+      <Modal
+        isVisible={fullscreenImageVisible}
+        backdropOpacity={1}
+        onBackdropPress={closeFullscreenImage}
+        onBackButtonPress={closeFullscreenImage}
+        style={styles.fullscreenModal}
+      >
+        <View style={styles.fullscreenContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={closeFullscreenImage}
+            activeOpacity={1}
+          >
+            <X style={styles.closeIcon} color={Colors.background} size={30} />
+          </TouchableOpacity>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            onScroll={(e) => {
+              const newIndex = Math.floor(
+                e.nativeEvent.contentOffset.x / width
+              );
+              setCurrentIndex(newIndex);
+            }}
+            showsHorizontalScrollIndicator={false}
+          >
+            {expandedPost?.imageUrls.map((imageUrl, index) => (
+              <Animated.View
+                key={index}
+                {...panResponder.panHandlers}
+                style={[
+                  styles.fullscreenImageContainer,
+                  { transform: [{ translateY: pan.y }] },
+                ]}
+              >
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.fullscreenImage}
+                />
+              </Animated.View>
+            ))}
+          </ScrollView>
+        </View>
+      </Modal>
+
 
         <ScrollView
           style={styles.container}
@@ -713,9 +734,11 @@ const styles = StyleSheet.create({
   },
   ratingContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
     alignItems: "center",
     marginBottom: height * 0.01,
+    width: width * 0.7,
+    paddingLeft: width * 0.05,
   },
   ratingItem: {
     alignItems: "center",
@@ -727,15 +750,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   ratingScore: {
-    fontSize: 15,
+    fontSize: width * 0.045,
     fontFamily: Fonts.SemiBold,
     color: Colors.text,
-    marginTop: -height * 0.005,
-    alignSelf: "flex-start",
+    marginLeft: width * 0.02,
   },
   commentsSection: {
     backgroundColor: Colors.background,
-    paddingBottom: 10,
+    paddingBottom: height * 0.01,
   },
   commentsHeader: {
     flexDirection: "row",
@@ -747,7 +769,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   commentsTitle: {
-    fontSize: 22,
+    fontSize: width * 0.05,
     fontWeight: "bold",
     color: Colors.text,
     fontFamily: Fonts.SemiBold,
@@ -780,7 +802,7 @@ const styles = StyleSheet.create({
   },
   commentUsername: {
     color: Colors.text,
-    fontSize: 15,
+    fontSize: width * 0.035,
     fontFamily: Fonts.Regular,
   },
   commentDetails: {
@@ -800,9 +822,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   commentText: {
-    fontSize: 14,
+    fontSize: width * 0.035,
     color: Colors.text,
-    lineHeight: 18,
+    lineHeight: height * 0.02,
     fontFamily: Fonts.Regular,
   },
   commentReplyText: {
@@ -826,11 +848,11 @@ const styles = StyleSheet.create({
     width: width * 0.115,
     height: width * 0.115,
     borderRadius: 90,
-    marginRight: 15,
+    marginRight: width * 0.035,
   },
   addCommentInput: {
     flex: 0.95,
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontFamily: Fonts.Medium,
     backgroundColor: Colors.inputBackground,
     borderRadius: 10,
@@ -850,14 +872,14 @@ const styles = StyleSheet.create({
   },
   stickyHeaderText: {
     fontFamily: Fonts.SemiBold,
-    fontSize: 22,
+    fontSize: width * 0.05,
     position: "absolute",
-    bottom: height * 0.03,
+    bottom: height * 0.025,
   },
   stickyHeaderSubText: {
     fontFamily: Fonts.Regular,
     color: Colors.highlightText,
-    fontSize: 16,
+    fontSize: width * 0.04,
     position: "absolute",
     bottom: height * 0.012,
   },
@@ -886,10 +908,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  fullscreenImageContainer: {
+    width: width, // Full screen width
+    height: height, // Full screen height
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   fullscreenImage: {
-    width: Dimensions.get("window").width,
-    height: Dimensions.get("window").height,
-    resizeMode: "contain",
+    width: width,
+    height: height,
+    resizeMode: 'contain',
   },
   closeButton: {
     position: "absolute",
