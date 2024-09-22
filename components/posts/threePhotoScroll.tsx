@@ -9,19 +9,19 @@ import {
   Dimensions,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
-import Colors from "../utils/colors";
-import { Fonts } from "../utils/fonts";
-import { RootStackParamList } from "../types/stackParams.types";
-import { Post } from "../models/post";
+import Colors from "../../utils/colors";
+import { Fonts } from "../../utils/fonts";
+import { RootStackParamList } from "../../types/stackParams.types";
+import { Post } from "../../models/post";
 import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");
 
-interface TwoPhotoScrollProps {
+interface ThreePhotoScrollProps {
   post: Post;
 }
 
-const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
+const ThreePhotoScroll: React.FC<ThreePhotoScrollProps> = ({ post }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
@@ -45,18 +45,16 @@ const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
     >
       <TouchableOpacity activeOpacity={1} onPress={handleProfilePress}>
         <View style={styles.userContainer}>
-          <FastImage
-            source={{
-              uri: post.profilePicture,
-              priority: FastImage.priority.normal,
-              cache: FastImage.cacheControl.immutable,
-            }}
-            style={styles.userImage}
-          />
+          <TouchableOpacity activeOpacity={1}>
+            <Image
+              source={{ uri: post.profilePicture }}
+              style={styles.userImage}
+            />
+          </TouchableOpacity>
           <View style={styles.userInfo}>
             <Text style={styles.userName}>{post.username} reviewed</Text>
             
-            {/* Split the establishment name and the location info */}
+            {/* Split the establishment name and location */}
             <View style={styles.locationContainer}>
               <Text
                 style={styles.restaurantName}
@@ -92,7 +90,14 @@ const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
               activeOpacity={1}
               onPress={handleImagePress}
             >
-              <Image source={{ uri: photo }} style={styles.fullWidthImage} />
+              <FastImage
+                source={{
+                  uri: photo,
+                  priority: FastImage.priority.normal,
+                  cache: FastImage.cacheControl.immutable,
+                }}
+                style={styles.fullWidthImage}
+              />
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -141,7 +146,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
   },
   locationContainer: {
-    flexDirection: "row",
+    flexDirection: "row", 
     alignItems: "center",
   },
   restaurantName: {
@@ -207,4 +212,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(TwoPhotoScroll);
+export default React.memo(ThreePhotoScroll);

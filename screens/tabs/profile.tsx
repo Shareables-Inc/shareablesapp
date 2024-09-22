@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -26,8 +25,7 @@ import { Menu } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import { usePostsByUser } from "../../hooks/usePost";
 import { useUserCounts } from "../../hooks/useUserFollowing";
-
-import { Timestamp } from "firebase/firestore"; // Import Timestamp
+import { Timestamp } from "firebase/firestore";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
 
@@ -66,16 +64,10 @@ const ProfileScreen = () => {
     };
   }, [posts]);
 
-  console.log("topPosts", topPosts);
-  console.log("recentPosts", recentPosts);
-  console.log("reviewCount", reviewCount);
-
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [isHeaderVisible, setHeaderVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [updatedProfilePicture, setUpdatedProfilePicture] = useState<
-    string | null
-  >(null);
+  const [updatedProfilePicture, setUpdatedProfilePicture] = useState<string | null>(null);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -174,6 +166,68 @@ const ProfileScreen = () => {
     return <SkeletonUserProfile />;
   }
 
+  // Custom Masonry Grid layout
+  const columnCount = 2;
+  const columnWidth = (width * 0.93) / columnCount;
+  const columnItems = Array.from({ length: columnCount }, () => []);
+
+  recentPosts.forEach((post, index) => {
+    // Alternate assigning posts to different columns
+    columnItems[index % columnCount].push(post);
+  });
+
+  const renderColumn = (items, columnIndex) => {
+    return (
+      <View style={{ flex: 1, marginHorizontal: 5 }}>
+        {items.map((post, index) => {
+          const isOddColumn = columnIndex % 2 !== 0;
+          const imageHeight = isOddColumn
+            ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
+            : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
+  
+          return (
+            <TouchableOpacity
+              key={index}
+              style={{ marginBottom: 10 }}
+              onPress={() => navigateToExpandedPost(post)}
+              activeOpacity={1}
+            >
+              <FastImage
+                source={{ uri: post.imageUrls[0] }}
+                style={{
+                  width: columnWidth,
+                  height: imageHeight,
+                  borderRadius: 10,
+                  marginTop: 5,
+                }}
+              />
+              {/* Corrected View with flexDirection: 'row' */}
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text
+                  style={[styles.restaurantNameReview]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {post.establishmentDetails.name}
+                </Text>
+                <Text style={styles.dash}> - </Text>
+                <Text style={styles.scoreReview}>{post.ratings!.overall}</Text> 
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
+  
+  
+    
+
+
+  if (posts.isLoading || !userProfile) {
+    return <SkeletonUserProfile />;
+  }
+
   return (
     <>
       {isHeaderVisible && (
@@ -264,9 +318,13 @@ const ProfileScreen = () => {
                   </View>
                 </TouchableOpacity>
                 <View style={styles.profileDetails}>
-                  <Text style={styles.restaurantTopPicks}>
-                    {post.establishmentDetails.name}
-                  </Text>
+                <Text
+                style={styles.restaurantTopPicks}
+                numberOfLines={1} 
+                ellipsizeMode="tail" 
+              >
+                {post.establishmentDetails.name}
+              </Text>
                 </View>
               </View>
             ))}
@@ -280,32 +338,10 @@ const ProfileScreen = () => {
         </View>
 
         <View style={styles.gridGallery}>
-          {recentPosts.map((post, index) => (
-            <TouchableOpacity
-              key={index}
-              activeOpacity={1}
-              style={styles.gridColumn}
-              onPress={() => navigateToExpandedPost(post)}
-            >
-              <FastImage
-                source={{
-                  uri: post.imageUrls[0],
-                  priority: FastImage.priority.normal,
-                  cache: FastImage.cacheControl.immutable,
-                }}
-                style={[
-                  styles.gridImage,
-                  {
-                    height: index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150,
-                    width: "100%",
-                  },
-                ]}
-              />
-              <Text style={styles.restaurantNameReview}>
-                {post.establishmentDetails.name} -{" "}
-                <Text style={styles.scoreReview}>{post.ratings!.overall}</Text>
-              </Text>
-            </TouchableOpacity>
+          {columnItems.map((items, index) => (
+            <View key={index} style={styles.gridColumn}>
+              {renderColumn(items, index)}
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -342,7 +378,7 @@ const styles = StyleSheet.create({
     height: width * 0.28,
     borderRadius: 90,
     marginRight: 10,
-    borderColor: Colors.highlightText,
+    borderColor: Colors.profileBorder,
     borderWidth: 4,
   },
   detailsSection: {
@@ -393,7 +429,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "5%",
+    marginLeft: "3%",
   },
   separator: {
     borderBottomColor: Colors.placeholderText,
@@ -405,7 +441,7 @@ const styles = StyleSheet.create({
   },
   galleryScrollView: {
     marginTop: height * 0.015,
-    paddingLeft: "5%",
+    paddingLeft: "3%",
   },
   galleryImage: {
     width: width * 0.37,
@@ -426,7 +462,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.055,
     fontFamily: Fonts.SemiBold,
     marginTop: "1%",
-    marginLeft: "5%",
+    marginLeft: "3%",
   },
   imageGalleryContainer: {
     flexDirection: "column",
@@ -451,24 +487,16 @@ const styles = StyleSheet.create({
     fontSize: width * 0.036,
     fontFamily: Fonts.Medium,
     textAlign: "left",
+    flexShrink: 1,
+    maxWidth: "90%",
   },
   gridGallery: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginLeft: "3%",
-    marginRight: "3%",
-    marginTop: "5%",
+    marginHorizontal: "1%",
+    marginTop: "3%",
   },
   gridColumn: {
-    flexDirection: "column",
-    position: "relative",
-    width: "48.5%",
-    marginBottom: height * 0.02,
-  },
-  gridImage: {
-    borderRadius: 10,
-    resizeMode: "cover",
+    flex: 1,
   },
   stickyHeader: {
     position: "absolute",
@@ -487,17 +515,20 @@ const styles = StyleSheet.create({
     bottom: height * 0.02,
   },
   restaurantNameReview: {
-    color: Colors.charcoal,
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    marginTop: height * 0.005,
-    textAlign: "left",
-    width: "80%",
+    color: Colors.text,
+    maxWidth: "70%",
+  },
+  dash: {
+    fontSize: width * 0.037,
+    fontFamily: Fonts.Medium,
+    color: Colors.text,
   },
   scoreReview: {
-    color: Colors.highlightText,
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
+    color: Colors.highlightText,
   },
   scoreContainer: {
     width: width * 0.075,

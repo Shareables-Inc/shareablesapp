@@ -10,7 +10,7 @@
       [
         "@rnmapbox/maps",
         {
-          "RNMapboxMapsDownloadToken": "sk.eyJ1Ijoic2hpcndhMjU2IiwiYSI6ImNtMGc4c2dkODE4d3oycW9odTdmcWthcmEifQ.vvw2WhkwG6aZVKFY3QbtoA",
+          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoiZHBhdGVsc2hhcmVhYmxlcyIsImEiOiJjbTFjcG1ydWEweWI0Mm5vbXZhMTc0MDZ5In0.-KSYx2Pk-UbntE0OyDn3LQ",
           "RNMapboxMapsVersion": "11.4.0"
         }
       ],

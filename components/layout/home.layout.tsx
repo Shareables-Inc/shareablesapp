@@ -11,7 +11,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import TabSelector from "../tabSelector";
+import TabSelector from "../posts/tabSelector";
 import { Bell, Navigation } from "lucide-react-native";
 import Colors from "../../utils/colors";
 import {
@@ -164,6 +164,11 @@ const styles = StyleSheet.create({
   },
   rightButton: {
     paddingHorizontal: 10,
+  },
+  divider: {
+    width: 1,           // Thickness of the divider
+    backgroundColor: Colors.background,  // White divider color
+    marginHorizontal: 10,  // Adjust to add spacing around the divider
   },
 });
 

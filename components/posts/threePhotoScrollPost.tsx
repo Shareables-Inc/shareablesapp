@@ -7,7 +7,7 @@ import {
   Dimensions,
   TouchableOpacity,
 } from "react-native";
-import Colors from "../utils/colors";
+import Colors from "../../utils/colors";
 import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");
@@ -16,12 +16,12 @@ interface Post {
   photos: string[];
 }
 
-interface TwoPhotoScrollProps {
+interface ThreePhotoScrollProps {
   post: Post;
   onRePick: () => void;
 }
 
-const TwoPhotoScrollPost: React.FC<TwoPhotoScrollProps> = ({
+const ThreePhotoScrollPost: React.FC<ThreePhotoScrollProps> = ({
   post,
   onRePick,
 }) => {
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   contentContainer: {
-    width: height * 0.35 * 0.8 * 2, // Ensure the content container width is twice the width of the scroll view
+    width: height * 0.35 * 0.8 * 3, // Ensure the content container width is thrice the width of the scroll view
   },
   imageWrapper: {
     width: height * 0.35 * 0.8,
@@ -132,4 +132,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TwoPhotoScrollPost;
+export default ThreePhotoScrollPost;
