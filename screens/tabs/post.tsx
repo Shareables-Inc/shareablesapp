@@ -1,4 +1,4 @@
-import React, { useState, useCallback} from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ import { RootStackParamList } from "../../types/stackParams.types";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { retrieveSearchResult } from "../../services/search.service";
 import { serverTimestamp } from "firebase/firestore";
+import { EstablishmentService } from "../../services/establishment.service";
 
 type PostScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -53,9 +54,9 @@ const PostScreen = () => {
   const [retrievedSuggestion, setRetrievedSuggestion] =
     useState<RetrieveResponse | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [activeCategory, setActiveCategory] = useState<"cuisines" | "foodOccasions" | "restaurantVibes" | null>("cuisines"); 
-
-
+  const [activeCategory, setActiveCategory] = useState<
+    "cuisines" | "foodOccasions" | "restaurantVibes" | null
+  >("cuisines");
 
   const { mutate: createPostMutation } = useCreatePost();
   const { mutate: createEstablishmentMutation, error: createError } =
@@ -101,6 +102,8 @@ const PostScreen = () => {
     async (suggestion: Suggestion) => {
       setSelectedSuggestion(suggestion);
       try {
+        // check if the establishment already exists in the database from
+
         const retrieveResponse = await retrieveSearchResult(
           suggestion.mapbox_id,
           user?.uid!
@@ -260,13 +263,18 @@ const PostScreen = () => {
     ]
   );
 
-  const handleCategoryPress = (category: "cuisines" | "foodOccasions" | "restaurantVibes") => {
-    setActiveCategory(category === activeCategory ? null : category); 
+  const handleCategoryPress = (
+    category: "cuisines" | "foodOccasions" | "restaurantVibes"
+  ) => {
+    setActiveCategory(category === activeCategory ? null : category);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={handleNextPress} style={styles.nextButtonContainer}>
+      <TouchableOpacity
+        onPress={handleNextPress}
+        style={styles.nextButtonContainer}
+      >
         <Text style={styles.nextButton}>Next</Text>
       </TouchableOpacity>
       <View style={styles.header}>
@@ -297,19 +305,28 @@ const PostScreen = () => {
 
         <View style={styles.tagContainer}>
           <TouchableOpacity
-            style={[styles.tagTypeTitle, activeCategory === "cuisines" && styles.activeTagButton]}
+            style={[
+              styles.tagTypeTitle,
+              activeCategory === "cuisines" && styles.activeTagButton,
+            ]}
             onPress={() => handleCategoryPress("cuisines")}
           >
             <Text style={styles.tagType}>Cuisine</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tagTypeTitle, activeCategory === "foodOccasions" && styles.activeTagButton]}
+            style={[
+              styles.tagTypeTitle,
+              activeCategory === "foodOccasions" && styles.activeTagButton,
+            ]}
             onPress={() => handleCategoryPress("foodOccasions")}
           >
             <Text style={styles.tagType}>Occasion</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tagTypeTitle, activeCategory === "restaurantVibes" && styles.activeTagButton]}
+            style={[
+              styles.tagTypeTitle,
+              activeCategory === "restaurantVibes" && styles.activeTagButton,
+            ]}
             onPress={() => handleCategoryPress("restaurantVibes")}
           >
             <Text style={styles.tagType}>Atmosphere</Text>
@@ -322,13 +339,19 @@ const PostScreen = () => {
           bounces={true}
         >
           {activeCategory === "cuisines" && (
-            <View style={styles.tagsContainer}>{renderTags(tagsData.cuisines, "cuisines")}</View>
+            <View style={styles.tagsContainer}>
+              {renderTags(tagsData.cuisines, "cuisines")}
+            </View>
           )}
           {activeCategory === "foodOccasions" && (
-            <View style={styles.tagsContainer}>{renderTags(tagsData.foodOccasions, "foodOccasions")}</View>
+            <View style={styles.tagsContainer}>
+              {renderTags(tagsData.foodOccasions, "foodOccasions")}
+            </View>
           )}
           {activeCategory === "restaurantVibes" && (
-            <View style={styles.tagsContainer}>{renderTags(tagsData.restaurantVibes, "restaurantVibes")}</View>
+            <View style={styles.tagsContainer}>
+              {renderTags(tagsData.restaurantVibes, "restaurantVibes")}
+            </View>
           )}
         </ScrollView>
       </View>

@@ -128,7 +128,8 @@ const App = () => {
           persister: asyncStoragePersister,
           dehydrateOptions: {
             shouldDehydrateQuery: (query) => {
-              return !doNotPersistQueries.includes(query.queryKey as QueryKey);
+              // Ignore userPosts query from cache
+              return !query.queryKey.includes("userPosts");
             },
           },
         }}

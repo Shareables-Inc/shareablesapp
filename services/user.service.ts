@@ -41,9 +41,8 @@ export class UserService {
       friendPosts: boolean;
     }
   ) {
-    console.log("Updating user preferences", preferences);
     const userDoc = await this.getUserByUid(userId);
-    console.log("User doc", userDoc);
+
 
     try {
       if (userDoc) {

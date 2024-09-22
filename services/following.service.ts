@@ -87,7 +87,7 @@ export class FollowingService {
   // Get all posts from the followerIDs
   // Return an array of the posts limited to 10
   async getFollowingPosts(userId: string): Promise<Post[]> {
-    console.log("Getting posts from users followed by:", userId);
+
 
     // Get users that the current user is following
     const followingSnapshot = await getDocs(
@@ -99,7 +99,6 @@ export class FollowingService {
     );
 
     if (followingIds.length === 0) {
-      console.log("User is not following anyone");
       return [];
     }
 

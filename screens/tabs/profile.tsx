@@ -38,6 +38,12 @@ const ProfileScreen = () => {
   const posts = usePostsByUser(user!.uid);
   const { data: userCounts, isLoading } = useUserCounts(user!.uid);
 
+  // need to refetch posts when userProfile is updated
+  useEffect(() => {
+    console.log("userProfile", userProfile);
+    posts.refetch();
+  }, [userProfile]);
+
   const { topPosts, recentPosts, reviewCount } = useMemo(() => {
     if (!posts.data) return { topPosts: [], recentPosts: [], reviewCount: 0 };
     const sortedByRating = [...posts.data].sort(
@@ -242,7 +248,7 @@ const ProfileScreen = () => {
 
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => navigation.navigate("MainSettings")}>
-            <Menu color={Colors.text} size={28}/>
+            <Menu color={Colors.text} size={28} />
           </TouchableOpacity>
         </View>
 
@@ -250,9 +256,9 @@ const ProfileScreen = () => {
           <TouchableOpacity onPress={pickImage}>
             <FastImage
               source={{
-                uri: userProfile.profilePicture,
+                uri: updatedProfilePicture || userProfile.profilePicture,
                 priority: FastImage.priority.normal,
-                cache: FastImage.cacheControl.immutable,
+                cache: FastImage.cacheControl.web,
               }}
               style={styles.profilePic}
             />

@@ -120,10 +120,4 @@ export class SaveService {
     }
   }
 
-  async clearSaves(userId: string): Promise<void> {
-    await updateDoc(doc(db, this.userSavesCollection, userId), {
-      saves: deleteField(),
-      lastUpdated: new Date(),
-    });
-  }
 }
