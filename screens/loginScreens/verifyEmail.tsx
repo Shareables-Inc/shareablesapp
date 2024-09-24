@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     height: height * 0.03,
     alignItems: "center",
     justifyContent: "center",
-    width: width * 0.3,
+    width: width * 0.6,
     backgroundColor: Colors.background,
   },
   resendButtonText: {

@@ -33,12 +33,13 @@ export default function NameInputScreen() {
   const [showLocationDropdown, setShowLocationDropdown] = useState<boolean>(false);
   const locationTabRef = useRef(null);
 
-  const locations = ["Toronto", "Mississauga", "Brampton", "Hamilton", "Montreal", "Ottawa"];
+  const locations = ["Brampton", "Burlington", "Guelph", "Hamilton", "Laval", "London", "Markham", 
+    "Mississauga", "Montreal", "Oakville", "Ottawa", "Scarborough", "Toronto", "Windsor", "York"];
 
   useLayoutEffect(() => {
     if (locationTabRef.current) {
       locationTabRef.current.measure((x, y, width, height, pageX, pageY) => {
-        setDropdownLayout({ width, x: pageX, y: pageY + height });
+        setDropdownLayout({ width, x: pageX, y: pageY + height + 1 });
       });
     }
   }, [showLocationDropdown]);
@@ -94,97 +95,91 @@ export default function NameInputScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
-      <View style={styles.innerContainer}>
-        <View style={styles.headerBox}>
-          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.5} style={styles.backArrowContainer}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>
+            <Text style={styles.heyThereText}>Hey there!</Text> Let's set up your profile.
+          </Text>
 
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.contentContainer}>
-            <Text style={styles.title}>
-              <Text style={styles.heyThereText}>Hey there!</Text> Let's set up your profile.
-            </Text>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="First Name"
-                placeholderTextColor={Colors.placeholderText}
-                value={firstName}
-                onChangeText={setFirstName}
-              />
-            </View>
-            <Text style={styles.requiredText}>Required</Text>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                placeholderTextColor={Colors.placeholderText}
-                value={lastName}
-                onChangeText={setLastName}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Phone Number"
-                placeholderTextColor={Colors.placeholderText}
-                value={phoneNumber}
-                onChangeText={setPhoneNumber}
-                keyboardType="number-pad"
-              />
-            </View>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="First Name"
+              placeholderTextColor={Colors.placeholderText}
+              value={firstName}
+              onChangeText={setFirstName}
+            />
           </View>
-        </TouchableWithoutFeedback>
+          <Text style={styles.requiredText}>Required</Text>
 
-        {/* Location Dropdown */}
-        <TouchableOpacity
-          ref={locationTabRef}
-          style={styles.inputContainer}
-          onPress={() => setShowLocationDropdown(!showLocationDropdown)}
-          activeOpacity={0.7}
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Last Name"
+              placeholderTextColor={Colors.placeholderText}
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Phone Number"
+              placeholderTextColor={Colors.placeholderText}
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              keyboardType="number-pad"
+            />
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+
+      {/* Location Dropdown */}
+      <TouchableOpacity
+        ref={locationTabRef}
+        style={styles.inputContainer}
+        onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+        activeOpacity={1}
+      >
+        <Text style={styles.locationText}>{selectedLocation}</Text>
+        <ChevronDown color={Colors.placeholderText} size={24} />
+      </TouchableOpacity>
+      {showLocationDropdown && dropdownLayout.width > 0 && (
+        <View
+          style={[
+            styles.dropdown,
+            {
+              width: dropdownLayout.width,
+              left: dropdownLayout.x,
+              top: dropdownLayout.y, // Ensures dropdown is directly below the input
+              maxHeight: availableHeight,
+              zIndex: 1000,
+            },
+          ]}
         >
-          <Text style={styles.locationText}>{selectedLocation}</Text>
-          <ChevronDown color={Colors.placeholderText} size={24} />
-        </TouchableOpacity>
-        {showLocationDropdown && dropdownLayout.width > 0 && (
-          <View
-            style={[
-              styles.dropdown,
-              {
-                width: dropdownLayout.width,
-                left: dropdownLayout.x,
-                top: dropdownLayout.y - height * 0.075,
-                maxHeight: availableHeight,
-                zIndex: 1000,
-              },
-            ]}
+          <ScrollView
+            showsVerticalScrollIndicator={false}
           >
-            <ScrollView>
-              {locations.map((location) => (
-                <TouchableOpacity
-                  key={location}
-                  style={styles.dropdownItem}
-                  onPress={() => handleLocationSelection(location)}
-                  activeOpacity={1}
-                >
-                  <Text style={styles.dropdownItemText}>{location}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
-        <Text style={styles.requiredTextCity}>Required</Text>
-
-        <View style={styles.nextButtonContainer}>
-          <TouchableOpacity style={styles.nextButton} onPress={handleNextStep} activeOpacity={0.7}>
-            <Text style={styles.nextButtonText}>Next Step</Text>
-          </TouchableOpacity>
+            {locations.map((location) => (
+              <TouchableOpacity
+                key={location}
+                style={styles.dropdownItem}
+                onPress={() => handleLocationSelection(location)}
+                activeOpacity={1}
+              >
+                <Text style={styles.dropdownItemText}>{location}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
+      )}
+      <Text style={styles.requiredTextCity}>Required</Text>
+
+      <View style={styles.nextButtonContainer}>
+        <TouchableOpacity style={styles.nextButton} onPress={handleNextStep} activeOpacity={1}>
+          <Text style={styles.nextButtonText}>Next Step</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -194,45 +189,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: width * 0.05,
     backgroundColor: Colors.background,
-  },
-  innerContainer: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
   },
   contentContainer: {
     width: "100%",
-  },
-  headerBox: {
-    width: width,
-    position: "absolute",
-    top: height * 0,
-    backgroundColor: Colors.background,
-    height: height * 0.075,
     justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1000,
-  },
-  backArrowContainer: {
-    position: "absolute",
-    left: "8%",
-    top: "80%"
-  },
-  cancelText: {
-    color: Colors.text,
-    fontFamily: Fonts.SemiBold,
-    fontSize: 20,
   },
   title: {
-    fontSize: 35,
+    fontSize: width * 0.08,
     fontFamily: Fonts.SemiBold,
     marginBottom: height * 0.05,
     width: width * 0.8,
     justifyContent: "flex-start",
     textAlign: "left",
-    marginTop: height * 0.15,
+    marginTop: height * 0.12,
   },
   heyThereText: {
     color: Colors.highlightText,
@@ -248,18 +219,18 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.025,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: width * 0.03,
   },
   input: {
     flex: 1,
     color: Colors.text,
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontFamily: Fonts.Medium,
   },
   requiredText: {
     color: Colors.highlightText,
     fontFamily: Fonts.Regular,
-    fontSize: 14,
+    fontSize: width * 0.035,
     marginBottom: height * 0.02,
     alignSelf: "flex-end",
     marginRight: width * 0.015,
@@ -268,7 +239,7 @@ const styles = StyleSheet.create({
   requiredTextCity: {
     color: Colors.highlightText,
     fontFamily: Fonts.Regular,
-    fontSize: 14,
+    fontSize: width * 0.035,
     marginBottom: height * 0.02,
     alignSelf: "flex-end",
     marginRight: width * 0.09,
@@ -289,20 +260,20 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: Colors.buttonText,
-    fontSize: 24,
+    fontSize: width * 0.055,
     fontFamily: Fonts.Bold,
   },
   locationText: {
     color: Colors.placeholderText,
     fontFamily: Fonts.Medium,
-    fontSize: 16,
+    fontSize: width * 0.04,
     flex: 1,
   },
   dropdown: {
     position: "absolute",
     backgroundColor: Colors.inputBackground,
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
     borderBottomLeftRadius: 10,
     borderBottomRightRadius: 10,
     borderWidth: 1,
@@ -310,16 +281,17 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   dropdownItem: {
-    padding: 15,
+    paddingHorizontal: width * 0.03,
+    paddingVertical: width * 0.04,
     borderBottomWidth: 1,
     borderBottomColor: Colors.profileTopPlaces,
     fontFamily: Fonts.Medium,
-    fontSize: 16,
+    fontSize: width * 0.04,
     color: Colors.inputBackground,
   },
   dropdownItemText: {
-    color: Colors.text,
+    color: Colors.placeholderText,
     fontFamily: Fonts.Medium,
-    fontSize: 16,
+    fontSize: width * 0.04,
   },
 });

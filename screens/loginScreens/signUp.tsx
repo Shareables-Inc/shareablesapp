@@ -62,7 +62,7 @@ export default function SignUpScreen() {
 
         <View style={styles.logoContainer}>
           <Image
-            source={require("../../assets/images/logo.png")}
+            source={require("../../assets/images/signUp.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -176,8 +176,8 @@ const styles = StyleSheet.create({
     marginTop: height * 0.12,
   },
   logo: {
-    width: width * 0.2,
-    height: height * 0.2,
+    width: width * 0.25,
+    height: height * 0.25,
   },
   title: {
     fontSize: width * 0.08,
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     width: width * 0.4,
-    backgroundColor: Colors.tags,
+    backgroundColor: Colors.text,
   },
   nextButtonText: {
     color: Colors.background,

@@ -23,12 +23,11 @@ import { Fonts } from "../../utils/fonts";
 const { width, height } = Dimensions.get("window");
 
 export default function LoginScreen() {
-  const { user } = useAuth();
+  const { user, login, sendVerificationEmail, forgotPassword } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordIsVisible, setPasswordIsVisible] = useState(false);
-  const { login, sendVerificationEmail } = useAuth();
 
   const handleSignIn = async () => {
     try {
@@ -92,13 +91,35 @@ export default function LoginScreen() {
     Alert.alert("Login Failed", errorMessage);
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert("Forgot Password", "Please enter your email address.");
+      return;
+    }
+    try {
+      await forgotPassword(email.trim());
+      Alert.alert(
+        "Password Reset Email Sent",
+        "Please check your inbox for further instructions."
+      );
+    } catch (error) {
+      if ((error as any).code === "auth/user-not-found") {
+        Alert.alert("Error", "No user found with this email address.");
+      } else if ((error as any).code === "auth/invalid-email") {
+        Alert.alert("Error", "Please enter a valid email address.");
+      } else {
+        Alert.alert("Error", "Failed to send password reset email. Try again.");
+      }
+    }
+  };
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <SafeAreaView style={styles.container}>
         <StatusBar style="auto" />
         <View style={styles.logoContainer}>
           <Image
-            source={require("../../assets/images/logo.png")}
+            source={require("../../assets/images/login.png")}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -139,11 +160,6 @@ export default function LoginScreen() {
               />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.forgotPasswordButton}>
-            <Text style={styles.forgotPasswordButtonText}>
-              Forgot password?
-            </Text>
-          </TouchableOpacity>
           <View style={styles.signInButtonContainer}>
             <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
               <Text style={styles.signInButtonText}>Sign In</Text>
@@ -159,6 +175,14 @@ export default function LoginScreen() {
             <Text style={styles.registerButtonText}>
               New to Shareables?{" "}
               <Text style={styles.registerButtonTextHighlight}>Sign Up!</Text>
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={handleForgotPassword} // Added onPress handler
+          >
+            <Text style={styles.forgotPasswordButtonText}>
+              Forgot password?
             </Text>
           </TouchableOpacity>
         </View>
@@ -178,10 +202,11 @@ const styles = StyleSheet.create({
     flex: 0.45,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: height * 0.05,
   },
   logo: {
-    width: width * 0.25,
-    height: height * 0.25,
+    width: width * 0.5,
+    height: height * 0.5,
   },
   contentContainer: {
     flex: 0.7,
@@ -189,7 +214,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     width: "100%",
     paddingHorizontal: width * 0.06,
-    marginTop: -(height * 0.03),
   },
   inputContainer: {
     width: width * 0.8,
@@ -213,9 +237,8 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
   forgotPasswordButton: {
-    alignSelf: "flex-end",
-    marginTop: -(height * 0.01),
-    marginBottom: height * 0.02,
+    alignSelf: "center",
+    marginTop: height * 0.01,
   },
   passwordVisibleButton: {
     position: "absolute",
@@ -223,16 +246,16 @@ const styles = StyleSheet.create({
   },
   forgotPasswordButtonText: {
     color: Colors.text,
-    fontSize: width * 0.037,
+    fontSize: width * 0.035,
     fontFamily: Fonts.Medium,
-    position: "absolute",
-    right: width * 0.07,
+    textAlign: "center",
   },
   signInButtonContainer: {
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
-    marginTop: height * 0.05,
+    marginTop: height * 0.03,
+    marginBottom: height * 0.01,
   },
   signInButton: {
     height: height * 0.05,

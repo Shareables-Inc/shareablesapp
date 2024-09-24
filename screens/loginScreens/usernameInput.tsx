@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Image,
   Dimensions,
   Alert,
 } from "react-native";
@@ -14,10 +13,9 @@ import { StatusBar } from "expo-status-bar";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation.types";
 import { auth, db } from "../../firebase/firebaseConfig";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
-import { ArrowLeft } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -25,6 +23,13 @@ export default function UserNameInputScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [userName, setUserName] = useState("");
   const [firstName, setFirstName] = useState("there"); // Default name if not fetched
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null); // New state for username check
+  const [usernameValid, setUsernameValid] = useState<boolean>(true); // Username validation state
+  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -41,17 +46,67 @@ export default function UserNameInputScreen() {
     fetchUserName();
   }, []);
 
-  const handleBackPress = async () => {
-    await auth.signOut();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Login" }],
-    });
+  const validateUsername = (username: string) => {
+    const noInvalidSymbols = /^[a-zA-Z0-9._\-]*$/; // Only allow letters, numbers, ., _, and -
+    const noMoreThanTwoInARow = /(?!.*([._\-])\1{2})/; // Ensure ., _, and - don't repeat more than twice
+    const noSpaces = !/\s/.test(username); // No spaces allowed
+    const minLength = username.length >= 3; // Minimum length of 3 characters
+    const validFormat =
+      noInvalidSymbols.test(username) && noMoreThanTwoInARow.test(username) && noSpaces;
+
+    return validFormat && minLength;
+  };
+
+  const handleUsernameChange = (text: string) => {
+    const formattedText = text.replace(/\s+/g, "").toLowerCase(); // Remove spaces and convert to lowercase
+
+    setUserName(formattedText);
+
+    // Clear previous debounce timeout
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+
+    // Debounce the username validation and availability check
+    const newTimeout = setTimeout(() => {
+      const isValid = validateUsername(formattedText);
+      setUsernameValid(isValid);
+
+      if (isValid) {
+        checkUsernameAvailability(formattedText);
+      } else {
+        setUsernameAvailable(null);
+      }
+    }, 3000); // 3-second delay before checking
+
+    setDebounceTimeout(newTimeout);
+  };
+
+  const checkUsernameAvailability = async (username: string) => {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("username", "==", username));
+
+    try {
+      const querySnapshot = await getDocs(q);
+      setUsernameAvailable(querySnapshot.empty); // If empty, username is available
+    } catch (error) {
+      console.error("Firestore Error:", error);
+    }
   };
 
   const handleNextStep = async () => {
     if (userName.trim() === "") {
       Alert.alert("Username Required", "Please enter a username to continue.");
+      return;
+    }
+
+    if (!usernameValid) {
+      Alert.alert("Invalid Username", "Please enter a valid username.");
+      return;
+    }
+
+    if (!usernameAvailable) {
+      Alert.alert("Username Unavailable", "Please choose a different username.");
       return;
     }
 
@@ -85,30 +140,16 @@ export default function UserNameInputScreen() {
     }
   };
 
-  const handleUsernameChange = (text: string) => {
-    // Convert entire string to lowercase before setting it
-    const formattedText = text.toLowerCase();
-    setUserName(formattedText);
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
       <View style={styles.headerBox}>
-        <TouchableOpacity
-          onPress={handleBackPress}
-          style={styles.backArrowContainer}
-        >
-          <ArrowLeft style={styles.backArrow} />
+        <TouchableOpacity onPress={handleBackPress} style={styles.backArrowContainer}>
+          <Text>{"<"}</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.title}>
-        <Text style={styles.heyThereText}>
-          We hope you're doing well, {firstName}.
-        </Text>{" "}
-        Let's create your username.
-      </Text>
+      <Text style={styles.title}>Let's create your username, {firstName}</Text>
 
       <View style={styles.inputContainer}>
         <TextInput
@@ -119,6 +160,17 @@ export default function UserNameInputScreen() {
           onChangeText={handleUsernameChange}
           autoCapitalize="none"
         />
+        {usernameValid === false && (
+          <Text style={styles.errorText}>
+            Invalid username: no spaces or special characters (except ., _, -, $) and must be at least 3 characters long.
+          </Text>
+        )}
+        {usernameAvailable !== null && usernameAvailable && usernameValid && (
+          <Text style={styles.successText}>Username is available!</Text>
+        )}
+        {usernameAvailable === false && (
+          <Text style={styles.errorText}>Username is already taken.</Text>
+        )}
       </View>
 
       <View style={styles.nextButtonContainer}>
@@ -126,6 +178,7 @@ export default function UserNameInputScreen() {
           style={styles.nextButton}
           onPress={handleNextStep}
           activeOpacity={1}
+          disabled={usernameAvailable === false || usernameAvailable === null || !usernameValid}
         >
           <Text style={styles.nextButtonText}>Next Step</Text>
         </TouchableOpacity>
@@ -139,7 +192,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: width * 0.05,
     backgroundColor: Colors.background,
   },
   headerBox: {
@@ -153,24 +206,17 @@ const styles = StyleSheet.create({
   },
   backArrowContainer: {
     position: "absolute",
-    left: "8%",
-    top: "100%",
-  },
-  backArrow: {
-    width: width * 0.095,
-    height: width * 0.095,
+    left: width * 0.08,
+    top: height * 0.1,
   },
   title: {
-    fontSize: 35,
-    marginBottom: height * 0.05,
-    width: width * 0.85,
-    justifyContent: "center",
-    textAlign: "left",
-    fontFamily: Fonts.Bold,
-  },
-  heyThereText: {
-    color: Colors.highlightText,
+    fontSize: width * 0.08,
     fontFamily: Fonts.SemiBold,
+    marginBottom: height * 0.05,
+    marginTop: -height * 0.1,
+    width: width * 0.8,
+    justifyContent: "flex-start",
+    textAlign: "left",
   },
   inputContainer: {
     width: width * 0.85,
@@ -180,15 +226,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     height: height * 0.058,
     marginBottom: height * 0.025,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: width * 0.03,
+    justifyContent: "center",
   },
   input: {
     flex: 1,
     color: Colors.text,
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontFamily: Fonts.Medium,
+  },
+  errorText: {
+    color: Colors.circleAlert,
+    marginTop: 10,
+  },
+  successText: {
+    color: Colors.circleCheck,
+    marginTop: 10,
   },
   nextButtonContainer: {
     width: "100%",
@@ -205,7 +258,7 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: Colors.buttonText,
-    fontSize: 24,
+    fontSize: width * 0.055,
     fontFamily: Fonts.Bold,
   },
 });

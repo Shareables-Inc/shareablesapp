@@ -6,9 +6,11 @@ import { doc, getDoc } from "firebase/firestore";
 import {
   sendEmailVerification,
   signInWithEmailAndPassword,
+  sendPasswordResetEmail // Import this method
 } from "firebase/auth";
 import { queryClient } from "../utils/query.client";
 import useNotificationStore from "../store/useNotificationStore";
+
 interface AuthContextType {
   user: User | null;
   userProfile: UserProfile | null;
@@ -20,6 +22,7 @@ interface AuthContextType {
   ) => Promise<{ needsVerification: boolean }>;
   logout: () => Promise<void>;
   sendVerificationEmail: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>; // Add this method
   refreshUserProfile: () => Promise<void>;
 }
 
@@ -31,6 +34,7 @@ const AuthContext = createContext<AuthContextType>({
   login: () => Promise.resolve({ needsVerification: false }),
   logout: () => Promise.resolve(),
   sendVerificationEmail: () => Promise.resolve(),
+  forgotPassword: () => Promise.resolve(), // Default to empty function
   refreshUserProfile: () => Promise.resolve(),
 });
 
@@ -40,6 +44,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const notificationStore = useNotificationStore();
+
   const refreshUserProfile = async () => {
     if (user) {
       setProfileLoading(true); // Start loading
@@ -104,6 +109,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     notificationStore.clearNotifications();
   };
 
+  const forgotPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+    } catch (error) {
+      console.error("Forgot Password error:", error);
+      throw error;
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -114,6 +128,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         login,
         logout,
         sendVerificationEmail,
+        forgotPassword, // Provide the new method
         refreshUserProfile,
       }}
     >
