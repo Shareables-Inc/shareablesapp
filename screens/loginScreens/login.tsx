@@ -9,34 +9,26 @@ import {
   Dimensions,
   SafeAreaView,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation.types";
 import { Feather } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../utils/colors";
-import { auth } from "../../firebase/firebaseConfig";
-import {
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-} from "firebase/auth";
-import Modal from "react-native-modal";
-import { Fonts } from "../../utils/fonts";
-import { db } from "../../firebase/firebaseConfig";
-import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useAuth } from "../../context/auth.context";
+import { Fonts } from "../../utils/fonts";
 
 const { width, height } = Dimensions.get("window");
 
 export default function LoginScreen() {
-  const { user } = useAuth();
+  const { user, login, sendVerificationEmail, forgotPassword } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordIsVisible, setPasswordIsVisible] = useState(false);
-  const [isErrorModalVisible, setIsErrorModalVisible] = useState(false);
-  const { login, sendVerificationEmail } = useAuth();
+
   const handleSignIn = async () => {
     try {
       const emailTrimmed = email.trim();
@@ -71,7 +63,6 @@ export default function LoginScreen() {
           ]
         );
       }
-      // If email is verified, navigation will be handled by the MainApp component
     } catch (error) {
       console.error(error);
       handleAuthErrors(error);
@@ -98,111 +89,105 @@ export default function LoginScreen() {
       console.log("Firebase Auth Error:", (error as any).message); // Log generic Firebase errors not related to auth
     }
     Alert.alert("Login Failed", errorMessage);
-    setIsErrorModalVisible(true);
   };
 
-  const resendVerificationEmail = async () => {
-    if (auth.currentUser) {
-      try {
-        await sendEmailVerification(auth.currentUser);
-        Alert.alert(
-          "Verification Email Sent",
-          "Please check your email for the verification link."
-        );
-      } catch (error) {
-        console.error("Failed to send verification email", error);
-        Alert.alert(
-          "Failed to Send Verification Email",
-          "An error occurred while sending the verification email. Please try again."
-        );
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert("Forgot Password", "Please enter your email address.");
+      return;
+    }
+    try {
+      await forgotPassword(email.trim());
+      Alert.alert(
+        "Password Reset Email Sent",
+        "Please check your inbox for further instructions."
+      );
+    } catch (error) {
+      if ((error as any).code === "auth/user-not-found") {
+        Alert.alert("Error", "No user found with this email address.");
+      } else if ((error as any).code === "auth/invalid-email") {
+        Alert.alert("Error", "Please enter a valid email address.");
+      } else {
+        Alert.alert("Error", "Failed to send password reset email. Try again.");
       }
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" />
-      <View style={styles.logoContainer}>
-        <Image
-          source={require("../../assets/images/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-      <View style={styles.contentContainer}>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={Colors.placeholderText}
-            selectionColor={Colors.placeholderText}
-            onChangeText={setEmail}
-            value={email}
-            autoCapitalize="none"
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="auto" />
+        <View style={styles.logoContainer}>
+          <Image
+            source={require("../../assets/images/login.png")}
+            style={styles.logo}
+            resizeMode="contain"
           />
         </View>
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={[styles.input, styles.passwordInput]}
-            placeholder="Password"
-            secureTextEntry={!passwordIsVisible}
-            placeholderTextColor={Colors.placeholderText}
-            selectionColor={Colors.placeholderText}
-            onChangeText={setPassword}
-            value={password}
-          />
+        <View style={styles.contentContainer}>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={Colors.placeholderText}
+              selectionColor={Colors.placeholderText}
+              onChangeText={setEmail}
+              value={email}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, styles.passwordInput]}
+              placeholder="Password"
+              secureTextEntry={!passwordIsVisible}
+              placeholderTextColor={Colors.placeholderText}
+              selectionColor={Colors.placeholderText}
+              onChangeText={setPassword}
+              value={password}
+              keyboardType="default"
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={styles.passwordVisibleButton}
+              onPress={() => setPasswordIsVisible(!passwordIsVisible)}
+            >
+              <Feather
+                name={passwordIsVisible ? "eye" : "eye-off"}
+                size={20}
+                color={Colors.placeholderText}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.signInButtonContainer}>
+            <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
+              <Text style={styles.signInButtonText}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Sign Up Button */}
           <TouchableOpacity
-            style={styles.passwordVisibleButton}
-            onPress={() => setPasswordIsVisible(!passwordIsVisible)}
+            style={styles.registerButton}
+            onPress={() => navigation.navigate("SignUp")}
+            activeOpacity={1}
           >
-            <Feather
-              name={passwordIsVisible ? "eye" : "eye-off"}
-              size={20}
-              color={Colors.placeholderText}
-            />
+            <Text style={styles.registerButtonText}>
+              New to Shareables?{" "}
+              <Text style={styles.registerButtonTextHighlight}>Sign Up!</Text>
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.forgotPasswordButton}
+            onPress={handleForgotPassword} // Added onPress handler
+          >
+            <Text style={styles.forgotPasswordButtonText}>
+              Forgot password?
+            </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.forgotPasswordButton}>
-          <Text style={styles.forgotPasswordButtonText}>Forgot password?</Text>
-        </TouchableOpacity>
-        <View style={styles.signInButtonContainer}>
-          <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
-            <Text style={styles.signInButtonText}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* OR Line Container */}
-        <View style={styles.orContainer}>
-          <View style={styles.orLine} />
-          <Text style={styles.orText}>OR</Text>
-          <View style={styles.orLine} />
-        </View>
-
-        {/* Google Button Container */}
-        <View style={styles.socialButtonsContainer}>
-          {/* Google Button */}
-          <TouchableOpacity style={styles.socialButton} activeOpacity={1}>
-            <Image
-              style={styles.socialLogo}
-              source={require("../../assets/images/googleLogo.png")}
-            />
-            <Text style={styles.socialText}>Google</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Sign Up Button */}
-        <TouchableOpacity
-          style={styles.registerButton}
-          onPress={() => navigation.navigate("SignUp")}
-          activeOpacity={1}
-        >
-          <Text style={styles.registerButtonText}>
-            New to Shareables?{" "}
-            <Text style={styles.registerButtonTextHighlight}>Sign Up!</Text>
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -217,10 +202,11 @@ const styles = StyleSheet.create({
     flex: 0.45,
     justifyContent: "center",
     alignItems: "center",
+    marginTop: height * 0.05,
   },
   logo: {
-    width: width * 0.3,
-    height: height * 0.3,
+    width: width * 0.5,
+    height: height * 0.5,
   },
   contentContainer: {
     flex: 0.7,
@@ -228,7 +214,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     width: "100%",
     paddingHorizontal: width * 0.06,
-    marginTop: -(height * 0.03),
   },
   inputContainer: {
     width: width * 0.8,
@@ -245,91 +230,45 @@ const styles = StyleSheet.create({
   input: {
     flex: 0.9,
     color: Colors.text,
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontFamily: Fonts.Medium,
   },
   passwordInput: {
     textAlign: "left",
   },
   forgotPasswordButton: {
-    alignSelf: "flex-end",
-    marginTop: -(height * 0.01),
-    marginBottom: height * 0.02,
+    alignSelf: "center",
+    marginTop: height * 0.01,
   },
   passwordVisibleButton: {
     position: "absolute",
     right: width * 0.04,
   },
   forgotPasswordButtonText: {
-    color: "black",
-    fontSize: 15,
+    color: Colors.text,
+    fontSize: width * 0.035,
     fontFamily: Fonts.Medium,
-    position: "absolute",
-    right: width * 0.07,
+    textAlign: "center",
   },
   signInButtonContainer: {
     alignItems: "center",
     justifyContent: "center",
     width: "100%",
-    marginTop: height * 0.05,
+    marginTop: height * 0.03,
+    marginBottom: height * 0.01,
   },
   signInButton: {
     height: height * 0.05,
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    width: width * 0.45,
+    width: width * 0.4,
     backgroundColor: Colors.text,
   },
   signInButtonText: {
     color: Colors.background,
-    fontSize: 20,
+    fontSize: width * 0.05,
     fontFamily: Fonts.Medium,
-  },
-  orContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: height * 0.025,
-    marginBottom: height * 0.025,
-  },
-  orLine: {
-    height: 1,
-    backgroundColor: Colors.placeholderText,
-    flex: 1,
-    marginTop: height * 0.017,
-  },
-  orText: {
-    color: Colors.placeholderText,
-    marginHorizontal: width * 0.03,
-    marginTop: height * 0.017,
-    fontSize: 16,
-    alignSelf: "center",
-    fontFamily: Fonts.Light,
-  },
-  socialButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: height * 0.02,
-  },
-  socialButton: {
-    backgroundColor: Colors.inputBackground,
-    borderRadius: 10,
-    padding: width * 0.028,
-    alignItems: "center",
-    justifyContent: "center",
-    flexDirection: "row",
-  },
-  socialLogo: {
-    width: 25,
-    height: 25,
-  },
-  socialText: {
-    color: Colors.text,
-    fontSize: 16,
-    fontFamily: Fonts.SemiBold,
-    marginLeft: width * 0.03,
   },
   registerButton: {
     alignSelf: "center",
@@ -337,14 +276,14 @@ const styles = StyleSheet.create({
     bottom: height * 0.025,
   },
   registerButtonText: {
-    fontSize: 16,
+    fontSize: width * 0.04,
     color: Colors.text,
     textAlign: "center",
     fontFamily: Fonts.Medium,
   },
   registerButtonTextHighlight: {
-    fontSize: 16,
-    color: Colors.highlightText,
+    fontSize: width * 0.04,
+    color: Colors.tags,
     fontFamily: Fonts.Bold,
   },
 });

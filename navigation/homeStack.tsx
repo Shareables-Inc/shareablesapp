@@ -5,7 +5,6 @@ import RestaurantProfileScreen from "../screens/restaurantScreens/restaurantProf
 import UserProfileScreen from "../screens/postScreens/userProfile";
 import { Post } from "../models/post";
 import HomePage from "../screens/tabs/home";
-import NewRestaurantProfile from "../screens/restaurantScreens/newRestaurantProfile";
 
 export type HomeStackParamList = {
   HomePage: { activeTab: "Feed" | "Discover" };

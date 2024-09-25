@@ -18,36 +18,17 @@ import {
 } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation.types";
 import { db } from "../../firebase/firebaseConfig";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  updateDoc,
-  doc,
-} from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
-import { ArrowLeft } from "lucide-react-native";
+import { CircleArrowLeft } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
+import { UserProfile } from "../../models/userProfile"; // Import UserProfile model
 
 const { width, height } = Dimensions.get("window");
 
 interface RouteParams {
   userContacts: string[]; // Assuming this is an array of phone numbers
-}
-
-interface Friend {
-  profilePicture?: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-}
-
-interface Props {
-  route: {
-    params: RouteParams;
-  };
 }
 
 const FollowFriendsScreen = ({
@@ -57,31 +38,26 @@ const FollowFriendsScreen = ({
 }) => {
   const { user, refreshUserProfile } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [visibleFriends, setVisibleFriends] = useState<Friend[]>([]);
+  const [friends, setFriends] = useState<UserProfile[]>([]);
+  const [visibleFriends, setVisibleFriends] = useState<UserProfile[]>([]);
   const [fadeAnims, setFadeAnims] = useState<Animated.Value[]>([]);
   const [nextFriendIndex, setNextFriendIndex] = useState<number>(4);
   const { userContacts } = route.params;
 
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
+
   const normalizePhoneNumber = (phoneNumber: string) => {
     const cleaned = phoneNumber.replace(/\D/g, "");
-    const normalized = cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
-    console.log(
-      `Original phone number: ${phoneNumber}, Cleaned phone number: ${cleaned}, Normalized (10 digits only) phone number: ${normalized}`
-    );
-    return normalized;
+    return cleaned.length >= 10 ? cleaned.slice(-10) : cleaned;
   };
 
   const fetchMatchingUsers = async (phoneNumbers: string[]) => {
-    console.log("Received phone numbers for matching:", phoneNumbers);
-
     const normalizedNumbers = phoneNumbers.map(normalizePhoneNumber);
-    console.log("All normalized phone numbers:", normalizedNumbers);
-
     const uniqueNumbers = [...new Set(normalizedNumbers)];
-    console.log("Unique normalized numbers:", uniqueNumbers);
 
-    const chunkSize = 30;
+    const chunkSize = 10; // Set chunk size to prevent Firestore query limits
     const chunks = [];
 
     for (let i = 0; i < uniqueNumbers.length; i += chunkSize) {
@@ -90,32 +66,33 @@ const FollowFriendsScreen = ({
 
     try {
       const usersRef = collection(db, "users");
-      const matchingUsers: Friend[] = [];
+      const matchingUsers: UserProfile[] = [];
 
       for (const chunk of chunks) {
         const q = query(usersRef, where("phoneNumber", "in", chunk));
         const querySnapshot = await getDocs(q);
+
         querySnapshot.forEach((doc) => {
-          matchingUsers.push(doc.data() as Friend);
+          const userData = doc.data() as UserProfile;
+
+          // Filter out the current user and avoid duplicates
+          if (userData.phoneNumber !== user?.phoneNumber && !matchingUsers.find(u => u.username === userData.username)) {
+            matchingUsers.push(userData);
+          }
         });
       }
 
-      console.log("Matching users found:", matchingUsers);
+      // Update friends and initialize animations
       setFriends(matchingUsers);
       setVisibleFriends(matchingUsers.slice(0, 4));
       setFadeAnims(matchingUsers.slice(0, 4).map(() => new Animated.Value(1)));
     } catch (error) {
-      console.error("Firestore Query Error:", error);
-      Alert.alert(
-        "Fetch Error",
-        "Unable to fetch user data. Please try again."
-      );
+      Alert.alert("Error", "Unable to fetch user data. Please try again.");
     }
   };
 
   useEffect(() => {
     if (userContacts && userContacts.length > 0) {
-      console.log("userContacts received:", userContacts);
       fetchMatchingUsers(userContacts);
     }
   }, [userContacts]);
@@ -142,7 +119,7 @@ const FollowFriendsScreen = ({
         if (nextFriendIndex < friends.length) {
           updatedVisibleFriends[index] = friends[nextFriendIndex];
           setNextFriendIndex(nextFriendIndex + 1);
-          fadeAnims[index].setValue(1); // Reset the animation value for reuse
+          fadeAnims[index].setValue(1); // Reset animation for next use
         } else {
           updatedVisibleFriends.splice(index, 1);
           fadeAnims.splice(index, 1);
@@ -156,11 +133,8 @@ const FollowFriendsScreen = ({
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
       <View style={styles.headerBox}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backArrowContainer}
-        >
-          <ArrowLeft color={Colors.text} size={35} />
+        <TouchableOpacity onPress={handleBackPress} style={styles.backArrowContainer}>
+          <CircleArrowLeft color={Colors.text} size={30} />
         </TouchableOpacity>
       </View>
 
@@ -273,7 +247,7 @@ const styles = StyleSheet.create({
   contactCard: {
     width: width * 0.42,
     margin: 5,
-    backgroundColor: Colors.contactCard,
+    backgroundColor: Colors.tags,
     borderRadius: 21,
     justifyContent: "center",
     alignItems: "center",
