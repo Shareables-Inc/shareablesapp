@@ -8,6 +8,8 @@ import {
   SafeAreaView,
   Dimensions,
   Alert,
+  TouchableWithoutFeedback,
+  Keyboard
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
@@ -16,16 +18,17 @@ import { auth, db } from "../../firebase/firebaseConfig";
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
+import { CircleArrowLeft, CircleCheck, CircleAlert } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
 
 export default function UserNameInputScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [userName, setUserName] = useState("");
-  const [firstName, setFirstName] = useState("there"); // Default name if not fetched
-  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null); // New state for username check
-  const [usernameValid, setUsernameValid] = useState<boolean>(true); // Username validation state
-  const [debounceTimeout, setDebounceTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [firstName, setFirstName] = useState("there");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -46,144 +49,132 @@ export default function UserNameInputScreen() {
     fetchUserName();
   }, []);
 
+  // Helper function for validation
   const validateUsername = (username: string) => {
-    const noInvalidSymbols = /^[a-zA-Z0-9._\-]*$/; // Only allow letters, numbers, ., _, and -
-    const noMoreThanTwoInARow = /(?!.*([._\-])\1{2})/; // Ensure ., _, and - don't repeat more than twice
-    const noSpaces = !/\s/.test(username); // No spaces allowed
-    const minLength = username.length >= 3; // Minimum length of 3 characters
-    const validFormat =
-      noInvalidSymbols.test(username) && noMoreThanTwoInARow.test(username) && noSpaces;
+    // Rule 1: No spaces in the middle or end
+    if (/\s/.test(username)) return "Username must not contain any spaces";
 
-    return validFormat && minLength;
+    // Rule 2: Disallowed characters
+    const disallowedChars = /[@:'"(){}[\]=~•&^%#!+;"<>\/?,]/;
+    if (disallowedChars.test(username)) return "Username contains invalid symbols";
+
+    // Rule 3: Allowed special characters 
+    if (/(\.\.|__|--|\$\$)/.test(username)) return "Username must not have three symbols in a row";
+
+    // Rule 4: Minimum length of 3 characters
+    if (username.length < 3) return "Username must be at least 3 characters long";
+
+    // Rule 5: Username must not be more than 25 characters
+    if (username.length > 25) return "Username must not be more than 25 characters";
+
+    return null; // No validation errors
   };
 
-  const handleUsernameChange = (text: string) => {
-    const formattedText = text.replace(/\s+/g, "").toLowerCase(); // Remove spaces and convert to lowercase
-
+  const handleUsernameChange = async (text: string) => {
+    const formattedText = text.toLowerCase().trim();
     setUserName(formattedText);
+    setUsernameAvailable(null);
 
-    // Clear previous debounce timeout
-    if (debounceTimeout) {
-      clearTimeout(debounceTimeout);
+    const validationError = validateUsername(formattedText);
+    if (validationError) {
+      setValidationMessage(validationError);
+      setUsernameAvailable(false);
+      return;
     }
 
-    // Debounce the username validation and availability check
-    const newTimeout = setTimeout(() => {
-      const isValid = validateUsername(formattedText);
-      setUsernameValid(isValid);
+    setValidationMessage(null);
 
-      if (isValid) {
-        checkUsernameAvailability(formattedText);
-      } else {
-        setUsernameAvailable(null);
+    const timer = setTimeout(async () => {
+      setCheckingUsername(true);
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("username", "==", formattedText));
+
+      try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+          setUsernameAvailable(true);
+        } else {
+          setUsernameAvailable(false);
+          setValidationMessage("Username is not available");
+        }
+      } catch (error) {
+        console.error("Firestore Error:", error);
+      } finally {
+        setCheckingUsername(false);
       }
-    }, 3000); // 3-second delay before checking
+    }, 250); 
 
-    setDebounceTimeout(newTimeout);
-  };
-
-  const checkUsernameAvailability = async (username: string) => {
-    const usersRef = collection(db, "users");
-    const q = query(usersRef, where("username", "==", username));
-
-    try {
-      const querySnapshot = await getDocs(q);
-      setUsernameAvailable(querySnapshot.empty); // If empty, username is available
-    } catch (error) {
-      console.error("Firestore Error:", error);
-    }
+    return () => clearTimeout(timer); 
   };
 
   const handleNextStep = async () => {
-    if (userName.trim() === "") {
-      Alert.alert("Username Required", "Please enter a username to continue.");
-      return;
-    }
-
-    if (!usernameValid) {
-      Alert.alert("Invalid Username", "Please enter a valid username.");
-      return;
-    }
-
     if (!usernameAvailable) {
-      Alert.alert("Username Unavailable", "Please choose a different username.");
+      Alert.alert("Username Unavailable", validationMessage || "Please choose a different username.");
       return;
     }
 
-    // Get the current user's ID from Firebase Authentication
     const userId = auth.currentUser?.uid;
     if (!userId) {
       Alert.alert("Error", "No user found. Please login again.");
       return;
     }
 
-    // Reference to the user's document in Firestore
     const userDocRef = doc(db, "users", userId);
-
     try {
-      // Update the user's document with the username
-      await setDoc(
-        userDocRef,
-        {
-          username: userName.trim(),
-        },
-        { merge: true }
-      ); // Use merge to not overwrite existing fields
-
-      navigation.navigate("TopCuisines"); // Navigate to the next screen
+      await setDoc(userDocRef, { username: userName }, { merge: true });
+      navigation.navigate("TopCuisines");
     } catch (error) {
       console.error("Firestore Error:", error);
-      Alert.alert(
-        "Update Failed",
-        "Failed to save your username. Please try again."
-      );
+      Alert.alert("Update Failed", "Failed to save your username. Please try again.");
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" />
-      <View style={styles.headerBox}>
-        <TouchableOpacity onPress={handleBackPress} style={styles.backArrowContainer}>
-          <Text>{"<"}</Text>
-        </TouchableOpacity>
-      </View>
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={styles.container}>
+        <StatusBar style="auto" />
+        <View style={styles.headerBox}>
+          <TouchableOpacity onPress={handleBackPress} style={styles.backArrowContainer}>
+            <CircleArrowLeft color={Colors.text} size={30} />
+          </TouchableOpacity>
+        </View>
 
-      <Text style={styles.title}>Let's create your username, {firstName}</Text>
+        <Text style={styles.title}>
+          <Text style={styles.heyThereText}>We hope you're doing well, {firstName}.</Text> Let's create your username.
+        </Text>
 
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          placeholderTextColor={Colors.placeholderText}
-          value={userName}
-          onChangeText={handleUsernameChange}
-          autoCapitalize="none"
-        />
-        {usernameValid === false && (
-          <Text style={styles.errorText}>
-            Invalid username: no spaces or special characters (except ., _, -, $) and must be at least 3 characters long.
-          </Text>
-        )}
-        {usernameAvailable !== null && usernameAvailable && usernameValid && (
-          <Text style={styles.successText}>Username is available!</Text>
-        )}
-        {usernameAvailable === false && (
-          <Text style={styles.errorText}>Username is already taken.</Text>
-        )}
-      </View>
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            placeholderTextColor={Colors.placeholderText}
+            value={userName}
+            onChangeText={handleUsernameChange}
+            autoCapitalize="none"
+          />
+          <View style={styles.feedbackContainer}>
+            {validationMessage ? (
+              <Text style={styles.errorText}>{validationMessage}</Text>
+            ) : usernameAvailable !== null && (
+              <Text style={usernameAvailable ? styles.successText : styles.errorText}>
+                {usernameAvailable ? "Username is available!" : "Username is unavailable."}
+              </Text>
+            )}
+          </View>
+        </View>
 
-      <View style={styles.nextButtonContainer}>
-        <TouchableOpacity
-          style={styles.nextButton}
-          onPress={handleNextStep}
-          activeOpacity={1}
-          disabled={usernameAvailable === false || usernameAvailable === null || !usernameValid}
-        >
-          <Text style={styles.nextButtonText}>Next Step</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+        <View style={styles.nextButtonContainer}>
+          <TouchableOpacity
+            style={styles.nextButton}
+            onPress={handleNextStep}
+            activeOpacity={1}
+            disabled={usernameAvailable === false || usernameAvailable === null}
+          >
+            <Text style={styles.nextButtonText}>Next Step</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
@@ -218,6 +209,10 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     textAlign: "left",
   },
+  heyThereText: {
+    color: Colors.highlightText,
+    fontFamily: Fonts.SemiBold,
+  },
   inputContainer: {
     width: width * 0.85,
     borderWidth: 0.3,
@@ -225,9 +220,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.inputBackground,
     borderRadius: 10,
     height: height * 0.058,
-    marginBottom: height * 0.025,
+    marginBottom: height * 0.015, 
     paddingHorizontal: width * 0.03,
     justifyContent: "center",
+    position: "relative", 
   },
   input: {
     flex: 1,
@@ -235,13 +231,22 @@ const styles = StyleSheet.create({
     fontSize: width * 0.04,
     fontFamily: Fonts.Medium,
   },
-  errorText: {
-    color: Colors.circleAlert,
-    marginTop: 10,
+  feedbackContainer: {
+    position: "absolute",
+    bottom: -height * 0.03, 
+    right: 0,
   },
   successText: {
     color: Colors.circleCheck,
-    marginTop: 10,
+    marginTop: height * 0.005,
+  },
+  errorText: {
+    color: Colors.circleAlert,
+    marginTop: height * 0.005,
+  },
+  checkingText: {
+    color: Colors.placeholderText,
+    marginTop: height * 0.005,
   },
   nextButtonContainer: {
     width: "100%",

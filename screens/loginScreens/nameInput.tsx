@@ -121,6 +121,7 @@ export default function NameInputScreen() {
               onChangeText={setLastName}
             />
           </View>
+          <Text style={styles.infoText}>Shown on your profile</Text>
 
           <View style={styles.inputContainer}>
             <TextInput
@@ -132,6 +133,8 @@ export default function NameInputScreen() {
               keyboardType="number-pad"
             />
           </View>
+          <Text style={styles.infoText}>Used to find your friends</Text>
+
         </View>
       </TouchableWithoutFeedback>
 
@@ -229,6 +232,15 @@ const styles = StyleSheet.create({
   },
   requiredText: {
     color: Colors.highlightText,
+    fontFamily: Fonts.Regular,
+    fontSize: width * 0.035,
+    marginBottom: height * 0.02,
+    alignSelf: "flex-end",
+    marginRight: width * 0.015,
+    marginTop: -(height * 0.02),
+  },
+  infoText: {
+    color: Colors.text,
     fontFamily: Fonts.Regular,
     fontSize: width * 0.035,
     marginBottom: height * 0.02,

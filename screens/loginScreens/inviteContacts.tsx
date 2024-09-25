@@ -20,7 +20,7 @@ import { doc, updateDoc } from "firebase/firestore";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { PhoneNumber } from "expo-contacts";
-import { ArrowLeft } from "lucide-react-native";
+import { CircleArrowLeft } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 
 const { width, height } = Dimensions.get("window");
@@ -39,6 +39,10 @@ const InviteContactsScreen = () => {
   const { user, refreshUserProfile } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [contacts, setContacts] = useState<Contact[]>([]);
+
+  const handleBackPress = () => {
+    navigation.goBack();
+  };
 
   const sendInvite = async (phoneNumber: string) => {
     const message = `Hi! Join me on this amazing app and discover great places to eat. Here's the link to download the app: [app link]`;
@@ -133,11 +137,8 @@ const InviteContactsScreen = () => {
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <StatusBar style="auto" />
       <View style={styles.headerBox}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backArrowContainer}
-        >
-          <ArrowLeft color={Colors.text} size={24} />
+        <TouchableOpacity onPress={handleBackPress} style={styles.backArrowContainer}>
+          <CircleArrowLeft color={Colors.text} size={30} />
         </TouchableOpacity>
       </View>
       <Text style={styles.title}>
@@ -211,15 +212,10 @@ const styles = StyleSheet.create({
     left: "8%",
     top: "100%",
   },
-  backArrow: {
-    width: 35,
-    height: 35,
-  },
   title: {
-    fontSize: 28,
+    fontSize: width * 0.07,
     color: Colors.text,
     fontFamily: Fonts.SemiBold,
-    marginBottom: 15,
     width: width * 0.9,
     justifyContent: "center",
     textAlign: "left",
@@ -231,7 +227,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.SemiBold,
   },
   description: {
-    fontSize: 22,
+    fontSize: width * 0.055,
     textAlign: "left",
     width: width * 0.85,
     fontFamily: Fonts.Medium,
@@ -240,9 +236,7 @@ const styles = StyleSheet.create({
   },
   nextButtonContainer: {
     width: width * 1,
-    marginTop: height * 0.02,
-    position: "absolute",
-    bottom: height * 0.17,
+    marginTop: height * 0.04,
   },
   nextButton: {
     height: height * 0.055,
@@ -256,12 +250,12 @@ const styles = StyleSheet.create({
   },
   nextButtonText: {
     color: Colors.buttonText,
-    fontSize: 24,
+    fontSize: width * 0.055,
     fontFamily: Fonts.Bold,
   },
   contactsContainer: {
     backgroundColor: Colors.background,
-    maxHeight: height * 0.36,
+    maxHeight: height * 0.45,
     width: width * 0.95,
     alignSelf: "center",
     marginTop: height * 0.03,
@@ -285,7 +279,7 @@ const styles = StyleSheet.create({
   },
   contactInitialsText: {
     color: Colors.background,
-    fontSize: 22,
+    fontSize: width * 0.05,
     fontFamily: Fonts.Bold,
   },
   contactDetails: {
@@ -293,12 +287,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactName: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: width * 0.045,
+    fontFamily: Fonts.SemiBold,
   },
   contactNumber: {
-    fontSize: 16,
-    color: "gray",
+    fontSize: width * 0.04,
+    color: Colors.placeholderText,
   },
   inviteButton: {
     backgroundColor: Colors.highlightText,
@@ -308,7 +302,7 @@ const styles = StyleSheet.create({
   },
   inviteButtonText: {
     color: Colors.background,
-    fontSize: 18,
+    fontSize: width * 0.045,
     fontFamily: Fonts.SemiBold,
   },
 });

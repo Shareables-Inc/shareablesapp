@@ -408,26 +408,5 @@ export const sendInviteNotification = onDocumentCreated(
         logger.error("User data or FCM token not found");
         return;
       }
-
-      // Prepare the notification message
-      const message: InviteNotification = {
-        to: userData.fcmToken,
-        sound: "default",
-        title: "New Restaurant Invite",
-        body: `${inviteData.userName} invited you to check out ${inviteData.establishmentName}`,
-        data: {
-          id: uuidv4(),
-          screen: "RestaurantProfile", // The screen you want to open
-          establishmentId: inviteData.establishmentId, // ID of the restaurant
-        },
-      };
-
-      // Send the notification
-      const response = await sendPushNotifications(message);
-      logger.info("Invite notification sent successfully", response);
-    } catch (error) {
-      logger.error("Error sending invite notification", error);
-    }
-  }
 );
 
