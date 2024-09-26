@@ -87,7 +87,6 @@ const styles = StyleSheet.create({
     position: "relative",
     borderRadius: 10,
     overflow: "hidden",
-    marginTop: height * 0.02,
     zIndex: 1,
   },
   scrollView: {
