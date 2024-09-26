@@ -32,6 +32,7 @@ import ThreePhotoGridPost from "../../components/posts/threePhotoGridPost";
 import { useAuth } from "../../context/auth.context";
 import { useUpdatePost } from "../../hooks/usePost";
 import { EstablishmentDetails } from "../../models/post";
+import { Sparkle, Utensils, HandPlatter, ImagePlus } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -56,6 +57,7 @@ const ReviewScreen = ({ route }) => {
   const [ratingAmbiance, setRatingAmbiance] = useState<number>(0);
   const [ratingFoodQuality, setRatingFoodQuality] = useState<number>(0);
   const [ratingService, setRatingService] = useState<number>(0);
+  const [priceRange, setPriceRange] = useState<number>(0);
 
   const pickImages = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -122,6 +124,7 @@ const ReviewScreen = ({ route }) => {
     if (field === "ambiance") setRatingAmbiance(value);
     if (field === "foodQuality") setRatingFoodQuality(value);
     if (field === "service") setRatingService(value);
+    if (field === "priceRange") setPriceRange(value);
   };
 
   const uploadImagesToFirebase = async () => {
@@ -142,10 +145,7 @@ const ReviewScreen = ({ route }) => {
       const response = await fetch(processedUri);
       const blob = await response.blob();
 
-      const storageRef = ref(
-        storage,
-        `images/${user!.uid}_${Date.now()}_${index}`
-      );
+      const storageRef = ref(storage, `images/${user!.uid}_${Date.now()}_${index}`);
       await uploadBytes(storageRef, blob);
 
       const downloadURL = await getDownloadURL(storageRef);
@@ -187,7 +187,7 @@ const ReviewScreen = ({ route }) => {
     const overallRating = calculateOverallRating(
       ratingAmbiance,
       ratingFoodQuality,
-      ratingService
+      ratingService,
     );
 
     try {
@@ -249,7 +249,8 @@ const ReviewScreen = ({ route }) => {
           { width: height * 0.35 * 0.8, height: height * 0.35 },
         ]}
       >
-        <Text style={styles.imagePickerText}>+</Text>
+        <ImagePlus color={Colors.tags} size={40} />
+        <Text style={styles.addImageText}>add photos</Text>
       </TouchableOpacity>
     );
   };
@@ -261,15 +262,6 @@ const ReviewScreen = ({ route }) => {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          <View style={styles.navigationControls}>
-            <TouchableOpacity
-              onPress={handlePost}
-              style={styles.postButton}
-              activeOpacity={1}
-            >
-              <Text style={styles.postButtonText}>Post</Text>
-            </TouchableOpacity>
-          </View>
 
           <View style={styles.contentContainer}>
             <View style={styles.imagePickerContainer}>
@@ -281,15 +273,22 @@ const ReviewScreen = ({ route }) => {
               style={styles.reviewInputContainer}
               keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
             >
+              <Text style={styles.restaurantInfo}>Pai Uptown | Toronto, ON</Text>
+
               <TextInput
-                placeholder="Write a quick review..."
+                placeholder="Write your review here..."
                 style={styles.reviewInput}
                 multiline
-                placeholderTextColor={Colors.text}
+                placeholderTextColor={Colors.placeholderText}
                 value={review}
                 onChangeText={handleReviewChange}
               />
             </KeyboardAvoidingView>
+
+            <View style={styles.headers}>  
+              <Text style={styles.ratingHeader}>Score</Text>
+              <Text style={styles.priceHeader}>Price</Text>
+            </View>
 
             <View style={styles.ratingsContainer}>
               <View style={styles.ratingSection}>
@@ -310,11 +309,13 @@ const ReviewScreen = ({ route }) => {
                 >
                   <Text style={styles.ratingScore}>{ratingAmbiance}</Text>
                 </TouchableOpacity>
-                <Text style={styles.ratingText}>Ambiance</Text>
+                <View style={{ marginLeft: width * 0.04 }}>
+                  <Sparkle color={Colors.charcoal} size={20} />
+                </View>
               </View>
               <View style={styles.ratingSection}>
                 <TouchableOpacity
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                   style={[
                     styles.ratingCircle,
                     ratingFoodQuality >= 8
@@ -330,11 +331,13 @@ const ReviewScreen = ({ route }) => {
                 >
                   <Text style={styles.ratingScore}>{ratingFoodQuality}</Text>
                 </TouchableOpacity>
-                <Text style={styles.ratingText}>Food Quality</Text>
+                <View style={{ marginLeft: width * 0.04 }}>
+                  <Utensils color={Colors.charcoal} size={20} />
+                </View>
               </View>
               <View style={styles.ratingSection}>
                 <TouchableOpacity
-                  activeOpacity={0.7}
+                  activeOpacity={0.8}
                   style={[
                     styles.ratingCircle,
                     ratingService >= 8
@@ -350,26 +353,59 @@ const ReviewScreen = ({ route }) => {
                 >
                   <Text style={styles.ratingScore}>{ratingService}</Text>
                 </TouchableOpacity>
-                <Text style={styles.ratingText}>Service</Text>
+                <View style={{ marginLeft: width * 0.04 }}>
+                  <HandPlatter color={Colors.charcoal} size={20} />
+                </View>
               </View>
+
+              <View style={styles.ratingSection}>
+                <TouchableOpacity
+                  activeOpacity={0.8}
+                  style={[
+                    styles.ratingSquare,
+                    ratingService >= 8
+                      ? styles.highlightedRatingCircle
+                      : styles.defaultRatingCircle,
+                  ]}
+                  onPress={() =>
+                    handleRatingChange(
+                      "priceRange",
+                      priceRange === 10 ? 0 : priceRange + 1
+                    )
+                  }
+                >
+                  <Text style={styles.ratingScore}>{ratingService}</Text>
+                </TouchableOpacity>
+              </View>
+
             </View>
 
-            {(images.length === 2 || images.length === 3) && (
               <View style={styles.toggleContainer}>
-                <Text style={styles.toggleLabel}>Switch Layout</Text>
+                <View style={styles.switch}>
                 <Switch
                   trackColor={{
-                    false: Colors.highlightText,
-                    true: Colors.highlightText,
+                    false: Colors.background,
+                    true: Colors.background,
                   }}
                   thumbColor={
-                    isGridView ? Colors.background : Colors.background
+                    isGridView ? Colors.charcoal : Colors.charcoal
                   }
                   onValueChange={toggleLayout}
                   value={isGridView}
                 />
+                </View>
+
+            <TouchableOpacity
+              onPress={handlePost}
+              style={styles.postButton}
+              activeOpacity={1}
+            >
+              <Text style={styles.postButtonText}>Post</Text>
+            </TouchableOpacity>
+
+
               </View>
-            )}
+
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -381,25 +417,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  navigationControls: {
-    width: "100%",
-    alignItems: "flex-end",
-    marginTop: height * 0.007,
-    paddingRight: width * 0.05,
-  },
-  postButton: {
-    borderRadius: 10,
-    backgroundColor: Colors.background,
-    paddingRight: width * 0.05,
-    paddingTop: height * 0.01,
-  },
-  postButtonText: {
-    color: Colors.highlightText,
-    fontSize: 22,
-    fontFamily: Fonts.SemiBold,
-  },
   contentContainer: {
-    marginTop: height * 0.035,
+    marginTop: height * 0.01,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -413,85 +432,126 @@ const styles = StyleSheet.create({
     width: height * 0.35 * 0.8,
     height: height * 0.35,
     borderRadius: 10,
-    borderColor: Colors.highlightText,
-    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
     overflow: "hidden",
   },
-  imagePickerText: {
-    fontSize: 40,
-    color: Colors.highlightText,
+  addImageText: {
+    fontFamily: Fonts.Medium,
+    fontSize: width * 0.045,
+    justifyContent: "center",
+    color: Colors.tags,
+    marginTop: height * 0.01
+  },
+  restaurantInfo: {
+    fontFamily: Fonts.SemiBold,
+    fontSize: width * 0.055,
+    color: Colors.text,
+    marginTop: height * 0.01
   },
   reviewInputContainer: {
-    width: width * 0.87,
+    width: width * 0.9,
     alignSelf: "center",
     justifyContent: "center",
-    height: height * 0.12,
-    borderColor: Colors.inputBackground,
-    borderWidth: 2,
+    height: height * 0.17,
     borderRadius: 10,
     marginBottom: height * 0.035,
   },
   reviewInput: {
     backgroundColor: Colors.background,
-    paddingLeft: width * 0.025,
     paddingTop: height * 0.012,
-    fontSize: 18,
+    fontSize: width * 0.04,
     fontFamily: Fonts.Regular,
     height: "100%",
-    color: Colors.text,
+    color: Colors.charcoal,
     borderRadius: 10,
+  },
+  headers: {
+    flexDirection: "row",
+    alignSelf: "flex-start"
+  },
+  ratingHeader: {
+    fontSize: width * 0.055,
+    fontFamily: Fonts.SemiBold,
+    color: Colors.charcoal,
+    alignSelf: "flex-start",
+    paddingLeft: width * 0.05,
+    marginBottom: height * 0.015
+  },
+  priceHeader: {
+    fontSize: width * 0.055,
+    fontFamily: Fonts.SemiBold,
+    color: Colors.charcoal,
+    alignSelf: "flex-start",
+    paddingLeft: width * 0.55,
+    marginBottom: height * 0.015
   },
   ratingsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignSelf: "flex-start",
+    paddingLeft: width * 0.04
   },
   ratingSection: {
-    alignItems: "center",
   },
   ratingCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: width * 0.13,
+    height: width * 0.13,
+    borderRadius: 90,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: height * 0.01,
-    marginHorizontal: width * 0.05,
+    marginRight: width * 0.06,
+  },
+  ratingSquare:{
+    width: width * 0.2,
+    height: width * 0.13,
+    borderRadius: 10,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: height * 0.01,
+    marginLeft: width * 0.11
   },
   defaultRatingCircle: {
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: Colors.charcoal,
   },
   highlightedRatingCircle: {
     backgroundColor: Colors.highlightText,
   },
-  ratingText: {
-    color: Colors.text,
-    fontFamily: Fonts.Regular,
-    fontSize: 14,
-  },
   ratingScore: {
-    fontSize: 18,
+    fontSize: width * 0.045,
     fontFamily: Fonts.Bold,
-    color: Colors.text,
+    color: Colors.background,
   },
   toggleContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     width: "100%",
-    marginTop: height * 0.1,
     paddingHorizontal: width * 0.1,
-  },
-  toggleLabel: {
-    fontSize: 18,
-    color: Colors.highlightText,
-    fontFamily: Fonts.Medium,
-    paddingLeft: width * 0.39,
+    marginTop: height * 0.057,
+    height: width * 0.30,
+    backgroundColor: Colors.tags,
+    borderRadius: 10
   },
   loadingIndicator: {
     marginTop: height * 0.05,
   },
+  postButton: {
+    borderRadius: 10,
+    backgroundColor: Colors.background,
+    paddingVertical: width * 0.02,
+    paddingHorizontal: width * 0.04,
+  },
+  postButtonText: {
+    color: Colors.tags,
+    fontSize: width * 0.055,
+    fontFamily: Fonts.SemiBold,
+  },
+  switch: {
+    backgroundColor: Colors.background,
+    borderRadius: 30
+  }
 });
 
 export default ReviewScreen;

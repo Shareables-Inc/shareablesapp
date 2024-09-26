@@ -8,7 +8,7 @@ export const Colors = {
   background: "#FFFFFF",
   buttonText: "#FFFFFF",
   scrollDots: "#BDBDBD",
-  charcoal: "#202020",
+  charcoal: "#3F3333",
   open: "#008000",
   header: "#F3F3F3",
   followed: "#3ADB5E",

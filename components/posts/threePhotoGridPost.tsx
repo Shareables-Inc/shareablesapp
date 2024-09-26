@@ -47,6 +47,14 @@ const ThreePhotoGridPost: React.FC<ThreePhotoGridProps> = ({
         style={styles.topRightImage}
       />
     </View>
+        <FastImage
+          source={{
+            uri: post.photos[2],
+            priority: FastImage.priority.normal,
+            cache: FastImage.cacheControl.immutable,
+          }}
+          style={styles.largeBottomImage}
+        />
   </TouchableOpacity>
 );
 
@@ -59,7 +67,6 @@ const styles = StyleSheet.create({
     position: "relative",
     borderRadius: 10,
     overflow: "hidden",
-    marginTop: height * 0.02,
     zIndex: 1,
   },
   upperImagesContainer: {
