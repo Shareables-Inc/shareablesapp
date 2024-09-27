@@ -11,7 +11,7 @@
         "@rnmapbox/maps",
         {
           "RNMapboxMapsDownloadToken": "sk.eyJ1IjoiZHBhdGVsc2hhcmVhYmxlcyIsImEiOiJjbTFjcG1ydWEweWI0Mm5vbXZhMTc0MDZ5In0.-KSYx2Pk-UbntE0OyDn3LQ",
-          "RNMapboxMapsVersion": "11.4.0"
+          "RNMapboxMapsVersion": "11.6.0"
         }
       ],
       [
@@ -77,6 +77,6 @@
         "projectId": "ef6370a3-a025-4a4c-920d-69ff87de0a82"
       }
     },
-    "owner": "shareables"
+    "owner": "shareablesapp"
   }
 }

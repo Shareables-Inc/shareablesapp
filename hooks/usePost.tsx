@@ -31,8 +31,14 @@ export const usePostPaginated = (limit = 10) => {
       ]);
       FastImage.preload(imagesToPreload);
 
+
+      // remove any post that are missing a imageUrl
+      result.posts = result.posts.filter((post) => post.imageUrls.length > 0);
+
       return result;
     },
+
+
     getNextPageParam: (lastPage: {
       lastVisible?: QueryDocumentSnapshot<DocumentData>;
     }) => lastPage.lastVisible,
