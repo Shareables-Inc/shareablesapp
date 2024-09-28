@@ -680,6 +680,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.05,
     paddingVertical: height * 0.02,
     backgroundColor: Colors.background,
+    flex:1
   },
   restaurantInfo: {
     flex: 1,
@@ -691,7 +692,7 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.005,
   },
   restaurantAddress: {
-    fontSize: width * 0.035,
+    fontSize: width * 0.038,
     color: Colors.text,
     fontFamily: Fonts.Regular,
   },
@@ -735,6 +736,7 @@ const styles = StyleSheet.create({
     paddingBottom: height * 0.015,
     paddingTop: height * 0.01,
     backgroundColor: Colors.background,
+    flex:1
   },
   userImageAndTags: {
     flexDirection: "row",
@@ -751,6 +753,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginLeft: width * 0.05,
     alignItems: "center",
+    flex:1
   },
   tag: {
     backgroundColor: Colors.tags,
@@ -776,7 +779,7 @@ const styles = StyleSheet.create({
   },
   overallRating: {
     fontSize: width * 0.04,
-    color: Colors.highlightText,
+    color: Colors.placeholderText,
     fontFamily: Fonts.SemiBold,
     alignSelf: "flex-start",
   },
@@ -786,7 +789,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   reviewText: {
-    fontSize: width * 0.04,
+    fontSize: width * 0.043,
     color: Colors.text,
     lineHeight: height * 0.03,
     fontFamily: Fonts.Regular,

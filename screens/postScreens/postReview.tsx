@@ -207,6 +207,7 @@ const ReviewScreen = ({ route }) => {
             ambiance: ratingAmbiance,
             foodQuality: ratingFoodQuality,
             service: ratingService,
+            priceRange: priceRange,
             overall: overallRating,
           },
         },
@@ -335,6 +336,7 @@ const ReviewScreen = ({ route }) => {
                   <Utensils color={Colors.charcoal} size={20} />
                 </View>
               </View>
+
               <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -418,6 +420,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
+    flex: 1,
     marginTop: height * 0.01,
     justifyContent: "center",
     alignItems: "center",
@@ -427,6 +430,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: height * 0.035,
+    flex: 1,
   },
   imagePicker: {
     width: height * 0.35 * 0.8,
@@ -527,10 +531,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    width: "100%",
     paddingHorizontal: width * 0.1,
     marginTop: height * 0.057,
-    height: width * 0.30,
+    width: width,
+    height: height * 0.15,
     backgroundColor: Colors.tags,
     borderRadius: 10
   },

@@ -17,12 +17,14 @@ import {
 } from "lucide-react-native";
 import Colors from "../../utils/colors";
 
-import ProfilesView from "../../components/searchScreen/ProfilesView";
-import RestaurantsView from "../../components/searchScreen/RestaurantsView";
+import ProfilesView from "../../components/explore/ProfilesView";
+import RestaurantsView from "../../components/explore/RestaurantsView";
 import { tagsData } from "../../config/constants";
 import { Fonts } from "../../utils/fonts";
-import TagButton from "../../components/searchScreen/tagButton";
+import TagButton from "../../components/explore/tagButton";
 import { useAuth } from "../../context/auth.context";
+
+const {width, height} = Dimensions.get("window")
 
 const SearchScreen = () => {
   const [activeTab, setActiveTab] = useState<"Profiles" | null>(null);
@@ -61,14 +63,8 @@ const SearchScreen = () => {
     setActiveTab((prevTab) => (prevTab === tab ? null : tab));
   };
 
-  const locations = [
-    "Toronto",
-    "Mississauga",
-    "Brampton",
-    "Hamilton",
-    "Montreal",
-    "Ottawa",
-  ];
+  const locations = ["Brampton", "Burlington", "Guelph", "Hamilton", "Laval", "London", "Markham", 
+    "Mississauga", "Montreal", "Oakville", "Ottawa", "Scarborough", "Toronto", "Windsor", "York"];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -82,7 +78,7 @@ const SearchScreen = () => {
         >
           <UserCircle
             size={18}
-            color={activeTab === "Profiles" ? "#fff" : "#000"}
+            color={activeTab === "Profiles" ? Colors.background : Colors.placeholderText}
           />
           <Text
             style={[
@@ -98,13 +94,14 @@ const SearchScreen = () => {
           style={[styles.tabButton]}
           onPress={() => setShowLocationDropdown(!showLocationDropdown)}
         >
-          <MapPin color="#000" size={18} />
+          <MapPin color={Colors.placeholderText} size={20} />
           <Text style={[styles.tabButtonText]}>{selectedLocation}</Text>
-          <ChevronDown color="#000" size={18} />
+          <ChevronDown color={Colors. placeholderText} size={20} />
         </TouchableOpacity>
       </View>
       {showLocationDropdown && (
-        <View
+        <ScrollView
+          showsVerticalScrollIndicator={false}
           style={[
             styles.dropdown,
             {
@@ -122,7 +119,7 @@ const SearchScreen = () => {
               <Text>{location}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       )}
       <View style={styles.container}>
         {activeTab === null && <RestaurantsView location={selectedLocation!} />}
@@ -135,47 +132,52 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
   },
   tabContainer: {
     flexDirection: "row",
-    padding: 10,
+    paddingHorizontal: width * 0.03,
+    paddingTop: width * 0.03,
+    paddingBottom: width * 0.02
   },
   dropdown: {
     position: "absolute",
-    top: 105,
-    right: 10,
-    backgroundColor: "#fff",
+    top: height * 0.13,
+    backgroundColor: Colors.background,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: Colors.inputBackground,
     zIndex: 1000,
+    maxHeight: height * 0.2
   },
   dropdownItem: {
-    padding: 10,
+    padding: width * 0.03,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: Colors.inputBackground,
   },
   tabButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f0f0f0",
-    padding: 10,
+    padding: width * 0.03,
     borderRadius: 10,
-    marginRight: 10,
+    marginRight: width * 0.03,
   },
   activeTab: {
     backgroundColor: Colors.tags,
   },
   tabButtonText: {
-    marginLeft: 8,
-    color: "#000",
+    marginLeft: width * 0.01,
+    fontFamily: Fonts.Regular,
+    color: Colors.placeholderText,
+    paddingHorizontal: width * 0.02,
+    fontSize: width * 0.04
   },
   activeTabText: {
-    color: "#fff",
+    color: Colors.background,
   },
 });
 

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions
 } from "react-native";
 import { MapPin } from "lucide-react-native";
 import Colors from "../../utils/colors";
@@ -27,6 +28,8 @@ import TagButton from "./tagButton";
 import { LinearGradient } from "expo-linear-gradient";
 import { useGetFeaturedEstablishments } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
+
+const { width, height } = Dimensions.get("window");
 
 interface RestaurantsViewProps {
   location: string;
@@ -161,7 +164,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
                 intensity={100}
                 tint="default"
               >
-                <MapPin size={16} color="#fff" />
+                {/* <MapPin size={16} color= {Colors.background} /> */}
                 <Text style={styles.featuredRestaurantName}>{item.name}</Text>
               </BlurView>
             </View>
@@ -175,7 +178,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     <View style={styles.topPosterItem}>
       <TouchableOpacity onPress={() => handleTopPosters(item.userId)}>
         <LinearGradient
-          colors={["#FF1E35", "#FF7E0E"]}
+          colors={[Colors.profileBorder, Colors.profileBorder]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.gradientBorder}
@@ -196,7 +199,9 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollViewContent}>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.sectionTitle}>Top Foodies</Text>
       <FlatList
         data={topPosters}
@@ -204,6 +209,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
         keyExtractor={(item) => item.userId}
         horizontal
         showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         style={styles.topPostersContainer}
         ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
         contentContainerStyle={[styles.justifyContentSpaceBetween]}
@@ -212,6 +218,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
         style={styles.categories}
       >
         {allTags.map((tag) => (
@@ -231,6 +238,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
         keyExtractor={(item) => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
+        showsVerticalScrollIndicator={false}
       />
       <Text style={styles.sectionTitle}>Discover</Text>
       {renderDiscoverSection()}
@@ -240,35 +248,28 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
 
 const styles = StyleSheet.create({
   scrollViewContent: {
-    padding: 8,
+    paddingLeft: width * 0.03,
   },
   categories: {
-    paddingHorizontal: 10,
     marginBottom: 12, // Reduced from 16
   },
   sectionTitle: {
     fontSize: 20,
     fontFamily: Fonts.Medium,
-    marginHorizontal: 8,
-    marginVertical: 8,
+    paddingVertical: width * 0.03
   },
-
   justifyContentSpaceBetween: {
-    justifyContent: "space-between",
-    alignContent: "center",
   },
   topPostersContainer: {
-    paddingHorizontal: 8,
   },
-
   topPosterItem: {
     alignItems: "center",
-    width: 80, // Set a fixed width for each item
+    width: width / 5, 
   },
   gradientBorder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: width / 5,
+    height: width / 5,
+    borderRadius: 90,
     padding: 3,
     justifyContent: "center",
     alignItems: "center",
@@ -276,7 +277,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: "100%",
     height: "100%",
-    borderRadius: 37,
+    borderRadius: 90,
     overflow: "hidden",
     backgroundColor: "white",
   },
@@ -285,17 +286,17 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   topPosterUsername: {
-    marginTop: 8,
-    fontSize: 12, // Reduced font size
-    color: Colors.highlightText,
-    textAlign: "center", // Center the username text
-    fontFamily: Fonts.Medium,
+    marginTop: 5,
+    fontSize: width * 0.03, 
+    color: Colors.charcoal,
+    textAlign: "center", 
+    fontFamily: Fonts.Regular,
   },
   itemSeparator: {
-    width: 16, // Adjust this value to increase/decrease space between items
+    width: width / 5 / 5,
   },
   featuredRestaurantImageContainer: {
-    borderRadius: 16,
+    borderRadius: 10,
     width: "100%",
     height: "100%",
   },
@@ -303,10 +304,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   featuredRestaurantCard: {
-    width: 300,
-    height: 180, // Reduced from 200
-    marginRight: 12, // Reduced from 16
-    borderRadius: 20,
+    width: width * 0.5,
+    height: width * 0.5 * 1.25, 
+    marginRight: width * 0.02, 
+    borderRadius: 12,
     overflow: "hidden",
   },
   featuredRestaurantImage: {
@@ -317,42 +318,38 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     left: 0,
-    right: 100,
-    bottom: 0,
-
-    padding: 16,
+    padding: "7%",
   },
   locationBadge: {
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 6,
-    paddingHorizontal: 6,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    borderRadius: 15,
     overflow: "hidden",
   },
   featuredRestaurantName: {
     color: Colors.background,
     marginLeft: 2,
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: Fonts.Bold,
+    fontSize: width * 0.04,
+    fontFamily: Fonts.Regular,
   },
   restaurantItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 8, // Reduced from 12
+    paddingVertical: width * 0.02, 
     borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    borderBottomColor: Colors.inputBackground,
+    maxWidth: width * 0.94
   },
   restaurantName: {
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontWeight: "bold",
     fontFamily: Fonts.Bold,
   },
   restaurantInfo: {
-    color: "#888",
+    color: Colors.placeholderText,
     marginTop: 4,
   },
   restaurantTags: {
@@ -363,21 +360,24 @@ const styles = StyleSheet.create({
   ratingBadge: {
     backgroundColor: Colors.tags,
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    width: width * 0.1,
+    height: width * 0.1,
+    alignContent: "center",
+    justifyContent: "center",
+    alignItems: "center"
   },
   ratingText: {
     color: Colors.background,
     fontFamily: Fonts.Bold,
-    fontSize: 16,
+    fontSize: width * 0.04,
   },
   noResultsContainer: {
-    padding: 16,
+    padding: width * 0.05,
     alignItems: "center",
   },
   noResultsText: {
     fontFamily: Fonts.Medium,
-    fontSize: 16,
+    fontSize: width * 0.04,
     color: Colors.highlightText,
   },
 });

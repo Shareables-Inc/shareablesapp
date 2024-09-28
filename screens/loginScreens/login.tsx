@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
   },
   registerButtonTextHighlight: {
     fontSize: width * 0.04,
-    color: Colors.tags,
+    color: Colors.highlightText,
     fontFamily: Fonts.Bold,
   },
 });
