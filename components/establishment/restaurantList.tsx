@@ -112,7 +112,7 @@ const RestaurantList = ({
           </View>
           <Text style={styles.tags}>
             {restaurant.tags && restaurant.tags.length > 0
-              ? restaurant.tags.join(" • ")
+              ? restaurant.tags.slice(0,3).join(" • ")
               : "No Tags Available"}
           </Text>
         </TouchableOpacity>

@@ -17,19 +17,20 @@ import {
 } from "lucide-react-native";
 import Colors from "../../utils/colors";
 
-import ProfilesView from "../../components/searchScreen/ProfilesView";
-import RestaurantsView from "../../components/searchScreen/RestaurantsView";
+import ProfilesView from "../../components/explore/ProfilesView";
+import RestaurantsView from "../../components/explore/RestaurantsView";
 import { tagsData } from "../../config/constants";
 import { Fonts } from "../../utils/fonts";
-import TagButton from "../../components/searchScreen/tagButton";
+import TagButton from "../../components/explore/tagButton";
 import { useAuth } from "../../context/auth.context";
+
+const { width, height } = Dimensions.get("window");
 
 const SearchScreen = () => {
   const [activeTab, setActiveTab] = useState<"Profiles" | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>();
   const [dropdownLayout, setDropdownLayout] = useState({ width: 0, x: 0 });
-  const [showLocationDropdown, setShowLocationDropdown] =
-    useState<boolean>(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState<boolean>(false);
   const locationTabRef = useRef<TouchableOpacity | null>(null);
 
   const { userProfile } = useAuth();
@@ -41,8 +42,7 @@ const SearchScreen = () => {
     }
   }, [userProfile]);
 
-  console.log("selected location", selectedLocation);
-
+  // Measure the layout of the location button when the component mounts
   useEffect(() => {
     if (locationTabRef.current) {
       locationTabRef.current.measure((x, y, width, height, pageX, pageY) => {
@@ -62,12 +62,21 @@ const SearchScreen = () => {
   };
 
   const locations = [
-    "Toronto",
-    "Mississauga",
     "Brampton",
+    "Burlington",
+    "Guelph",
     "Hamilton",
+    "Laval",
+    "London",
+    "Markham",
+    "Mississauga",
     "Montreal",
+    "Oakville",
     "Ottawa",
+    "Scarborough",
+    "Toronto",
+    "Windsor",
+    "York",
   ];
 
   return (
@@ -79,10 +88,13 @@ const SearchScreen = () => {
             activeTab === "Profiles" && styles.activeTab,
           ]}
           onPress={() => handleTabPress("Profiles")}
+          activeOpacity={1}
         >
           <UserCircle
-            size={18}
-            color={activeTab === "Profiles" ? "#fff" : "#000"}
+            size={20}
+            color={
+              activeTab === "Profiles" ? Colors.background : Colors.placeholderText
+            }
           />
           <Text
             style={[
@@ -97,19 +109,25 @@ const SearchScreen = () => {
           ref={locationTabRef}
           style={[styles.tabButton]}
           onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+          onLayout={(event) => {
+            const { width, x } = event.nativeEvent.layout;
+            setDropdownLayout({ width, x });
+          }}
+          activeOpacity={1}
         >
-          <MapPin color="#000" size={18} />
+          <MapPin color={Colors.placeholderText} size={20} />
           <Text style={[styles.tabButtonText]}>{selectedLocation}</Text>
-          <ChevronDown color="#000" size={18} />
+          <ChevronDown color={Colors.placeholderText} size={20} />
         </TouchableOpacity>
       </View>
       {showLocationDropdown && (
-        <View
+        <ScrollView
+          showsVerticalScrollIndicator={false}
           style={[
             styles.dropdown,
             {
-              width: dropdownLayout.width,
-              left: dropdownLayout.x,
+              width: dropdownLayout.width, // Use dynamic width from layout
+              left: dropdownLayout.x, // Align dropdown with the tab button
             },
           ]}
         >
@@ -118,11 +136,12 @@ const SearchScreen = () => {
               key={location}
               style={styles.dropdownItem}
               onPress={() => handleLocationSelection(location)}
+              activeOpacity={1}
             >
               <Text>{location}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       )}
       <View style={styles.container}>
         {activeTab === null && <RestaurantsView location={selectedLocation!} />}
@@ -135,47 +154,52 @@ const SearchScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: Colors.background,
   },
   container: {
     flex: 1,
   },
   tabContainer: {
     flexDirection: "row",
-    padding: 10,
+    paddingHorizontal: width * 0.03,
+    paddingTop: width * 0.03,
+    paddingBottom: width * 0.02,
   },
   dropdown: {
     position: "absolute",
-    top: 105,
-    right: 10,
-    backgroundColor: "#fff",
+    top: height * 0.13,
+    backgroundColor: Colors.background,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: Colors.inputBackground,
     zIndex: 1000,
+    maxHeight: height * 0.2,
+    minWidth: width * 0.1,
   },
   dropdownItem: {
-    padding: 10,
+    padding: width * 0.03,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
+    borderBottomColor: Colors.inputBackground,
   },
   tabButton: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f0f0f0",
-    padding: 10,
+    padding: width * 0.03,
     borderRadius: 10,
-    marginRight: 10,
+    marginRight: width * 0.03,
   },
   activeTab: {
     backgroundColor: Colors.tags,
   },
   tabButtonText: {
-    marginLeft: 8,
-    color: "#000",
+    fontFamily: Fonts.Regular,
+    color: Colors.placeholderText,
+    paddingHorizontal: width * 0.02,
+    fontSize: width * 0.04,
   },
   activeTabText: {
-    color: "#fff",
+    color: Colors.background,
   },
 });
 

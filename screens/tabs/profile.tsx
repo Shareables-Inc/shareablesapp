@@ -409,9 +409,10 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     backgroundColor: Colors.background,
-    width: width * 0.8,
+    width: width * 0.9 ,
     alignSelf: "flex-start",
-    marginLeft: width * 0.07,
+    paddingLeft: width * 0.05,
+    flex: 1
   },
   bioText: {
     fontSize: width * 0.037,

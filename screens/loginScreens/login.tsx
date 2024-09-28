@@ -135,6 +135,7 @@ export default function LoginScreen() {
               value={email}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
           <View style={styles.inputContainer}>
@@ -283,7 +284,7 @@ const styles = StyleSheet.create({
   },
   registerButtonTextHighlight: {
     fontSize: width * 0.04,
-    color: Colors.tags,
+    color: Colors.highlightText,
     fontFamily: Fonts.Bold,
   },
 });

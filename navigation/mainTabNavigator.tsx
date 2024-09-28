@@ -21,7 +21,7 @@ import HomeTab from "../screens/tabs/home";
 import { useAuth } from "../context/auth.context";
 import HomeStack from "./homeStack";
 
-import SearchScreen from "../screens/tabs/search";
+import SearchScreen from "../screens/tabs/explore";
 import FastImage from "react-native-fast-image";
 
 const Tab = createBottomTabNavigator();
