@@ -24,14 +24,13 @@ import { Fonts } from "../../utils/fonts";
 import TagButton from "../../components/explore/tagButton";
 import { useAuth } from "../../context/auth.context";
 
-const {width, height} = Dimensions.get("window")
+const { width, height } = Dimensions.get("window");
 
 const SearchScreen = () => {
   const [activeTab, setActiveTab] = useState<"Profiles" | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>();
   const [dropdownLayout, setDropdownLayout] = useState({ width: 0, x: 0 });
-  const [showLocationDropdown, setShowLocationDropdown] =
-    useState<boolean>(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState<boolean>(false);
   const locationTabRef = useRef<TouchableOpacity | null>(null);
 
   const { userProfile } = useAuth();
@@ -43,8 +42,7 @@ const SearchScreen = () => {
     }
   }, [userProfile]);
 
-  console.log("selected location", selectedLocation);
-
+  // Measure the layout of the location button when the component mounts
   useEffect(() => {
     if (locationTabRef.current) {
       locationTabRef.current.measure((x, y, width, height, pageX, pageY) => {
@@ -63,8 +61,23 @@ const SearchScreen = () => {
     setActiveTab((prevTab) => (prevTab === tab ? null : tab));
   };
 
-  const locations = ["Brampton", "Burlington", "Guelph", "Hamilton", "Laval", "London", "Markham", 
-    "Mississauga", "Montreal", "Oakville", "Ottawa", "Scarborough", "Toronto", "Windsor", "York"];
+  const locations = [
+    "Brampton",
+    "Burlington",
+    "Guelph",
+    "Hamilton",
+    "Laval",
+    "London",
+    "Markham",
+    "Mississauga",
+    "Montreal",
+    "Oakville",
+    "Ottawa",
+    "Scarborough",
+    "Toronto",
+    "Windsor",
+    "York",
+  ];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -75,10 +88,13 @@ const SearchScreen = () => {
             activeTab === "Profiles" && styles.activeTab,
           ]}
           onPress={() => handleTabPress("Profiles")}
+          activeOpacity={1}
         >
           <UserCircle
-            size={18}
-            color={activeTab === "Profiles" ? Colors.background : Colors.placeholderText}
+            size={20}
+            color={
+              activeTab === "Profiles" ? Colors.background : Colors.placeholderText
+            }
           />
           <Text
             style={[
@@ -93,10 +109,15 @@ const SearchScreen = () => {
           ref={locationTabRef}
           style={[styles.tabButton]}
           onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+          onLayout={(event) => {
+            const { width, x } = event.nativeEvent.layout;
+            setDropdownLayout({ width, x });
+          }}
+          activeOpacity={1}
         >
           <MapPin color={Colors.placeholderText} size={20} />
           <Text style={[styles.tabButtonText]}>{selectedLocation}</Text>
-          <ChevronDown color={Colors. placeholderText} size={20} />
+          <ChevronDown color={Colors.placeholderText} size={20} />
         </TouchableOpacity>
       </View>
       {showLocationDropdown && (
@@ -105,8 +126,8 @@ const SearchScreen = () => {
           style={[
             styles.dropdown,
             {
-              width: dropdownLayout.width,
-              left: dropdownLayout.x,
+              width: dropdownLayout.width, // Use dynamic width from layout
+              left: dropdownLayout.x, // Align dropdown with the tab button
             },
           ]}
         >
@@ -115,6 +136,7 @@ const SearchScreen = () => {
               key={location}
               style={styles.dropdownItem}
               onPress={() => handleLocationSelection(location)}
+              activeOpacity={1}
             >
               <Text>{location}</Text>
             </TouchableOpacity>
@@ -141,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: width * 0.03,
     paddingTop: width * 0.03,
-    paddingBottom: width * 0.02
+    paddingBottom: width * 0.02,
   },
   dropdown: {
     position: "absolute",
@@ -151,7 +173,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.inputBackground,
     zIndex: 1000,
-    maxHeight: height * 0.2
+    maxHeight: height * 0.2,
+    minWidth: width * 0.1,
   },
   dropdownItem: {
     padding: width * 0.03,
@@ -170,11 +193,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tags,
   },
   tabButtonText: {
-    marginLeft: width * 0.01,
     fontFamily: Fonts.Regular,
     color: Colors.placeholderText,
     paddingHorizontal: width * 0.02,
-    fontSize: width * 0.04
+    fontSize: width * 0.04,
   },
   activeTabText: {
     color: Colors.background,

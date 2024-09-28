@@ -1,8 +1,10 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, View, Dimensions } from "react-native";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { User, UserCircle } from "lucide-react-native";
+
+const {width, height}=Dimensions.get("window")
 
 interface TagButtonProps {
 	tag: string;
@@ -16,18 +18,9 @@ const TagButton: React.FC<TagButtonProps> = ({ tag, isSelected, onPress }) => {
 			style={[styles.tagButton, isSelected && styles.selectedTag]}
 			onPress={onPress}
 		>
-			{tag === "Friends" ? (
-				<View style={{ flexDirection: "row", alignItems: "center" }}>
-					<User size={20} color={Colors.background} />
-					<Text style={[styles.tagText, isSelected && styles.selectedTagText]}>
-						{tag}
-					</Text>
-				</View>
-			) : (
 				<Text style={[styles.tagText, isSelected && styles.selectedTagText]}>
 					{tag}
 				</Text>
-			)}
 		</TouchableOpacity>
 	);
 };
@@ -35,25 +28,30 @@ const TagButton: React.FC<TagButtonProps> = ({ tag, isSelected, onPress }) => {
 const styles = StyleSheet.create({
 	tagButton: {
 		backgroundColor: Colors.tags,
-		paddingHorizontal: 14,
+		paddingHorizontal: 16,
 		paddingVertical: 14,
 		borderRadius: 10,
 		marginRight: 8,
 		marginVertical: 8,
-		minWidth: 80,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	selectedTag: {
-		backgroundColor: Colors.highlightText,
+		backgroundColor: Colors.background,
+		borderColor: Colors.tags,
+		borderWidth: 2,
+		paddingHorizontal: 14,
+		paddingVertical: 12,
 	},
 	tagText: {
 		color: Colors.background,
-		fontFamily: Fonts.Light,
-		fontSize: 14,
+		fontFamily: Fonts.Regular,
+		fontSize: width * 0.038,
 	},
 	selectedTagText: {
-		fontFamily: Fonts.Medium,
+		color: Colors.tags,
+		fontFamily: Fonts.Regular,
+		fontSize: width * 0.038,
 	},
 });
 

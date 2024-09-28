@@ -192,7 +192,7 @@ const RestaurantCard = ({
                 </Text>
               </View>
             </View>
-            <Text style={styles.tags}>{restaurant.tags?.join(" • ")}</Text>
+            <Text style={styles.tags}>{restaurant.tags?.slice(0,3).join(" • ")}</Text>
             <View style={styles.buttonContainer}>
               {restaurant.status && (
                 <TouchableOpacity style={styles.button}>

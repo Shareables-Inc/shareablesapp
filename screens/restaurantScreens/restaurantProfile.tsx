@@ -420,7 +420,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
               </Text>
             </View>
           </View>
-          <Text style={styles.tags}>{establishmentData?.tags.join(" • ")}</Text>
+          <Text style={styles.tags}>{establishmentData?.tags.slice(0,3).join(" • ")}</Text>
           <View style={styles.buttonContainer}>
             <View style={styles.actionButtonsContainer}>
               <TouchableOpacity style={styles.actionButton} onPress={handleInvite} activeOpacity={1}>

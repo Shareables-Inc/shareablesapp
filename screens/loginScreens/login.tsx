@@ -135,6 +135,7 @@ export default function LoginScreen() {
               value={email}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
             />
           </View>
           <View style={styles.inputContainer}>

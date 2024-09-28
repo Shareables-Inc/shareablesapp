@@ -76,7 +76,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
       if (!uniqueEstablishments.has(establishment.id)) {
         uniqueEstablishments.add(establishment.id);
         topThree.push(establishment);
-        if (topThree.length === 3) break;
+        if (topThree.length === 4) break;
       }
     }
 
@@ -117,13 +117,14 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
       <TouchableOpacity
         key={index}
         onPress={() => handleNavigateToRestaurantProfile(establishment)}
+        activeOpacity={1}
       >
         <View style={styles.restaurantItem}>
           <View>
             <Text style={styles.restaurantName}>{establishment.name}</Text>
             <Text style={styles.restaurantInfo}>{establishment.address}</Text>
             <Text style={styles.restaurantTags}>
-              {establishment.tags?.join(" • ")}
+              {establishment.tags?.slice(0,3).join(" • ")}
             </Text>
           </View>
 
@@ -148,6 +149,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
       <View key={item.id} style={styles.featuredRestaurantCard}>
         <TouchableOpacity
           onPress={() => handleNavigateToRestaurantProfile(item)}
+          activeOpacity={1}
         >
           <View style={styles.featuredRestaurantImageContainer}>
             <FastImage
@@ -176,7 +178,10 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
 
   const renderTopPoster = ({ item }: { item: TopPoster }) => (
     <View style={styles.topPosterItem}>
-      <TouchableOpacity onPress={() => handleTopPosters(item.userId)}>
+      <TouchableOpacity 
+        onPress={() => handleTopPosters(item.userId)}
+        activeOpacity={1}
+        >
         <LinearGradient
           colors={[Colors.profileBorder, Colors.profileBorder]}
           start={{ x: 0, y: 0 }}
@@ -194,7 +199,13 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
           </View>
         </LinearGradient>
       </TouchableOpacity>
-      <Text style={styles.topPosterUsername}>@{item.username}</Text>
+      <Text 
+        style={styles.topPosterUsername} 
+        numberOfLines={1} 
+        ellipsizeMode="tail"
+      >
+        @{item.username}
+      </Text>
     </View>
   );
 
@@ -202,7 +213,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     <ScrollView contentContainerStyle={styles.scrollViewContent}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={styles.sectionTitle}>Top Foodies</Text>
+      <Text style={styles.sectionTitleFoodies}>Top Foodies</Text>
       <FlatList
         data={topPosters}
         renderItem={renderTopPoster}
@@ -218,7 +229,6 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
         style={styles.categories}
       >
         {allTags.map((tag) => (
@@ -231,40 +241,53 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
         ))}
       </ScrollView>
 
-      <Text style={styles.sectionTitle}>Featured Restaurants</Text>
-      <FlatList
-        data={topThreePosts}
-        renderItem={renderFeaturedRestaurants}
-        keyExtractor={(item) => item.id}
+      <Text style={styles.sectionTitleFeatured}>Featured Restaurants</Text>
+      <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        showsVerticalScrollIndicator={false}
-      />
-      <Text style={styles.sectionTitle}>Discover</Text>
+      >
+        <View style={{paddingRight: width * 0.03, flexDirection: "row"}}>
+        {topThreePosts.map((item) => (
+          renderFeaturedRestaurants({ item })
+        ))}
+        </View>
+      </ScrollView>
+    <View style={{ marginTop: width * 0.08}}>
       {renderDiscoverSection()}
+    </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   scrollViewContent: {
-    paddingLeft: width * 0.03,
   },
   categories: {
-    marginBottom: 12, // Reduced from 16
+    marginBottom: width * 0.03,
+    paddingLeft: width * 0.03
   },
-  sectionTitle: {
-    fontSize: 20,
+  sectionTitleFoodies: {
+    fontSize: width * 0.05,
     fontFamily: Fonts.Medium,
-    paddingVertical: width * 0.03
+    paddingVertical: width * 0.03,
+    marginLeft: width * 0.03
+  },
+  sectionTitleFeatured: {
+    fontSize: width * 0.05,
+    fontFamily: Fonts.Medium,
+    paddingBottom: width * 0.04,
+    marginTop: -(width * 0.02),
+    marginLeft: width * 0.03
   },
   justifyContentSpaceBetween: {
+    marginLeft: width * 0.03
   },
   topPostersContainer: {
+    marginBottom: width * 0.05,
+    width: width
   },
   topPosterItem: {
-    alignItems: "center",
-    width: width / 5, 
+    width: width / 5,
   },
   gradientBorder: {
     width: width / 5,
@@ -300,15 +323,13 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  featuredRestaurants: {
-    paddingHorizontal: 10,
-  },
   featuredRestaurantCard: {
-    width: width * 0.5,
-    height: width * 0.5 * 1.25, 
-    marginRight: width * 0.02, 
+    width: width * 0.48,
+    height: width * 0.48 * 1.25, 
     borderRadius: 12,
     overflow: "hidden",
+    marginLeft: width * 0.03,
+    marginRight: -(width * 0.01)
   },
   featuredRestaurantImage: {
     width: "100%",
@@ -338,13 +359,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: width * 0.02, 
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.inputBackground,
-    maxWidth: width * 0.94
+    paddingVertical: width * 0.035, 
+    borderTopColor: Colors.inputBackground,
+    borderTopWidth: 1,
+    maxWidth: width * 0.94,
+    marginLeft: width * 0.03
   },
   restaurantName: {
-    fontSize: width * 0.04,
+    fontSize: width * 0.045,
     fontWeight: "bold",
     fontFamily: Fonts.Bold,
   },

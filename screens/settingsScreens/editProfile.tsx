@@ -35,7 +35,11 @@ const EditProfileScreen = () => {
   const [hasChanges, setHasChanges] = useState(false); // Track unsaved changes
   const locationTabRef = useRef(null);
 
-  const locations = ["Toronto", "Mississauga", "Brampton", "Hamilton", "Montreal", "Ottawa"];
+  const locations = [
+    "Brampton", "Burlington", "Guelph", "Hamilton", "Laval", 
+    "London", "Markham", "Mississauga", "Montreal", "Oakville", 
+    "Ottawa", "Scarborough", "Toronto", "Windsor", "York"
+  ];
 
   useEffect(() => {
     const fetchUserData = async () => {
