@@ -165,7 +165,7 @@ const EditProfileScreen = () => {
     <SafeAreaView edges={["bottom", "top"]} style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.headerBox}>
         <TouchableOpacity onPress={handleBackPress}>
-          <CircleArrowLeft size={30} color={Colors.text} />
+          <CircleArrowLeft size={28} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerTitle}>Profile Details</Text>

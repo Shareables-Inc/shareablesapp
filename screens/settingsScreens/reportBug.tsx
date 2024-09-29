@@ -8,6 +8,7 @@ import {
   Dimensions,
   Keyboard,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
@@ -27,6 +28,7 @@ const ReportBugScreen = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -54,7 +56,7 @@ const ReportBugScreen = () => {
       console.log("Bug reported successfully!");  // Log success after Jira response
 
       // Show success message and navigate back
-      Alert.alert("Success", "Bug reported successfully!");
+      Alert.alert("Success", "Thank you for improving the app!");
       setHasChanges(false);
       navigation.goBack();
     } catch (error) {
@@ -67,10 +69,10 @@ const ReportBugScreen = () => {
     <SafeAreaView edges={["bottom", "top"]} style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.headerBox}>
         <TouchableOpacity onPress={handleBackPress}>
-          <CircleArrowLeft size={30} color={Colors.text} />
+          <CircleArrowLeft size={28} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Report a Bug</Text>
+          <Text style={styles.headerTitle}>Bug Report</Text>
         </View>
       </View>
 
@@ -109,21 +111,25 @@ const ReportBugScreen = () => {
       </TouchableWithoutFeedback>
 
       {hasChanges && (
-          <Text style={styles.unsavedChangesText}>
-            You have unsaved changes
-          </Text>
-        )}
+        <Text style={styles.unsavedChangesText}>
+          You have unsaved changes
+        </Text>
+      )}
 
+      {loading ? ( // Show loading indicator if request is in progress
+        <ActivityIndicator size="large" color={Colors.tags} style={styles.loadingIndicator} />
+      ) : (
         <TouchableOpacity
           style={[styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
           activeOpacity={1}
           onPress={handleSaveChanges}
           disabled={!hasChanges}
         >
-          <Text style={styles.saveButtonText}>Send Bug</Text>
+          <Text style={styles.saveButtonText}>Send Request</Text>
         </TouchableOpacity>
-    </SafeAreaView>  
-);
+      )}
+    </SafeAreaView>
+  );
 };
 
 
@@ -231,6 +237,9 @@ const styles = StyleSheet.create({
         fontSize: width * 0.04,
         fontFamily: Fonts.Bold,
       },
+      loadingIndicator: {
+        marginTop: height * 0.02, 
+      }
 });
 
 export default ReportBugScreen;

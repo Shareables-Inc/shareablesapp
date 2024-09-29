@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,16 +7,17 @@ import {
   StyleSheet,
   Dimensions,
   Keyboard,
+  Alert,
+  ActivityIndicator, 
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation.types";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
-import { auth, db } from "../../firebase/firebaseConfig";
-import { doc, serverTimestamp, setDoc, getDoc } from "firebase/firestore";
-import { ChevronDown, CircleArrowLeft } from "lucide-react-native";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import { requestFeatureToJira } from "../../helpers/featureRequest";
+import { CircleArrowLeft } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -25,6 +26,7 @@ const RequestFeatureScreen = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
+  const [loading, setLoading] = useState(false); 
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -40,24 +42,41 @@ const RequestFeatureScreen = () => {
     setHasChanges(true);
   };
 
-  const handleSaveChanges = (text: string) => {
-}
+  const handleSaveChanges = async () => {
+    if (!title || !description) {
+      Alert.alert("Error", "Please fill in both the title and description.");
+      return;
+    }
+
+    try {
+      setLoading(true); // Start loading
+      await requestFeatureToJira(title, description);
+      Alert.alert("Success", "Thank you for the request!");
+      setHasChanges(false);
+      setLoading(false); // Stop loading
+      navigation.goBack();
+    } catch (error) {
+      console.log("Error reporting feature to Jira:", error);
+      Alert.alert("Error", "Failed to send request.");
+      setLoading(false); // Stop loading in case of error
+    }
+  };
 
   return (
     <SafeAreaView edges={["bottom", "top"]} style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.headerBox}>
         <TouchableOpacity onPress={handleBackPress}>
-          <CircleArrowLeft size={30} color={Colors.text} />
+          <CircleArrowLeft size={28} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Request Feature</Text>
+          <Text style={styles.headerTitle}>Feature Request</Text>
         </View>
       </View>
 
       <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
         <Text style={styles.infoText}>
-            Got an idea to make the app better? Let us know! Your suggestions help shape future updates, 
-            bringing features that matter most to you and enhancing the overall experience for everyone.
+          Got an idea to make the app better? Let us know! Your suggestions help shape future updates,
+          bringing features that matter most to you and enhancing the overall experience for everyone.
         </Text>
       </TouchableWithoutFeedback>
 
@@ -65,35 +84,36 @@ const RequestFeatureScreen = () => {
         <Text style={styles.inputHeader}>Feature Name</Text>
 
         <TextInput
-            style={[styles.input]}
-            placeholder="add a feature name"
-            placeholderTextColor={Colors.placeholderText}
-            value={title}
-            onChangeText={handleTitleChange}
-          />
-
+          style={[styles.input]}
+          placeholder="add a feature name"
+          placeholderTextColor={Colors.placeholderText}
+          value={title}
+          onChangeText={handleTitleChange}
+        />
       </TouchableWithoutFeedback>
 
       <TouchableWithoutFeedback style={styles.inputContainer} onPress={Keyboard.dismiss}>
         <Text style={styles.inputHeader}>Reason</Text>
 
         <TextInput
-            style={[styles.input, styles.inputDescription]}
-            placeholder="let us know how this feature would make your experience better"
-            placeholderTextColor={Colors.placeholderText}
-            value={description}
-            onChangeText={handleDescriptionChange}
-            multiline
-          />
-
+          style={[styles.input, styles.inputDescription]}
+          placeholder="let us know how this feature would make your experience better"
+          placeholderTextColor={Colors.placeholderText}
+          value={description}
+          onChangeText={handleDescriptionChange}
+          multiline
+        />
       </TouchableWithoutFeedback>
 
       {hasChanges && (
-          <Text style={styles.unsavedChangesText}>
-            You have unsaved changes
-          </Text>
-        )}
+        <Text style={styles.unsavedChangesText}>
+          You have unsaved changes
+        </Text>
+      )}
 
+      {loading ? ( // Show loading indicator if request is in progress
+        <ActivityIndicator size="large" color={Colors.tags} style={styles.loadingIndicator} />
+      ) : (
         <TouchableOpacity
           style={[styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
           activeOpacity={1}
@@ -102,8 +122,9 @@ const RequestFeatureScreen = () => {
         >
           <Text style={styles.saveButtonText}>Send Request</Text>
         </TouchableOpacity>
-    </SafeAreaView>  
-);
+      )}
+    </SafeAreaView>
+  );
 };
 
 
@@ -211,6 +232,9 @@ const styles = StyleSheet.create({
         fontSize: width * 0.04,
         fontFamily: Fonts.Bold,
       },
+      loadingIndicator: {
+        marginTop: height * 0.02, 
+      }
 });
 
 export default RequestFeatureScreen;

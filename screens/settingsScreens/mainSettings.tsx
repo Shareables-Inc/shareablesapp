@@ -94,11 +94,11 @@ const MainSettingsScreen = () => {
 
             <View style={styles.separatorSmall} />
 
-            <TouchableOpacity activeOpacity={1}>
+            {/* <TouchableOpacity activeOpacity={1}>
               <Text style={styles.bodyText}>Leave a Review</Text>
             </TouchableOpacity>
 
-            <View style={styles.separatorSmall} />
+            <View style={styles.separatorSmall} /> */}
           </View>
         </ScrollView>
       </View>
