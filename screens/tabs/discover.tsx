@@ -5,20 +5,13 @@ import React, {
   useState,
   useMemo,
 } from "react";
-import {
-  View,
-  StyleSheet,
-  Text,
-  ActivityIndicator,
-  Animated,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import {
   NavigationProp,
   useIsFocused,
   useNavigation,
 } from "@react-navigation/native";
-import { Camera, MapView, Viewport } from "@rnmapbox/maps";
+import { Camera, MapView } from "@rnmapbox/maps";
 import { BottomSheetModal, useBottomSheetModal } from "@gorhom/bottom-sheet";
 import { useAuth } from "../../context/auth.context";
 import { usePostsByUser } from "../../hooks/usePost";
@@ -36,7 +29,6 @@ import MapViewWithMarkers, {
   MarkerTypeWithImage,
 } from "../../components/discover/MapViewWithMarkers";
 import { useLocationStore } from "../../store/useLocationStore";
-import { useCameraFocusStore } from "../../store/useCameraFocusStore";
 import { Fonts } from "../../utils/fonts";
 import LocationErrorMessage from "../../components/discover/LocationErrorMessage";
 import { useGetUserSaves } from "../../hooks/useUserSave";
@@ -202,7 +194,7 @@ function DiscoverScreen() {
         establishmentName: save.name,
         city: save.city,
         country: save.country,
-        priceRange: save.priceRange,
+        priceRange: save.priceRange || 0,
         tags: save.tags,
         averageRating: save.averageRating,
         userProfilePicture: null,
@@ -217,9 +209,9 @@ function DiscoverScreen() {
         establishmentName: post.establishmentDetails.name,
         city: post.establishmentDetails.city,
         country: post.establishmentDetails.country,
-        priceRange: post.establishmentDetails.priceRange?.toString() || "",
+        priceRange: post.establishmentDetails.priceRange || 0,
         tags: post.tags,
-        averageRating: post.establishmentDetails.averageRating,
+        averageRating: post.establishmentDetails.averageRating.toString(),
         type: "following" as const,
       })) || []),
       ...(memoizedPosts?.map((post) => ({
@@ -230,10 +222,10 @@ function DiscoverScreen() {
         establishmentName: post.establishmentDetails.name,
         city: post.establishmentDetails.city,
         country: post.establishmentDetails.country,
-        priceRange: post.establishmentDetails.priceRange?.toString() || "",
+        priceRange: post.establishmentDetails.priceRange || 0,
         userProfilePicture: post.profilePicture,
         tags: post.tags,
-        averageRating: post.establishmentDetails.averageRating,
+        averageRating: post.establishmentDetails.averageRating.toString(),
         type: "post" as const,
       })) || []),
     ];

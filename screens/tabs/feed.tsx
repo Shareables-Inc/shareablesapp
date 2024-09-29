@@ -42,7 +42,6 @@ const FeedScreen = () => {
   } = usePostPaginated(10);
 
   const posts = data?.pages.flatMap((page) => page.posts) || [];
-  console.log(posts);
 
   const handlePostPress = useCallback(
     (post: Post) => {
@@ -97,7 +96,7 @@ const FeedScreen = () => {
               Platform.OS === "android" ? height * 0.1 : height * 0.045,
           }}
         />
-      ) : posts.length === 0 ? (
+      ) : !posts || posts.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
             Looks like there aren't any posts yet. Be the first to share your
@@ -154,7 +153,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: height * 0.02,
-    fontFamily: Fonts.Medium, 
+    fontFamily: Fonts.Medium,
     color: Colors.text,
     textAlign: "center",
     marginBottom: height * 0.02,

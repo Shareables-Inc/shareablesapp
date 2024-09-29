@@ -21,13 +21,12 @@ import {
 } from "@react-navigation/native";
 import { useLocationStore } from "../../store/useLocationStore";
 import { RootStackParamList } from "../../types/stackParams.types";
-import { useCameraFocusStore } from "../../store/useCameraFocusStore";
 import useNotificationStore from "../../store/useNotificationStore";
 import { Fonts } from "../../utils/fonts";
 interface HomeLayoutProps {
   children: React.ReactNode;
   activeTab: "Feed" | "Discover";
-  onTabChange: (tab: "Feed" | "Discover") => void
+  onTabChange: (tab: "Feed" | "Discover") => void;
 }
 
 const { height, width } = Dimensions.get("window");
@@ -142,13 +141,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginHorizontal: width * 0.03
+    marginHorizontal: width * 0.03,
   },
   content: {
     flex: 1,
   },
   feedContent: {
-    paddingTop: height * 0.125 
+    paddingTop: height * 0.125,
   },
   notificationContainer: {
     flexDirection: "row",
@@ -166,9 +165,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   divider: {
-    width: 1,           // Thickness of the divider
-    backgroundColor: Colors.background,  // White divider color
-    marginHorizontal: 10,  // Adjust to add spacing around the divider
+    width: 1, // Thickness of the divider
+    backgroundColor: Colors.background, // White divider color
+    marginHorizontal: 10, // Adjust to add spacing around the divider
   },
 });
 

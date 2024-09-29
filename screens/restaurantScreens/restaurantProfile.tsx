@@ -21,26 +21,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import Colors from "../../utils/colors";
 import { StatusBar } from "expo-status-bar";
 import { Fonts } from "../../utils/fonts";
-import { auth, db } from "../../firebase/firebaseConfig";
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  getDocs,
-  getDoc,
-  doc,
-  addDoc,
-} from "firebase/firestore";
-
-import { Post } from "../../models/post";
 import {
   ArrowLeft,
   MapPin,
   MessageCircle,
   Bookmark,
-  Globe,
 } from "lucide-react-native";
 import { useEstablishmentProfileData } from "../../hooks/useEstablishment";
 import { RootStackParamList } from "../../types/stackParams.types";
@@ -74,8 +59,6 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
   const [isHeaderVisible, setHeaderVisible] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("Closed");
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [isModalVisible, setModalVisible] = useState(false);
-  const modalHeight = useRef(new Animated.Value(0)).current;
   const { mutate: createSave } = useCreateUserSave();
   const { mutate: removeSave } = useDeleteUserSave();
   const [isSaved, setIsSaved] = useState<boolean>(false);
@@ -243,7 +226,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
   };
 
   const renderPriceRange = () => {
-    return "$".repeat(parseInt(establishmentData!.priceRange) || 0);
+    return "$".repeat(establishmentData!.priceRange || 0);
   };
 
   const calculateDistance = (
@@ -289,7 +272,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
   const handleInvite = () => {
     const message = `Go checkout ${establishmentData?.name} on Shareables!`;
     const url = `sms:?body=${encodeURIComponent(message)}`;
-  
+
     Linking.canOpenURL(url)
       .then((supported) => {
         if (supported) {
@@ -303,7 +286,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
         Alert.alert("Error", "Failed to open messaging app.");
       });
   };
-  
+
   const posts = establishmentData?.fewImagePostReview || [];
 
   const columnCount = 2; // Number of columns in the grid
@@ -320,8 +303,16 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
         {items.map((post, index) => {
           const isOddColumn = columnIndex % 2 !== 0;
           const imageHeight = isOddColumn
-            ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
-            : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
+            ? index % 3 === 0
+              ? 150
+              : index % 3 === 1
+              ? 200
+              : 250
+            : index % 3 === 0
+            ? 250
+            : index % 3 === 1
+            ? 200
+            : 150;
 
           return (
             <TouchableOpacity
@@ -339,7 +330,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
                   marginTop: 5,
                 }}
               />
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text
                   style={styles.restaurantNameReview}
                   numberOfLines={1}
@@ -409,9 +400,8 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{establishmentData?.name}</Text>
               <Text style={styles.location}>
-                {establishmentData?.city} •{" "}
-                {establishmentData?.priceRange || "No Price Range"} •{" "}
-                <Text style={styles.distance}>{distanceText}</Text>
+                {establishmentData?.city} • {establishmentData?.priceRange || 0}{" "}
+                • <Text style={styles.distance}>{distanceText}</Text>
               </Text>
             </View>
             <View style={styles.ratingContainer}>
@@ -420,10 +410,16 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
               </Text>
             </View>
           </View>
-          <Text style={styles.tags}>{establishmentData?.tags.slice(0,3).join(" • ")}</Text>
+          <Text style={styles.tags}>
+            {establishmentData?.tags.slice(0, 3).join(" • ")}
+          </Text>
           <View style={styles.buttonContainer}>
             <View style={styles.actionButtonsContainer}>
-              <TouchableOpacity style={styles.actionButton} onPress={handleInvite} activeOpacity={1}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={handleInvite}
+                activeOpacity={1}
+              >
                 <MessageCircle size={20} color={Colors.text} />
                 <Text style={styles.actionButtonText}>Invite</Text>
               </TouchableOpacity>
@@ -490,12 +486,12 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
           </Text>
 
           <View style={styles.gridGallery}>
-          {columnItems.map((items, index) => (
-            <View key={index} style={styles.gridColumn}>
-              {renderColumn(items, index)}
-            </View>
-          ))}
-        </View>
+            {columnItems.map((items, index) => (
+              <View key={index} style={styles.gridColumn}>
+                {renderColumn(items, index)}
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
     </>
@@ -567,12 +563,12 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.02,
   },
   titleContainer: {
-    flex: 1, 
+    flex: 1,
   },
   title: {
     fontSize: width * 0.06,
     fontFamily: Fonts.Bold,
-    flexWrap: "wrap", 
+    flexWrap: "wrap",
   },
   location: {
     color: Colors.text,
@@ -722,6 +718,5 @@ const styles = StyleSheet.create({
     color: Colors.highlightText,
   },
 });
-
 
 export default RestaurantProfileScreen;

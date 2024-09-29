@@ -181,8 +181,7 @@ const RestaurantCard = ({
               <View style={styles.titleContainer}>
                 <Text style={styles.title}>{restaurant.name}</Text>
                 <Text style={styles.location}>
-                  {restaurant.city} •{" "}
-                  {restaurant.priceRange || "No Price Range"} •{" "}
+                  {restaurant.city} • {restaurant.priceRange || 0} •{" "}
                   <Text style={styles.distance}>{distanceText}</Text>
                 </Text>
               </View>
@@ -192,7 +191,9 @@ const RestaurantCard = ({
                 </Text>
               </View>
             </View>
-            <Text style={styles.tags}>{restaurant.tags?.slice(0,3).join(" • ")}</Text>
+            <Text style={styles.tags}>
+              {restaurant.tags?.slice(0, 3).join(" • ")}
+            </Text>
             <View style={styles.buttonContainer}>
               {restaurant.status && (
                 <TouchableOpacity style={styles.button}>

@@ -22,6 +22,7 @@ import SelectedRetrievedCard from "../../components/selectedRetrievedCard";
 import {
   useCreateEstablishment,
   useGetEstablishmentByAddressAndName,
+  useGetEstablishmentByMapboxId,
 } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
 import { FirebasePost, Post } from "../../models/post";
@@ -65,6 +66,9 @@ const PostScreen = () => {
     retrievedSuggestion?.features[0]?.properties.name || "",
     retrievedSuggestion?.features[0]?.properties.address || ""
   );
+  const getEstablishmentByMapboxId = useGetEstablishmentByMapboxId(
+    retrievedSuggestion?.features[0]?.properties.mapbox_id || ""
+  );
 
   const handleSelectTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
@@ -103,13 +107,25 @@ const PostScreen = () => {
       setSelectedSuggestion(suggestion);
       try {
         // check if the establishment already exists in the database from
+        // the mapbox id
+        const {
+          data: existingEstablishmentMapbox,
+          isLoading: isLoadingMapbox,
+          error: errorMapbox,
+        } = getEstablishmentByMapboxId;
+
+        if (isLoadingMapbox) return;
+        if (errorMapbox) throw errorMapbox;
+        if (existingEstablishmentMapbox) {
+          setRetrievedSuggestion(existingEstablishmentMapbox);
+          return;
+        }
 
         const retrieveResponse = await retrieveSearchResult(
           suggestion.mapbox_id,
           user?.uid!
         );
         setRetrievedSuggestion(retrieveResponse);
-        console.log(retrieveResponse);
       } catch (error) {
         console.error("Error retrieving search result:", error);
         Alert.alert(
@@ -260,6 +276,8 @@ const PostScreen = () => {
       setRetrievedSuggestion,
       setSelectedSuggestion,
       setSelectedTags, // Add this to the dependency array
+      getEstablishmentByAddressAndName,
+      getEstablishmentByMapboxId,
     ]
   );
 

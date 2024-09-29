@@ -24,20 +24,34 @@ export const usePostPaginated = (limit = 10) => {
         pageParam as QueryDocumentSnapshot<DocumentData> | undefined
       );
 
+      console.log("result.posts");
+      console.log(result.posts);
+
+      // Filter out invalid posts and ensure all required fields are present
+      const validPosts = result.posts.filter((post) => {
+        return (
+          post &&
+          post.id &&
+          post.imageUrls &&
+          Array.isArray(post.imageUrls) &&
+          post.imageUrls.length > 0 &&
+          post.profilePicture
+        );
+      });
+
       // Preload images for this page
-      const imagesToPreload = result.posts.flatMap((post) => [
+      const imagesToPreload = validPosts.flatMap((post) => [
         { uri: post.profilePicture },
         ...post.imageUrls.map((url) => ({ uri: url })),
       ]);
       FastImage.preload(imagesToPreload);
 
-
       // remove any post that are missing a imageUrl
-      result.posts = result.posts.filter((post) => post.imageUrls.length > 0);
-
-      return result;
+      return {
+        ...result,
+        posts: validPosts,
+      };
     },
-
 
     getNextPageParam: (lastPage: {
       lastVisible?: QueryDocumentSnapshot<DocumentData>;

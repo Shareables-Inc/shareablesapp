@@ -15,9 +15,9 @@ import { Likes } from "./likes";
 import { Follower } from "./follower";
 import { UserProfile } from "./user";
 import { Post } from "./post";
-import { Invite } from "./invite";
 import { v4 as uuidv4 } from "uuid";
 import { sendPushNotifications } from "./api/expo.api";
+import { Timestamp } from "firebase-admin/firestore";
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 export const sendCommentNotification = onDocumentCreated(
@@ -75,6 +75,7 @@ export const sendCommentNotification = onDocumentCreated(
       const message: CommentNotification = {
         to: userData.fcmToken,
         sound: "default",
+        tag: Timestamp.now().toDate().toString(),
         title: "New Comment on Your Post",
         body: `${comment.userName} commented: ${comment.comment.substring(
           0,
@@ -146,6 +147,7 @@ export const sendFollowNotification = onDocumentCreated(
       const message: FollowerNotification = {
         to: followedUserData.fcmToken,
         sound: "default",
+        tag: Timestamp.now().toDate().toString(),
         title: "New Follower",
         body: `${followerUserData.username} started following you!`,
         data: {
@@ -230,6 +232,7 @@ export const sendLikeNotification = onDocumentCreated(
       const message: LikeNotification = {
         to: ownerData.fcmToken,
         sound: "default",
+        tag: Timestamp.now().toDate().toString(),
         title: "New Like on Your Post",
         body: `${likerData.username} liked your post!`,
 
@@ -313,6 +316,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
         const message: PostNotification = {
           to: follower.fcmToken,
           sound: "default",
+          tag: Timestamp.now().toDate().toString(),
           title: "Your Friend Made a New Post!",
           body: `${userData.username} made a new post!`,
           data: {
@@ -325,6 +329,9 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
         notifications.push(message);
       }
     }
+
+    // delay the notification by 1 minute
+    await new Promise((resolve) => setTimeout(resolve, 60000));
 
     const response = await sendPushNotifications(notifications);
     logger.info("Notification sent successfully", response);
@@ -387,26 +394,3 @@ export const decrementLikeCount = onDocumentDeleted(
     }
   }
 );
-
-export const sendInviteNotification = onDocumentCreated(
-  "invites/{inviteId}",
-  async (event: any) => {
-    const inviteData = event.data?.data() as Invite | undefined;
-
-    if (!inviteData) {
-      logger.error("No invite data found");
-      return;
-    }
-
-    try {
-      // Fetch the invited user's FCM token
-      const userRef = admin.firestore().collection("users").doc(inviteData.userId);
-      const userDoc = await userRef.get();
-      const userData = userDoc.data();
-
-      if (!userData || !userData.fcmToken) {
-        logger.error("User data or FCM token not found");
-        return;
-      }
-);
-

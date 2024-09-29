@@ -87,61 +87,80 @@ export class FollowingService {
   // Get all posts from the followerIDs
   // Return an array of the posts limited to 10
   async getFollowingPosts(userId: string): Promise<Post[]> {
+    try {
+      // Get users that the current user is following
+      const followingSnapshot = await getDocs(
+        query(this.followingCollection, where("followerId", "==", userId))
+      );
 
+      if (followingSnapshot.empty) {
+        return [];
+      }
 
-    // Get users that the current user is following
-    const followingSnapshot = await getDocs(
-      query(this.followingCollection, where("followerId", "==", userId))
-    );
+      const followingIds = followingSnapshot.docs.map(
+        (doc) => doc.id.split("_")[1]
+      );
 
-    const followingIds = followingSnapshot.docs.map(
-      (doc) => doc.id.split("_")[1]
-    );
+      if (followingIds.length === 0) {
+        return [];
+      }
 
-    if (followingIds.length === 0) {
+      // Get posts from all users being followed
+      const postsSnapshot = await getDocs(
+        query(
+          this.postsCollection,
+          where("userId", "in", followingIds),
+          orderBy("createdAt", "desc"),
+          limit(10)
+        )
+      );
+
+      if (postsSnapshot.empty) {
+        return [];
+      }
+
+      const posts = postsSnapshot.docs.map(
+        (doc) => ({ id: doc.id, ...doc.data() } as Post)
+      );
+
+      // Fetch profile pictures and establishment data in parallel
+      const [profilePictures, establishmentData] = await Promise.all([
+        this.getProfilePictures(posts.map((post) => post.userId)),
+        this.getEstablishmentData(
+          posts.map((post) => post.establishmentDetails?.id).filter(Boolean)
+        ),
+      ]).catch((error) => {
+        console.error(
+          "Error fetching profile pictures or establishment data:",
+          error
+        );
+        return [{}, {}];
+      });
+
+      // Process posts
+      const processedPosts = posts.map((post) => ({
+        ...post,
+        profilePicture: profilePictures[post.userId],
+        establishmentDetails: {
+          ...post.establishmentDetails,
+          averageRating:
+            establishmentData[post.establishmentDetails?.id]?.averageRating,
+        },
+      }));
+
+      // Remove duplicates
+      const uniquePosts = this.removeDuplicates(processedPosts);
+
+      console.log(
+        `Found ${uniquePosts.length} unique posts from followed users`
+      );
+
+      console.log("Unique posts:", uniquePosts);
+      return uniquePosts;
+    } catch (error) {
+      console.error("Error fetching following posts:", error);
       return [];
     }
-
-    // Get posts from all users being followed
-    const postsSnapshot = await getDocs(
-      query(
-        this.postsCollection,
-        where("userId", "in", followingIds),
-        orderBy("createdAt", "desc"),
-        limit(10)
-      )
-    );
-
-    const posts = postsSnapshot.docs.map(
-      (doc) => ({ id: doc.id, ...doc.data() } as Post)
-    );
-
-    // Fetch profile pictures and establishment data in parallel
-    const [profilePictures, establishmentData] = await Promise.all([
-      this.getProfilePictures(posts.map((post) => post.userId)),
-      this.getEstablishmentData(
-        posts.map((post) => post.establishmentDetails?.id).filter(Boolean)
-      ),
-    ]);
-
-    // Process posts
-    const processedPosts = posts.map((post) => ({
-      ...post,
-      profilePicture: profilePictures[post.userId],
-      establishmentDetails: {
-        ...post.establishmentDetails,
-        averageRating:
-          establishmentData[post.establishmentDetails?.id]?.averageRating,
-      },
-    }));
-
-    // Remove duplicates
-    const uniquePosts = this.removeDuplicates(processedPosts);
-
-    console.log(`Found ${uniquePosts.length} unique posts from followed users`);
-
-    console.log("Unique posts:", uniquePosts);
-    return uniquePosts;
   }
 
   private async getProfilePictures(
@@ -161,12 +180,27 @@ export class FollowingService {
     establishmentIds: string[]
   ): Promise<Record<string, DocumentData>> {
     const establishmentData: Record<string, DocumentData> = {};
-    await Promise.all(
-      establishmentIds.map(async (id) => {
-        const docSnapshot = await getDoc(doc(db, "establishments", id));
-        establishmentData[id] = docSnapshot.data() || {};
-      })
-    );
+
+    const validIds = establishmentIds.filter((id) => id !== null);
+
+    if (validIds.length === 0) {
+      console.log("No valid establishment IDs provided");
+      return establishmentData;
+    }
+
+    const batchSize = 10;
+    for (let i = 0; i < validIds.length; i += batchSize) {
+      const batch = validIds.slice(i, i + batchSize);
+      const batchQuery = query(
+        collection(db, "establishments"),
+        where("id", "in", batch)
+      );
+      const batchSnapshot = await getDocs(batchQuery);
+      batchSnapshot.forEach((doc) => {
+        establishmentData[doc.id] = doc.data() || {};
+      });
+    }
+
     return establishmentData;
   }
 
@@ -221,35 +255,5 @@ export class FollowingService {
     return userStatsSnapshot.exists()
       ? userStatsSnapshot.data()?.followerCount || 0
       : 0;
-  }
-
-  async getFollowingPosters(userId: string): Promise<Post[]> {
-    const followingQuery = query(
-      this.followingCollection,
-      where("followerId", "==", userId)
-    );
-    const followingSnapshot = await getDocs(followingQuery);
-    const followingIds = followingSnapshot.docs.map((doc) => {
-      const [followerId, followingId] = doc.id.split("_");
-      return followingId;
-    });
-
-    const postsQuery = query(
-      this.postsCollection,
-      where("userId", "in", followingIds),
-      orderBy("createdAt", "desc"),
-      limit(10)
-    );
-
-    const postsSnapshot = await getDocs(postsQuery);
-    const posts = postsSnapshot.docs.map(
-      (doc) =>
-        ({
-          id: doc.id,
-          ...doc.data(),
-        } as Post)
-    );
-
-    return posts;
   }
 }

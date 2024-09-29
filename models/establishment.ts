@@ -49,7 +49,7 @@ export type FirebaseEstablishment = {
   longitude: number;
   phone?: string;
   postal_code: string;
-  priceRange?: string;
+  priceRange?: number;
   status?: string;
   tags: string[];
   website?: string;
@@ -58,7 +58,7 @@ export type FirebaseEstablishment = {
 };
 
 export type EstablishmentCard = Establishment & {
-  priceRange: string;
+  priceRange: number;
   distance: string;
   tags: string[];
   gallery?: Post[];
@@ -87,6 +87,6 @@ export interface FeaturedEstablishment
   extends Omit<Establishment, "tags" | "createdAt"> {
   images?: string[];
   tags: string[];
-  priceRange?: string;
+  priceRange?: number;
   createdAt: string | FieldValue;
 }
