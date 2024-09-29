@@ -49,21 +49,21 @@ const ReportBugScreen = () => {
       Alert.alert("Error", "Please fill in both the title and description.");
       return;
     }
-
+  
     try {
-      console.log("Attempting to report bug to Jira...");  // Log at the start of the function
+      setLoading(true); // Start loading
       await reportBugToJira(title, description);
-      console.log("Bug reported successfully!");  // Log success after Jira response
-
-      // Show success message and navigate back
       Alert.alert("Success", "Thank you for improving the app!");
       setHasChanges(false);
+      setLoading(false); // Stop loading
       navigation.goBack();
     } catch (error) {
-      console.log("Error reporting bug to Jira:", error);  // Log error if caught
+      console.log("Error reporting bug to Jira:", error);
       Alert.alert("Error", "Failed to report the bug.");
+      setLoading(false); // Stop loading in case of error
     }
   };
+  
 
   return (
     <SafeAreaView edges={["bottom", "top"]} style={{ flex: 1, backgroundColor: Colors.background }}>
@@ -125,7 +125,7 @@ const ReportBugScreen = () => {
           onPress={handleSaveChanges}
           disabled={!hasChanges}
         >
-          <Text style={styles.saveButtonText}>Send Request</Text>
+          <Text style={styles.saveButtonText}>Report Bug</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

@@ -15,7 +15,6 @@ import { Likes } from "./likes";
 import { Follower } from "./follower";
 import { UserProfile } from "./user";
 import { Post } from "./post";
-import { Invite } from "./invite";
 import { v4 as uuidv4 } from "uuid";
 import { sendPushNotifications } from "./api/expo.api";
 // Initialize Firebase Admin SDK
@@ -265,6 +264,15 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       return;
     }
 
+    // Delay the notification by 5 minutes to ensure full post completion
+    await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+
+    // Check if the post has images before sending the notification
+    if (!postData.imageUrls || postData.imageUrls.length === 0) {
+      logger.info("Post has no images, skipping notification");
+      return;
+    }
+
     // get the user who made the post
     const userRef = admin.firestore().collection("users").doc(postData.userId);
     const userDoc = await userRef.get();
@@ -283,7 +291,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
     const followersDoc = await followersRef.get();
     const followersData = followersDoc.docs.map((doc) => doc.data());
 
-    // I need to then get the follower's username and fcm token
+    // Get the follower's username and FCM token
     const followerUsernames = await Promise.all(
       followersData.map(async (follower) => {
         const followerRef = admin
@@ -305,7 +313,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       return;
     }
 
-    // send a notification to each follower
+    // Send a notification to each follower
     const notifications: PostNotification[] = [];
 
     for (const follower of followerUsernames) {
@@ -330,6 +338,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
     logger.info("Notification sent successfully", response);
   }
 );
+
 
 export const incrementLikeCount = onDocumentCreated(
   "/likes/{likeId}",
@@ -387,26 +396,3 @@ export const decrementLikeCount = onDocumentDeleted(
     }
   }
 );
-
-export const sendInviteNotification = onDocumentCreated(
-  "invites/{inviteId}",
-  async (event: any) => {
-    const inviteData = event.data?.data() as Invite | undefined;
-
-    if (!inviteData) {
-      logger.error("No invite data found");
-      return;
-    }
-
-    try {
-      // Fetch the invited user's FCM token
-      const userRef = admin.firestore().collection("users").doc(inviteData.userId);
-      const userDoc = await userRef.get();
-      const userData = userDoc.data();
-
-      if (!userData || !userData.fcmToken) {
-        logger.error("User data or FCM token not found");
-        return;
-      }
-);
-

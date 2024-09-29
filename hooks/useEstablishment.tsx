@@ -8,18 +8,33 @@ const establishmentService = new EstablishmentService();
 export const useGetEstablishmentById = (establishmentId: string) => {
   return useQuery({
     queryKey: ["establishment", establishmentId],
-    queryFn: () => establishmentService.getEstablishmentById(establishmentId),
+    queryFn: async () => {
+      const establishment = await establishmentService.getEstablishmentById(establishmentId);
+      // Check if the establishment has any posts by using postCount
+      if (!establishment || establishment.postCount === 0) {
+        return null;
+      }
+      return establishment;
+    },
     enabled: !!establishmentId,
   });
 };
 
+
 export const useGetEstablishments = (establishmentIds: string[]) => {
   return useQuery({
     queryKey: ["establishments", establishmentIds],
-    queryFn: () => establishmentService.getEstablishments(establishmentIds),
+    queryFn: async () => {
+      const establishments = await establishmentService.getEstablishments(establishmentIds);
+      // Filter out establishments with postCount of 0
+      return establishments.filter(
+        (establishment) => establishment.postCount > 0
+      );
+    },
     enabled: !!establishmentIds,
   });
 };
+
 
 export const useCreateEstablishment = () => {
   return useMutation({
@@ -51,12 +66,19 @@ export const useGetEstablishmentByAddressAndName = (
 export const useEstablishmentProfileData = (establishmentId: string) => {
   return useQuery({
     queryKey: ["establishmentProfile", establishmentId],
-    queryFn: () =>
-      establishmentService.getEstablishmentCardData(establishmentId),
+    queryFn: async () => {
+      const profileData = await establishmentService.getEstablishmentCardData(establishmentId);
+      // Return null if postCount is 0
+      if (!profileData || profileData.postCount === 0) {
+        return null;
+      }
+      return profileData;
+    },
     enabled: !!establishmentId,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
+
 
 export const useGetFeaturedEstablishments = (
   location: string,
@@ -64,9 +86,15 @@ export const useGetFeaturedEstablishments = (
 ) => {
   return useQuery({
     queryKey: ["featuredEstablishments", location, selectedTag],
-    queryFn: () =>
-      establishmentService.getFeaturedEstablishments(location, selectedTag),
+    queryFn: async () => {
+      const featuredEstablishments = await establishmentService.getFeaturedEstablishments(location, selectedTag);
+      // Filter out establishments with postCount of 0
+      return featuredEstablishments.filter(
+        (establishment) => establishment.postCount > 0
+      );
+    },
     enabled: !!location,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, 
   });
 };
+
