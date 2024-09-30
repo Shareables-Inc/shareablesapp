@@ -24,9 +24,6 @@ export const usePostPaginated = (limit = 10) => {
         pageParam as QueryDocumentSnapshot<DocumentData> | undefined
       );
 
-      console.log("result.posts");
-      console.log(result.posts);
-
       // Filter out invalid posts and ensure all required fields are present
       const validPosts = result.posts.filter((post) => {
         return (

@@ -37,11 +37,11 @@ const ProfileScreen = () => {
   const { user, userProfile } = useAuth();
   const posts = usePostsByUser(user!.uid);
   const { data: userCounts, isLoading } = useUserCounts(user!.uid);
-  console.log("userCounts", userCounts?.followerCount);
+
 
   // need to refetch posts when userProfile is updated
   useEffect(() => {
-    console.log("userProfile", userProfile);
+    
     posts.refetch();
   }, [userProfile]);
 
@@ -176,7 +176,7 @@ const ProfileScreen = () => {
 
   recentPosts.forEach((post, index) => {
     // Alternate assigning posts to different columns
-    columnItems[index % columnCount].push(post);
+    columnItems[index % columnCount].push(post as never);
   });
 
   const renderColumn = (items, columnIndex) => {

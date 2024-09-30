@@ -51,8 +51,9 @@ export class EstablishmentService {
       this.establishmentsCollection,
       where("mapboxId", "==", mapboxId)
     );
+   
     const establishmentsSnapshot = await getDocs(establishmentsQuery);
-
+ 
     if (establishmentsSnapshot.empty) {
       return null;
     }

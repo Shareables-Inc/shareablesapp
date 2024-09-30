@@ -43,7 +43,7 @@ const AccountSettingsScreen = () => {
           onPress: async () => {
             try {
               await logout();
-              console.log("User signed out successfully");
+             
               // Reset navigation stack and navigate to Login screen
               navigation.reset({
                 index: 0,

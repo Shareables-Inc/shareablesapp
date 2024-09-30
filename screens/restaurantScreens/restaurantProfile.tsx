@@ -37,6 +37,7 @@ import { useGetUserSaves } from "../../hooks/useUserSave";
 import { Save } from "../../models/save";
 import { useLocationStore } from "../../store/useLocationStore";
 import { SkeletonRestaurantProfile } from "../../components/skeleton/skeletonRestaurantProfile";
+import { Post } from "../../models/post";
 
 const { width, height } = Dimensions.get("window");
 
@@ -80,7 +81,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
     }
   }, [userSaves.data]);
 
-  console.log("establishmentData", establishmentData);
+
 
   const handleSaveEstablishment = () => {
     try {
@@ -292,12 +293,11 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
   const columnCount = 2; // Number of columns in the grid
   const columnWidth = (width * 0.89) / columnCount; // Width of each column
   const columnItems = Array.from({ length: columnCount }, () => []); // Array to store column data
-
   posts.forEach((post, index) => {
-    columnItems[index % columnCount].push(post); // Distribute posts across columns
+    columnItems[index % columnCount].push(post as never); // Distribute posts across columns
   });
 
-  const renderColumn = (items, columnIndex) => {
+  const renderColumn = (items: Post[], columnIndex: number) => {
     return (
       <View style={{ flex: 1, marginHorizontal: 5 }}>
         {items.map((post, index) => {

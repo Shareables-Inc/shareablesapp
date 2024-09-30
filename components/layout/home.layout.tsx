@@ -35,7 +35,7 @@ const HomeLayout = ({ children, activeTab, onTabChange }: HomeLayoutProps) => {
   const insets = useSafeAreaInsets();
   const notificationStore = useNotificationStore();
   const notificationCount = notificationStore.notifications.length;
-  console.log(notificationStore.notifications);
+
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const animation = useRef(
     new Animated.Value(activeTab === "Feed" ? 0 : 1)

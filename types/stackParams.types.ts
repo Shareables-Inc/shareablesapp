@@ -21,7 +21,12 @@ export type RootStackParamList = {
     tags: string[];
     postId: string;
   };
-  Review: undefined;
+  Review: {
+    establishmentId: string;
+    restaurantName: string;
+    tags: string[];
+    postId: string;
+  };
   Notifications: undefined;
   Mailbox: undefined;
   MainSettings: undefined;

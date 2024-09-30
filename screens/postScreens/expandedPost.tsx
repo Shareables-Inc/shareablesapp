@@ -148,7 +148,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
     }
   };
 
-
   const handleScroll = (event: {
     nativeEvent: { contentOffset: { x: any } };
   }) => {
@@ -172,13 +171,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   );
 
   const handleBackPress = () => {
-    // Log the current navigation state
-    const navState = navigation.getState();
-    console.log("Navigation History:");
-    navState.routes.forEach((route, index) => {
-      console.log(`${index}: ${route.name}`);
-    });
-
     navigation.goBack();
   };
 
@@ -248,7 +240,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
         collection(db, "comments"),
         where("postId", "==", postId),
         orderBy("postId", "asc"),
-        orderBy("createdAt", "desc") 
+        orderBy("createdAt", "desc")
       );
       const unsubscribe = onSnapshot(q, (querySnapshot) => {
         const commentsData: any[] = [];
@@ -257,10 +249,10 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
         });
         setComments(commentsData);
       });
-  
+
       return () => unsubscribe();
     };
-  
+
     fetchComments();
   }, [postId]);
 
@@ -268,36 +260,35 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
     if (!timestamp || !timestamp.toDate) {
       return "Just now"; // Fallback if timestamp is not yet set or not a Firestore Timestamp
     }
-  
+
     const now = new Date();
     const commentDate = timestamp.toDate(); // Convert Firestore Timestamp to JS Date
     const diffTime = Math.abs(now.getTime() - commentDate.getTime());
-  
+
     // Check if the comment is within the last 10 minutes (600,000 milliseconds)
     const tenMinutes = 1000 * 60 * 10;
     if (diffTime < tenMinutes) {
       return "now";
     }
-  
+
     // Check if the comment is within the last 24 hours (86,400,000 milliseconds)
     const oneDay = 1000 * 60 * 60 * 24;
     if (diffTime < oneDay) {
       return "today";
     }
-  
+
     // Calculate the number of days ago
     const diffDays = Math.floor(diffTime / oneDay);
     return diffDays + "d"; // Show number of days followed by "d"
   };
-  
-  
+
   const handleAddComment = async () => {
     try {
       if (comment.trim() === "") {
         // Prevent adding empty comments
         return;
       }
-  
+
       if (user?.uid && postId) {
         const commentData = {
           postId: postId,
@@ -305,9 +296,9 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           userName: userProfile!.username,
           userProfilePicture: userProfile!.profilePicture,
           comment: comment.trim(),
-          createdAt: serverTimestamp(),  // Use Firestore serverTimestamp()
+          createdAt: serverTimestamp(), // Use Firestore serverTimestamp()
         };
-  
+
         await addDoc(collection(db, "comments"), commentData);
         setComments([...comments, commentData]);
         setComment(""); // Clear the input after adding the comment
@@ -318,8 +309,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       console.error("Error adding comment:", error);
     }
   };
-  
-  
 
   return (
     <>
@@ -336,51 +325,50 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       >
         <StatusBar style="auto" />
 
-      <Modal
-        isVisible={fullscreenImageVisible}
-        backdropOpacity={1}
-        onBackdropPress={closeFullscreenImage}
-        onBackButtonPress={closeFullscreenImage}
-        style={styles.fullscreenModal}
-      >
-        <View style={styles.fullscreenContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={closeFullscreenImage}
-            activeOpacity={1}
-          >
-            <X style={styles.closeIcon} color={Colors.background} size={30} />
-          </TouchableOpacity>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            onScroll={(e) => {
-              const newIndex = Math.floor(
-                e.nativeEvent.contentOffset.x / width
-              );
-              setCurrentIndex(newIndex);
-            }}
-            showsHorizontalScrollIndicator={false}
-          >
-            {expandedPost?.imageUrls.map((imageUrl, index) => (
-              <Animated.View
-                key={index}
-                {...panResponder.panHandlers}
-                style={[
-                  styles.fullscreenImageContainer,
-                  { transform: [{ translateY: pan.y }] },
-                ]}
-              >
-                <Image
-                  source={{ uri: imageUrl }}
-                  style={styles.fullscreenImage}
-                />
-              </Animated.View>
-            ))}
-          </ScrollView>
-        </View>
-      </Modal>
-
+        <Modal
+          isVisible={fullscreenImageVisible}
+          backdropOpacity={1}
+          onBackdropPress={closeFullscreenImage}
+          onBackButtonPress={closeFullscreenImage}
+          style={styles.fullscreenModal}
+        >
+          <View style={styles.fullscreenContainer}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={closeFullscreenImage}
+              activeOpacity={1}
+            >
+              <X style={styles.closeIcon} color={Colors.background} size={30} />
+            </TouchableOpacity>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              onScroll={(e) => {
+                const newIndex = Math.floor(
+                  e.nativeEvent.contentOffset.x / width
+                );
+                setCurrentIndex(newIndex);
+              }}
+              showsHorizontalScrollIndicator={false}
+            >
+              {expandedPost?.imageUrls.map((imageUrl, index) => (
+                <Animated.View
+                  key={index}
+                  {...panResponder.panHandlers}
+                  style={[
+                    styles.fullscreenImageContainer,
+                    { transform: [{ translateY: pan.y }] },
+                  ]}
+                >
+                  <Image
+                    source={{ uri: imageUrl }}
+                    style={styles.fullscreenImage}
+                  />
+                </Animated.View>
+              ))}
+            </ScrollView>
+          </View>
+        </Modal>
 
         <ScrollView
           style={styles.container}
@@ -508,54 +496,57 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           </View>
 
           <View style={styles.ratingContainer}>
-          <View style={styles.ratingItem}>
-            <View style={styles.ratingType}>
-              <Sparkle color={Colors.text} size={26} />
-              <Text
-                style={[
-                  styles.ratingScore,
-                  {
-                    color: (expandedPost?.ratings?.ambiance ?? 0) > 7
-                      ? Colors.highlightText
-                      : Colors.text,
-                  },
-                ]}
-              >
-                {expandedPost?.ratings.ambiance + ".0"}
-              </Text>
+            <View style={styles.ratingItem}>
+              <View style={styles.ratingType}>
+                <Sparkle color={Colors.text} size={26} />
+                <Text
+                  style={[
+                    styles.ratingScore,
+                    {
+                      color:
+                        (expandedPost?.ratings?.ambiance ?? 0) > 7
+                          ? Colors.highlightText
+                          : Colors.text,
+                    },
+                  ]}
+                >
+                  {expandedPost?.ratings.ambiance + ".0"}
+                </Text>
               </View>
             </View>
             <View style={styles.ratingItem}>
               <View style={styles.ratingType}>
                 <Utensils color={Colors.text} size={26} />
                 <Text
-                style={[
-                  styles.ratingScore,
-                  {
-                    color: (expandedPost?.ratings?.foodQuality ?? 0) > 7
-            ? Colors.highlightText
-                      : Colors.text,
-                  },
-                ]}
-              >
-                {(expandedPost?.ratings?.foodQuality ?? 0) + ".0"}
-              </Text>
+                  style={[
+                    styles.ratingScore,
+                    {
+                      color:
+                        (expandedPost?.ratings?.foodQuality ?? 0) > 7
+                          ? Colors.highlightText
+                          : Colors.text,
+                    },
+                  ]}
+                >
+                  {(expandedPost?.ratings?.foodQuality ?? 0) + ".0"}
+                </Text>
               </View>
             </View>
             <View style={styles.ratingItem}>
               <View style={styles.ratingType}>
                 <HandPlatter color={Colors.text} size={26} />
                 <Text
-                style={[
-                  styles.ratingScore,
-                  {
-                    color: (expandedPost?.ratings?.service ?? 0) > 7
-                      ? Colors.highlightText
-                      : Colors.text,
-                  },
-                ]}
-              >
-                {expandedPost?.ratings.service + ".0"}
+                  style={[
+                    styles.ratingScore,
+                    {
+                      color:
+                        (expandedPost?.ratings?.service ?? 0) > 7
+                          ? Colors.highlightText
+                          : Colors.text,
+                    },
+                  ]}
+                >
+                  {expandedPost?.ratings.service + ".0"}
                 </Text>
               </View>
             </View>
@@ -577,19 +568,24 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
             </View>
 
             {comments.map((comment, index) => (
-            <View key={index} style={styles.commentContainer}>
-              <Image
-                source={{ uri: comment.userProfilePicture }}
-                style={styles.commentAvatar}
-              />
-              <View style={styles.commentDetails}>
-                <Text style={styles.commentUsername}>
-                @{comment.userName} <Text style={styles.timestampText}>{comment.createdAt ? getDaysAgo(comment.createdAt) : "now"}</Text>
-                </Text>
-                <Text style={styles.commentText}>{comment.comment}</Text>
+              <View key={index} style={styles.commentContainer}>
+                <Image
+                  source={{ uri: comment.userProfilePicture }}
+                  style={styles.commentAvatar}
+                />
+                <View style={styles.commentDetails}>
+                  <Text style={styles.commentUsername}>
+                    @{comment.userName}{" "}
+                    <Text style={styles.timestampText}>
+                      {comment.createdAt
+                        ? getDaysAgo(comment.createdAt)
+                        : "now"}
+                    </Text>
+                  </Text>
+                  <Text style={styles.commentText}>{comment.comment}</Text>
+                </View>
               </View>
-            </View>
-          ))}
+            ))}
           </View>
         </ScrollView>
 
@@ -680,7 +676,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.05,
     paddingVertical: height * 0.02,
     backgroundColor: Colors.background,
-    flex:1
+    flex: 1,
   },
   restaurantInfo: {
     flex: 1,
@@ -736,7 +732,7 @@ const styles = StyleSheet.create({
     paddingBottom: height * 0.015,
     paddingTop: height * 0.01,
     backgroundColor: Colors.background,
-    flex:1
+    flex: 1,
   },
   userImageAndTags: {
     flexDirection: "row",
@@ -753,7 +749,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     marginLeft: width * 0.05,
     alignItems: "center",
-    flex:1
+    flex: 1,
   },
   tag: {
     backgroundColor: Colors.tags,
@@ -859,8 +855,8 @@ const styles = StyleSheet.create({
     marginRight: width * 0.01,
   },
   timestampText: {
-    fontSize: width * 0.03, 
-    color: Colors.placeholderText, 
+    fontSize: width * 0.03,
+    color: Colors.placeholderText,
     fontFamily: Fonts.Regular,
   },
   commentDetails: {
@@ -957,13 +953,13 @@ const styles = StyleSheet.create({
   fullscreenImageContainer: {
     width: width, // Full screen width
     height: height, // Full screen height
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   fullscreenImage: {
     width: width,
     height: height,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   closeButton: {
     position: "absolute",

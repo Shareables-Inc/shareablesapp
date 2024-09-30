@@ -26,7 +26,6 @@ export class UserService {
   public async getUserByUsername(username: string) {
     const q = query(this.userCollection, where("username", "==", username));
     const querySnapshot = await getDocs(q);
-    console.log(querySnapshot.docs);
     return querySnapshot.docs.map((doc) => this.documentToUserProfile(doc));
   }
 
@@ -42,7 +41,6 @@ export class UserService {
     }
   ) {
     const userDoc = await this.getUserByUid(userId);
-
 
     try {
       if (userDoc) {
@@ -61,7 +59,7 @@ export class UserService {
           commentOnPostNotification: commentsOnPosts,
           friendPostsNotification: friendPosts,
         };
-        console.log("Updated user", updatedUser);
+
         const userDocRef = doc(this.userCollection, userId);
         await updateDoc(userDocRef, updatedUser);
         return updatedUser;
@@ -69,8 +67,6 @@ export class UserService {
     } catch (error) {
       console.error("Error updating user preferences", error);
     }
-
-    console.log("User not found");
 
     return null;
   }

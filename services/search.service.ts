@@ -57,8 +57,6 @@ export const retrieveSearchResults = async (
   );
   const data = await response.json();
 
-  console.log("RETRIEVE SEARCH RESULTS");
-  console.log(JSON.stringify(data, null, 2));
   return data;
 };
 

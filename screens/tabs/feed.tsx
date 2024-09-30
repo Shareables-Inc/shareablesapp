@@ -96,7 +96,7 @@ const FeedScreen = () => {
               Platform.OS === "android" ? height * 0.1 : height * 0.045,
           }}
         />
-      ) : !posts || posts.length === 0 ? (
+      ) : posts.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
             Looks like there aren't any posts yet. Be the first to share your

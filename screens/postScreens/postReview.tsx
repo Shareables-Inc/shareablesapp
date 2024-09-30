@@ -145,7 +145,10 @@ const ReviewScreen = ({ route }) => {
       const response = await fetch(processedUri);
       const blob = await response.blob();
 
-      const storageRef = ref(storage, `images/${user!.uid}_${Date.now()}_${index}`);
+      const storageRef = ref(
+        storage,
+        `images/${user!.uid}_${Date.now()}_${index}`
+      );
       await uploadBytes(storageRef, blob);
 
       const downloadURL = await getDownloadURL(storageRef);
@@ -187,7 +190,7 @@ const ReviewScreen = ({ route }) => {
     const overallRating = calculateOverallRating(
       ratingAmbiance,
       ratingFoodQuality,
-      ratingService,
+      ratingService
     );
 
     try {
@@ -263,7 +266,6 @@ const ReviewScreen = ({ route }) => {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-
           <View style={styles.contentContainer}>
             <View style={styles.imagePickerContainer}>
               {renderPhotoComponent()}
@@ -274,7 +276,9 @@ const ReviewScreen = ({ route }) => {
               style={styles.reviewInputContainer}
               keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
             >
-              <Text style={styles.restaurantInfo}>Pai Uptown | Toronto, ON</Text>
+              <Text style={styles.restaurantInfo}>
+                Pai Uptown | Toronto, ON
+              </Text>
 
               <TextInput
                 placeholder="Write your review here..."
@@ -286,7 +290,7 @@ const ReviewScreen = ({ route }) => {
               />
             </KeyboardAvoidingView>
 
-            <View style={styles.headers}>  
+            <View style={styles.headers}>
               <Text style={styles.ratingHeader}>Score</Text>
               <Text style={styles.priceHeader}>Price</Text>
             </View>
@@ -379,35 +383,29 @@ const ReviewScreen = ({ route }) => {
                   <Text style={styles.ratingScore}>{ratingService}</Text>
                 </TouchableOpacity>
               </View>
-
             </View>
 
-              <View style={styles.toggleContainer}>
-                <View style={styles.switch}>
+            <View style={styles.toggleContainer}>
+              <View style={styles.switch}>
                 <Switch
                   trackColor={{
                     false: Colors.background,
                     true: Colors.background,
                   }}
-                  thumbColor={
-                    isGridView ? Colors.charcoal : Colors.charcoal
-                  }
+                  thumbColor={isGridView ? Colors.charcoal : Colors.charcoal}
                   onValueChange={toggleLayout}
                   value={isGridView}
                 />
-                </View>
-
-            <TouchableOpacity
-              onPress={handlePost}
-              style={styles.postButton}
-              activeOpacity={1}
-            >
-              <Text style={styles.postButtonText}>Post</Text>
-            </TouchableOpacity>
-
-
               </View>
 
+              <TouchableOpacity
+                onPress={handlePost}
+                style={styles.postButton}
+                activeOpacity={1}
+              >
+                <Text style={styles.postButtonText}>Post</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -445,13 +443,13 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
     justifyContent: "center",
     color: Colors.tags,
-    marginTop: height * 0.01
+    marginTop: height * 0.01,
   },
   restaurantInfo: {
     fontFamily: Fonts.SemiBold,
     fontSize: width * 0.055,
     color: Colors.text,
-    marginTop: height * 0.01
+    marginTop: height * 0.01,
   },
   reviewInputContainer: {
     width: width * 0.9,
@@ -472,7 +470,7 @@ const styles = StyleSheet.create({
   },
   headers: {
     flexDirection: "row",
-    alignSelf: "flex-start"
+    alignSelf: "flex-start",
   },
   ratingHeader: {
     fontSize: width * 0.055,
@@ -480,7 +478,7 @@ const styles = StyleSheet.create({
     color: Colors.charcoal,
     alignSelf: "flex-start",
     paddingLeft: width * 0.05,
-    marginBottom: height * 0.015
+    marginBottom: height * 0.015,
   },
   priceHeader: {
     fontSize: width * 0.055,
@@ -488,16 +486,15 @@ const styles = StyleSheet.create({
     color: Colors.charcoal,
     alignSelf: "flex-start",
     paddingLeft: width * 0.55,
-    marginBottom: height * 0.015
+    marginBottom: height * 0.015,
   },
   ratingsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignSelf: "flex-start",
-    paddingLeft: width * 0.04
+    paddingLeft: width * 0.04,
   },
-  ratingSection: {
-  },
+  ratingSection: {},
   ratingCircle: {
     width: width * 0.13,
     height: width * 0.13,
@@ -507,14 +504,14 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.01,
     marginRight: width * 0.06,
   },
-  ratingSquare:{
+  ratingSquare: {
     width: width * 0.2,
     height: width * 0.13,
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: height * 0.01,
-    marginLeft: width * 0.11
+    marginLeft: width * 0.11,
   },
   defaultRatingCircle: {
     backgroundColor: Colors.charcoal,
@@ -536,7 +533,7 @@ const styles = StyleSheet.create({
     width: width,
     height: height * 0.15,
     backgroundColor: Colors.tags,
-    borderRadius: 10
+    borderRadius: 10,
   },
   loadingIndicator: {
     marginTop: height * 0.05,
@@ -554,8 +551,8 @@ const styles = StyleSheet.create({
   },
   switch: {
     backgroundColor: Colors.background,
-    borderRadius: 30
-  }
+    borderRadius: 30,
+  },
 });
 
 export default ReviewScreen;

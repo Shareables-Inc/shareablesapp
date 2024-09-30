@@ -104,9 +104,6 @@ function DiscoverScreen() {
           zoomLevel: 14,
         });
       }
-
-      console.log("Returning to current location");
-      // Example: mapRef.current?.setCamera({ centerCoordinate: [longitude, latitude], zoomLevel: 14 });
     });
 
     // Cleanup function to reset the returnToCurrentLocation when the component unmounts
@@ -241,7 +238,7 @@ function DiscoverScreen() {
   }, []);
 
   const handleMapLoaded = useCallback(() => {
-    console.log("Map has loaded in DiscoverScreen");
+
     setIsMapLoaded(true);
 
     Animated.timing(fadeAnim, {
@@ -292,7 +289,7 @@ function DiscoverScreen() {
     (marker: MarkerType) => {
       if (restaurantListRef.current?.present) {
         restaurantListRef.current?.collapse();
-        console.log("collapsed");
+       
       }
       handleMarkerPress(marker);
     },
@@ -303,8 +300,7 @@ function DiscoverScreen() {
     return <LocationErrorMessage />;
   }
 
-  console.log("isMapLoaded", isMapLoaded);
-  console.log("error", error);
+
 
   return (
     <View style={styles.container}>

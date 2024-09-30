@@ -151,11 +151,6 @@ export class FollowingService {
       // Remove duplicates
       const uniquePosts = this.removeDuplicates(processedPosts);
 
-      console.log(
-        `Found ${uniquePosts.length} unique posts from followed users`
-      );
-
-      console.log("Unique posts:", uniquePosts);
       return uniquePosts;
     } catch (error) {
       console.error("Error fetching following posts:", error);
@@ -184,7 +179,6 @@ export class FollowingService {
     const validIds = establishmentIds.filter((id) => id !== null);
 
     if (validIds.length === 0) {
-      console.log("No valid establishment IDs provided");
       return establishmentData;
     }
 

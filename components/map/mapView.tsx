@@ -14,7 +14,7 @@ interface MapViewComponentProps {
 const MapViewComponent = forwardRef<MapView, MapViewComponentProps>(
   ({ children, onMapLoaded }, ref) => {
     const handleMapLoaded = useCallback(() => {
-      console.log("Map has loaded");
+      
       onMapLoaded?.(); // Call the onMapLoaded prop if provided
     }, [onMapLoaded]);
     return (

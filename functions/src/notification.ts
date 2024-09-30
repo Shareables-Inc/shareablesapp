@@ -3,7 +3,7 @@ interface Notification {
   sound: string;
   title: string;
   body: string;
-  tag: string;
+  tag?: string;
   data: {
     id: string;
     screen: string;
@@ -16,7 +16,7 @@ export interface CommentNotification extends Notification {
   sound: string;
   title: string;
   body: string;
-  tag: string;
+  tag?: string;
   data: {
     id: string;
     screen: string;
@@ -31,7 +31,7 @@ export interface FollowerNotification extends Notification {
   sound: string;
   title: string;
   body: string;
-  tag: string;
+  tag?: string;
   data: {
     id: string;
     screen: string;
@@ -45,7 +45,7 @@ export interface LikeNotification extends Notification {
   sound: string;
   title: string;
   body: string;
-  tag: string;
+  tag?: string;
   data: {
     id: string;
     screen: string;
@@ -59,7 +59,7 @@ export interface PostNotification extends Notification {
   sound: string;
   title: string;
   body: string;
-  tag: string;
+  tag?: string;
   data: {
     id: string;
     screen: string;
@@ -73,7 +73,7 @@ export interface InviteNotification extends Notification {
   sound: string;
   title: string;
   body: string;
-  tag: string;
+  tag?: string;
   data: {
     id: string;
     screen: string;

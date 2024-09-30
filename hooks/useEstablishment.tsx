@@ -52,6 +52,7 @@ export const useGetEstablishmentByMapboxId = (mapboxId: string) => {
   return useQuery({
     queryKey: ["establishment", { mapboxId }],
     queryFn: () => establishmentService.getEstablishmentByMapboxId(mapboxId),
+    enabled: !!mapboxId,
   });
 };
 

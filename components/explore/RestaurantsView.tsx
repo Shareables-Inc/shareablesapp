@@ -58,7 +58,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   };
 
   const handleTagSelection = (tag: string) => {
-    console.log("tag", tag);
+
     setSelectedTag(tag === selectedTag ? "" : tag);
     refetchFeaturedEstablishments();
   };
@@ -87,7 +87,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
 
   // Discover posts without duplication
 
-  console.log("topThreePosts", topThreePosts);
+
 
   const handleTopPosters = (userId: string) => {
     navigation.navigate("UserProfile", { userId });

@@ -75,7 +75,6 @@ export const sendCommentNotification = onDocumentCreated(
       const message: CommentNotification = {
         to: userData.fcmToken,
         sound: "default",
-        tag: Timestamp.now().toDate().toString(),
         title: "New Comment on Your Post",
         body: `${comment.userName} commented: ${comment.comment.substring(
           0,
@@ -147,7 +146,6 @@ export const sendFollowNotification = onDocumentCreated(
       const message: FollowerNotification = {
         to: followedUserData.fcmToken,
         sound: "default",
-        tag: Timestamp.now().toDate().toString(),
         title: "New Follower",
         body: `${followerUserData.username} started following you!`,
         data: {
@@ -232,10 +230,8 @@ export const sendLikeNotification = onDocumentCreated(
       const message: LikeNotification = {
         to: ownerData.fcmToken,
         sound: "default",
-        tag: Timestamp.now().toDate().toString(),
         title: "New Like on Your Post",
         body: `${likerData.username} liked your post!`,
-
         data: {
           id: uuidv4(),
           screen: "ExpandedPost",
@@ -316,7 +312,6 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
         const message: PostNotification = {
           to: follower.fcmToken,
           sound: "default",
-          tag: Timestamp.now().toDate().toString(),
           title: "Your Friend Made a New Post!",
           body: `${userData.username} made a new post!`,
           data: {
