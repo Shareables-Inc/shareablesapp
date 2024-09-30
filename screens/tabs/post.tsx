@@ -19,11 +19,7 @@ import { Establishment } from "../../models/establishment";
 import { RetrieveResponse, Suggestion } from "../../types/mapbox.types";
 import { tagsData } from "../../config/constants";
 import SelectedRetrievedCard from "../../components/selectedRetrievedCard";
-import {
-  useCreateEstablishment,
-  useGetEstablishmentByAddressAndName,
-  useGetEstablishmentByMapboxId,
-} from "../../hooks/useEstablishment";
+import { useCreateEstablishment } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
 import { FirebasePost, Post } from "../../models/post";
 import { useCreatePost } from "../../hooks/usePost";
@@ -166,7 +162,6 @@ const PostScreen = () => {
         { ...newPost, id: "" },
         {
           onSuccess: (id) => {
-
             // Clear states
             setRetrievedSuggestion(null);
             setSelectedSuggestion(null);
@@ -217,7 +212,7 @@ const PostScreen = () => {
       // then create the post
       let establishmentId: string;
 
-      if ("id" in retrievedSuggestion) {
+      if (retrievedSuggestion.id !== "") {
         // The establishment already exists in our database
         establishmentId = retrievedSuggestion.id;
       } else {
