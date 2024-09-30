@@ -30,8 +30,6 @@ export class SaveService {
       createdAt: new Date(),
     };
 
-    console.log("saveData", saveData);
-
     // Check if all required fields are present
     if (
       !save.establishmentId ||
@@ -85,24 +83,15 @@ export class SaveService {
 
     if (userDoc.exists()) {
       const userData = userDoc.data() as UserSaves;
-      console.log("Original saves:", userData.saves);
 
       const updatedSaves = userData.saves.filter(
         (save) => save.establishmentId !== establishmentId
       );
 
-      console.log("Filtered saves:", updatedSaves);
-      console.log("Removed establishmentId:", establishmentId);
-
       if (updatedSaves.length === userData.saves.length) {
         console.warn(
           "No save was removed. EstablishmentId not found:",
           establishmentId
-        );
-      } else {
-        console.log(
-          "Number of saves removed:",
-          userData.saves.length - updatedSaves.length
         );
       }
 
@@ -113,11 +102,9 @@ export class SaveService {
 
       // Verify the update
       const updatedDoc = await getDoc(userDocRef);
-      const updatedData = updatedDoc.data() as UserSaves;
-      console.log("Saves after update:", updatedData.saves);
+      updatedDoc.data() as UserSaves;
     } else {
       console.warn("User document not found for userId:", userId);
     }
   }
-
 }

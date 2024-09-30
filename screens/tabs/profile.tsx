@@ -38,9 +38,10 @@ const ProfileScreen = () => {
   const posts = usePostsByUser(user!.uid);
   const { data: userCounts, isLoading } = useUserCounts(user!.uid);
 
+
   // need to refetch posts when userProfile is updated
   useEffect(() => {
-    console.log("userProfile", userProfile);
+    
     posts.refetch();
   }, [userProfile]);
 
@@ -67,7 +68,9 @@ const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [isHeaderVisible, setHeaderVisible] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [updatedProfilePicture, setUpdatedProfilePicture] = useState<string | null>(null);
+  const [updatedProfilePicture, setUpdatedProfilePicture] = useState<
+    string | null
+  >(null);
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -173,7 +176,7 @@ const ProfileScreen = () => {
 
   recentPosts.forEach((post, index) => {
     // Alternate assigning posts to different columns
-    columnItems[index % columnCount].push(post);
+    columnItems[index % columnCount].push(post as never);
   });
 
   const renderColumn = (items, columnIndex) => {
@@ -182,9 +185,17 @@ const ProfileScreen = () => {
         {items.map((post, index) => {
           const isOddColumn = columnIndex % 2 !== 0;
           const imageHeight = isOddColumn
-            ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
-            : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
-  
+            ? index % 3 === 0
+              ? 150
+              : index % 3 === 1
+              ? 200
+              : 250
+            : index % 3 === 0
+            ? 250
+            : index % 3 === 1
+            ? 200
+            : 150;
+
           return (
             <TouchableOpacity
               key={index}
@@ -202,7 +213,7 @@ const ProfileScreen = () => {
                 }}
               />
               {/* Corrected View with flexDirection: 'row' */}
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
                 <Text
                   style={[styles.restaurantNameReview]}
                   numberOfLines={1}
@@ -211,7 +222,7 @@ const ProfileScreen = () => {
                   {post.establishmentDetails.name}
                 </Text>
                 <Text style={styles.dash}> - </Text>
-                <Text style={styles.scoreReview}>{post.ratings!.overall}</Text> 
+                <Text style={styles.scoreReview}>{post.ratings!.overall}</Text>
               </View>
             </TouchableOpacity>
           );
@@ -219,7 +230,7 @@ const ProfileScreen = () => {
       </View>
     );
   };
-  
+
   if (posts.isLoading || !userProfile) {
     return <SkeletonUserProfile />;
   }
@@ -267,8 +278,8 @@ const ProfileScreen = () => {
             <View style={styles.ovalsContainer}>
               <View style={styles.followerOval}>
                 <Text style={styles.ovalText}>
-                  {userCounts?.followerCount}{" "}
-                  {userCounts?.followerCount === 1 ? "Follower" : "Followers"}
+                  {userCounts?.followerCount}
+                  {userCounts?.followerCount === 1 ? " Follower" : " Followers"}
                 </Text>
               </View>
               <View style={styles.followerOval}>
@@ -314,13 +325,13 @@ const ProfileScreen = () => {
                   </View>
                 </TouchableOpacity>
                 <View style={styles.profileDetails}>
-                <Text
-                style={styles.restaurantTopPicks}
-                numberOfLines={1} 
-                ellipsizeMode="tail" 
-              >
-                {post.establishmentDetails.name}
-              </Text>
+                  <Text
+                    style={styles.restaurantTopPicks}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {post.establishmentDetails.name}
+                  </Text>
                 </View>
               </View>
             ))}
@@ -409,10 +420,10 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     backgroundColor: Colors.background,
-    width: width * 0.9 ,
+    width: width * 0.9,
     alignSelf: "flex-start",
     paddingLeft: width * 0.05,
-    flex: 1
+    flex: 1,
   },
   bioText: {
     fontSize: width * 0.037,

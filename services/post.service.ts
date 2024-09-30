@@ -1,5 +1,5 @@
-import {FirebasePost, Post} from "../models/post";
-import {db, storage} from "../firebase/firebaseConfig";
+import { FirebasePost, Post } from "../models/post";
+import { db, storage } from "../firebase/firebaseConfig";
 import {
   addDoc,
   arrayRemove,
@@ -22,8 +22,8 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import {PostComment} from "../models/postComments";
-import {getDownloadURL, ref} from "firebase/storage";
+import { PostComment } from "../models/postComments";
+import { getDownloadURL, ref } from "firebase/storage";
 
 export interface TopPoster {
   userId: string;
@@ -247,37 +247,37 @@ export class PostService {
 
       // Fetch user details for top posters
       return await Promise.all(
-          topUserIds.map(async (userId) => {
-            const userDoc = await getDoc(doc(this.userCollection, userId));
-            const userData = userDoc.data();
+        topUserIds.map(async (userId) => {
+          const userDoc = await getDoc(doc(this.userCollection, userId));
+          const userData = userDoc.data();
 
-            // Fetch profile picture
-            const storageRef = ref(storage, `profilePictures/${userId}`);
-            const profilePicture = await getDownloadURL(storageRef);
+          // Fetch profile picture
+          const storageRef = ref(storage, `profilePictures/${userId}`);
+          const profilePicture = await getDownloadURL(storageRef);
 
-            const mostLikedPost = userMostLikedPosts.get(userId);
-            let mostLikedPostData = {
-              id: "",
-              imageUrl: "",
-              likeCount: 0,
+          const mostLikedPost = userMostLikedPosts.get(userId);
+          let mostLikedPostData = {
+            id: "",
+            imageUrl: "",
+            likeCount: 0,
+          };
+
+          if (mostLikedPost) {
+            mostLikedPostData = {
+              id: mostLikedPost.id,
+              imageUrl: mostLikedPost.imageUrls[0] || "",
+              likeCount: mostLikedPost.likeCount || 0,
             };
+          }
 
-            if (mostLikedPost) {
-              mostLikedPostData = {
-                id: mostLikedPost.id,
-                imageUrl: mostLikedPost.imageUrls[0] || "",
-                likeCount: mostLikedPost.likeCount || 0,
-              };
-            }
-
-            return {
-              userId,
-              username: userData?.username || "Unknown User",
-              profilePicture,
-              postCount: userPostCounts.get(userId) || 0,
-              mostLikedPost: mostLikedPostData,
-            };
-          })
+          return {
+            userId,
+            username: userData?.username || "Unknown User",
+            profilePicture,
+            postCount: userPostCounts.get(userId) || 0,
+            mostLikedPost: mostLikedPostData,
+          };
+        })
       );
     } catch (error) {
       console.error("Error fetching top posters:", error);

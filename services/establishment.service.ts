@@ -21,7 +21,6 @@ import {
   runTransaction,
   Query,
 } from "firebase/firestore";
-import { useQuery } from "@tanstack/react-query";
 import { Post } from "../models/post";
 import { getDownloadURL, ref } from "firebase/storage";
 
@@ -52,8 +51,9 @@ export class EstablishmentService {
       this.establishmentsCollection,
       where("mapboxId", "==", mapboxId)
     );
+   
     const establishmentsSnapshot = await getDocs(establishmentsQuery);
-
+ 
     if (establishmentsSnapshot.empty) {
       return null;
     }
@@ -85,6 +85,24 @@ export class EstablishmentService {
     );
   }
 
+  async getEstablishmentsByMapboxId(
+    mapboxId: string
+  ): Promise<Establishment[]> {
+    const establishmentsQuery = query(
+      this.establishmentsCollection,
+      where("mapboxId", "==", mapboxId)
+    );
+    const establishmentsSnapshot = await getDocs(establishmentsQuery);
+
+    if (establishmentsSnapshot.empty) {
+      return [];
+    }
+
+    return establishmentsSnapshot.docs.map(
+      (doc) => doc.data() as Establishment
+    );
+  }
+
   async getEstablishments(
     establishmentIds: string[]
   ): Promise<Establishment[]> {
@@ -93,6 +111,10 @@ export class EstablishmentService {
       where("id", "in", establishmentIds)
     );
     const establishmentsSnapshot = await getDocs(establishmentsQuery);
+
+    if (establishmentsSnapshot.empty) {
+      return [];
+    }
 
     return establishmentsSnapshot.docs.map(
       (doc) => doc.data() as Establishment
@@ -267,7 +289,7 @@ export class EstablishmentService {
       postal_code: establishmentData.postal_code,
       latitude: establishmentData.latitude,
       longitude: establishmentData.longitude,
-      priceRange: establishmentData.priceRange || "No Price Range",
+      priceRange: establishmentData.priceRange || 0,
       distance: "N/A", // This would need to be calculated based on user's location
       tags: establishmentData.tags,
       gallery: gallery.length > 0 ? gallery : undefined,

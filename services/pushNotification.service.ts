@@ -7,7 +7,6 @@ import { collection, doc, getDoc, updateDoc } from "firebase/firestore";
 
 function handleRegistrationError(errorMessage: string) {
   // alert(errorMessage);
-  console.log(errorMessage, "error handleRegistrationError");
   // throw new Error(errorMessage);
 }
 
@@ -28,8 +27,6 @@ export async function scheduleWeeklyRestaurantNotification() {
       repeats: true,
     },
   });
-
-  console.log("Weekly restaurant notification scheduled");
 }
 
 async function registerForPushNotificationsAsync() {
@@ -68,7 +65,7 @@ async function registerForPushNotificationsAsync() {
           projectId,
         })
       ).data;
-      console.log(pushTokenString);
+
       return pushTokenString;
     } catch (e: unknown) {
       handleRegistrationError(`${e}`);
@@ -91,7 +88,7 @@ async function getDevicePushToken() {
         projectId,
       })
     ).data;
-    console.log(pushTokenString);
+
     return pushTokenString;
   } catch (e: unknown) {
     handleRegistrationError(`${e}`);

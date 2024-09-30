@@ -3,7 +3,6 @@ import {
   onDocumentDeleted,
 } from "firebase-functions/v2/firestore";
 import * as admin from "firebase-admin";
-import * as logger from "firebase-functions/logger";
 import {
   CommentNotification,
   FollowerNotification,
@@ -17,15 +16,16 @@ import { UserProfile } from "./user";
 import { Post } from "./post";
 import { v4 as uuidv4 } from "uuid";
 import { sendPushNotifications } from "./api/expo.api";
+
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+
 export const sendCommentNotification = onDocumentCreated(
   "comments/{commentId}",
   async (event) => {
     const comment = event.data?.data() as Comment | undefined;
     const commentId = event.id;
     if (!comment) {
-      logger.error("No comment data found");
       return;
     }
 
@@ -36,18 +36,15 @@ export const sendCommentNotification = onDocumentCreated(
       const postData = postDoc.data();
 
       if (!postData) {
-        logger.error("Post data not found");
         return;
       }
 
       if (!postData.userId) {
-        logger.error("Post userId not found");
         return;
       }
 
       // Don't send notification if the commenter is the post owner
       if (comment.userId === postData.userId) {
-        logger.info("Comment author is post owner, skipping notification");
         return;
       }
 
@@ -60,13 +57,11 @@ export const sendCommentNotification = onDocumentCreated(
       const userData = userDoc.data();
 
       if (!userData || !userData.fcmToken) {
-        logger.error("User data or FCM token not found");
         return;
       }
 
       // check if the user has enabled comment notifications
       if (!userData.commentOnPostNotification) {
-        logger.info("User has disabled comment notifications");
         return;
       }
 
@@ -89,22 +84,19 @@ export const sendCommentNotification = onDocumentCreated(
       };
 
       // Send the notification
-      const response = await sendPushNotifications(message);
-      logger.info("Notification sent successfully", response);
+      await sendPushNotifications(message);
     } catch (error) {
-      logger.error("Error sending notification", error);
+      // Error handling without logger
     }
   }
 );
 
-// this is a notifcation for a when a user is get a new follower
 export const sendFollowNotification = onDocumentCreated(
   "following/{followingId}",
   async (event) => {
     const followingData = event.data?.data() as Follower | undefined;
 
     if (!followingData) {
-      logger.error("No following data found");
       return;
     }
 
@@ -118,7 +110,6 @@ export const sendFollowNotification = onDocumentCreated(
       const followerUserData = followerDoc.data();
 
       if (!followerUserData || !followerUserData.username) {
-        logger.error("Follower user data or username not found");
         return;
       }
 
@@ -131,13 +122,11 @@ export const sendFollowNotification = onDocumentCreated(
       const followedUserData = followedUserDoc.data();
 
       if (!followedUserData || !followedUserData.fcmToken) {
-        logger.error("Followed user data or FCM token not found");
         return;
       }
 
       // check if the user has enabled new follower notifications
       if (!followedUserData.newFollowerNotification) {
-        logger.info("User has disabled new follower notifications");
         return;
       }
 
@@ -156,22 +145,19 @@ export const sendFollowNotification = onDocumentCreated(
       };
 
       // Send the notification
-      const response = await sendPushNotifications(message);
-      logger.info("Follow notification sent successfully", response);
+      await sendPushNotifications(message);
     } catch (error) {
-      logger.error("Error sending follow notification", error);
+      // Error handling without logger
     }
   }
 );
 
-// This notification will handle when your someone likes your post
 export const sendLikeNotification = onDocumentCreated(
   "likes/{likeId}",
   async (event) => {
     const likeData = event.data?.data() as Likes | undefined;
 
     if (!likeData) {
-      logger.error("No like data found");
       return;
     }
 
@@ -185,7 +171,6 @@ export const sendLikeNotification = onDocumentCreated(
       const postData = postDoc.data();
 
       if (!postData) {
-        logger.error("Post data not found");
         return;
       }
 
@@ -195,7 +180,6 @@ export const sendLikeNotification = onDocumentCreated(
 
       // don't send a notification if the liker is the post owner
       if (likerId === postOwnerId) {
-        logger.info("Liker is the post owner, skipping notification");
         return;
       }
 
@@ -205,13 +189,11 @@ export const sendLikeNotification = onDocumentCreated(
       const ownerData = ownerDoc.data();
 
       if (!ownerData || !ownerData.fcmToken) {
-        logger.error("Post owner data or FCM token not found");
         return;
       }
 
       // check if the user has enabled like notifications
       if (!ownerData.likeNotification) {
-        logger.info("User has disabled like notifications");
         return;
       }
 
@@ -221,7 +203,6 @@ export const sendLikeNotification = onDocumentCreated(
       const likerData = likerDoc.data();
 
       if (!likerData || !likerData.username) {
-        logger.error("Liker data or username not found");
         return;
       }
 
@@ -231,7 +212,6 @@ export const sendLikeNotification = onDocumentCreated(
         sound: "default",
         title: "New Like on Your Post",
         body: `${likerData.username} liked your post!`,
-
         data: {
           id: uuidv4(),
           screen: "ExpandedPost",
@@ -241,26 +221,22 @@ export const sendLikeNotification = onDocumentCreated(
       };
 
       // Send the notification
-      const response = await sendPushNotifications(message);
-      logger.info("Like notification sent successfully", response);
+      await sendPushNotifications(message);
     } catch (error) {
-      logger.error("Error sending like notification", error);
+      // Error handling without logger
     }
   }
 );
 
-// people who you have followed made a new post
 export const sendFollowedUserPostNotification = onDocumentCreated(
   "posts/{postId}",
   async (event) => {
     const postData = event.data?.data() as Post | undefined;
     if (!postData) {
-      logger.error("No post data found");
       return;
     }
 
     if (!postData.userId) {
-      logger.error("No post userId found");
       return;
     }
 
@@ -279,7 +255,6 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
     const userData = userDoc.data() as UserProfile | undefined;
 
     if (!userData) {
-      logger.error("No user data found");
       return;
     }
 
@@ -309,7 +284,6 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
 
     // check if the user has enabled friend posts notifications
     if (!userData.friendPostsNotification) {
-      logger.info("User has disabled friend posts notifications");
       return;
     }
 
@@ -334,8 +308,10 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       }
     }
 
-    const response = await sendPushNotifications(notifications);
-    logger.info("Notification sent successfully", response);
+    // delay the notification by 1 minute
+    await new Promise((resolve) => setTimeout(resolve, 60000));
+
+    await sendPushNotifications(notifications);
   }
 );
 
@@ -352,7 +328,6 @@ export const incrementLikeCount = onDocumentCreated(
     const postId = likeData.data().postId;
 
     if (!postId) {
-      logger.error("No postId found in like data");
       return;
     }
 
@@ -363,26 +338,23 @@ export const incrementLikeCount = onDocumentCreated(
         likeCount: admin.firestore.FieldValue.increment(1),
       });
     } catch (error) {
-      logger.error("Error incrementing like count:", error);
+      // Error handling without logger
     }
   }
 );
 
-// Function to decrement like count
 export const decrementLikeCount = onDocumentDeleted(
   "/likes/{likeId}",
   async (event) => {
     const likeData = event.data;
 
     if (!likeData) {
-      logger.error("No like data found");
       return;
     }
 
     const postId = likeData.data().postId;
 
     if (!postId) {
-      logger.error("No postId found in like data");
       return;
     }
 
@@ -392,7 +364,7 @@ export const decrementLikeCount = onDocumentDeleted(
         likeCount: admin.firestore.FieldValue.increment(-1),
       });
     } catch (error) {
-      logger.error("Error decrementing like count:", error);
+      // Error handling without logger
     }
   }
 );

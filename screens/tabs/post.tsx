@@ -19,10 +19,7 @@ import { Establishment } from "../../models/establishment";
 import { RetrieveResponse, Suggestion } from "../../types/mapbox.types";
 import { tagsData } from "../../config/constants";
 import SelectedRetrievedCard from "../../components/selectedRetrievedCard";
-import {
-  useCreateEstablishment,
-  useGetEstablishmentByAddressAndName,
-} from "../../hooks/useEstablishment";
+import { useCreateEstablishment } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
 import { FirebasePost, Post } from "../../models/post";
 import { useCreatePost } from "../../hooks/usePost";
@@ -31,7 +28,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { retrieveSearchResult } from "../../services/search.service";
 import { serverTimestamp } from "firebase/firestore";
 import { EstablishmentService } from "../../services/establishment.service";
-
+import { mapRetrieveResponseToEstablishment } from "../../helpers/parseData";
 type PostScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   "MainTabNavigator"
@@ -52,7 +49,7 @@ const PostScreen = () => {
   const [selectedSuggestion, setSelectedSuggestion] =
     useState<Suggestion | null>(null);
   const [retrievedSuggestion, setRetrievedSuggestion] =
-    useState<RetrieveResponse | null>(null);
+    useState<Establishment | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState<
     "cuisines" | "foodOccasions" | "restaurantVibes" | null
@@ -61,10 +58,6 @@ const PostScreen = () => {
   const { mutate: createPostMutation } = useCreatePost();
   const { mutate: createEstablishmentMutation, error: createError } =
     useCreateEstablishment();
-  const getEstablishmentByAddressAndName = useGetEstablishmentByAddressAndName(
-    retrievedSuggestion?.features[0]?.properties.name || "",
-    retrievedSuggestion?.features[0]?.properties.address || ""
-  );
 
   const handleSelectTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
@@ -102,14 +95,27 @@ const PostScreen = () => {
     async (suggestion: Suggestion) => {
       setSelectedSuggestion(suggestion);
       try {
-        // check if the establishment already exists in the database from
+        // Check if the establishment already exists in the database from the Mapbox ID
+        const establishmentService = new EstablishmentService();
+        const existingEstablishmentMapbox =
+          await establishmentService.getEstablishmentByMapboxId(
+            suggestion.mapbox_id
+          );
 
-        const retrieveResponse = await retrieveSearchResult(
-          suggestion.mapbox_id,
-          user?.uid!
-        );
-        setRetrievedSuggestion(retrieveResponse);
-        console.log(retrieveResponse);
+        if (existingEstablishmentMapbox) {
+          // If the establishment exists, use it
+          setRetrievedSuggestion(existingEstablishmentMapbox);
+        } else {
+          // If the establishment doesn't exist, retrieve it as a new suggestion
+          const retrieveResponse = await retrieveSearchResult(
+            suggestion.mapbox_id,
+            user?.uid!
+          );
+          // create a helper function to map the retrieve response to an establishment
+          const establishment =
+            mapRetrieveResponseToEstablishment(retrieveResponse);
+          setRetrievedSuggestion(establishment);
+        }
       } catch (error) {
         console.error("Error retrieving search result:", error);
         Alert.alert(
@@ -122,76 +128,6 @@ const PostScreen = () => {
     [user]
   );
 
-  const handleNextPress = useCallback(async () => {
-    if (!retrievedSuggestion) {
-      Alert.alert("Error", "Please select a restaurant before proceeding.");
-      return;
-    }
-
-    try {
-      const {
-        data: existingEstablishment,
-        isLoading,
-        error,
-      } = getEstablishmentByAddressAndName;
-
-      if (isLoading) return;
-      if (error) throw error;
-
-      let establishmentId: string;
-
-      if (!existingEstablishment) {
-        const newEstablishment: Establishment = {
-          id: "",
-          name: retrievedSuggestion.features[0].properties.name,
-          address: retrievedSuggestion.features[0].properties.address,
-          city: retrievedSuggestion.features[0].properties.context.place.name,
-          country:
-            retrievedSuggestion.features[0].properties.context.country.name,
-          latitude: retrievedSuggestion.features[0].geometry.coordinates[1],
-          longitude: retrievedSuggestion.features[0].geometry.coordinates[0],
-          mapboxId: retrievedSuggestion.features[0].properties.mapbox_id,
-          postal_code:
-            retrievedSuggestion.features[0].properties.context.postcode.name,
-          status: "",
-          website: "",
-          tags: [],
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-          averageRating: "0",
-          postCount: 0,
-        };
-
-        createEstablishmentMutation(newEstablishment, {
-          onSuccess: (newId) => {
-            establishmentId = newId;
-            createPost(establishmentId);
-          },
-          onError: (error) => {
-            console.error("Error creating establishment:", error);
-            Alert.alert(
-              "Error",
-              "There was an error creating the establishment. Please try again."
-            );
-          },
-        });
-      } else {
-        establishmentId = existingEstablishment[0].id;
-        createPost(establishmentId);
-      }
-    } catch (error) {
-      console.error("Error in handleNextPress:", error);
-      Alert.alert("Error", "There was an unexpected error. Please try again.");
-    }
-  }, [
-    retrievedSuggestion,
-    selectedTags,
-    createPostMutation,
-    navigation,
-    getEstablishmentByAddressAndName,
-    createEstablishmentMutation,
-  ]);
-
   const createPost = useCallback(
     (establishmentId: string) => {
       const newPost: FirebasePost = {
@@ -200,16 +136,14 @@ const PostScreen = () => {
         username: userProfile?.username!,
         establishmentDetails: {
           id: establishmentId,
-          address: retrievedSuggestion?.features[0]!.properties.address!,
+          address: retrievedSuggestion?.address!,
           averageRating: 0,
-          city: retrievedSuggestion?.features[0]!.properties.context.place
-            .name!,
-          country:
-            retrievedSuggestion!.features[0].properties.context.country.name!,
+          city: retrievedSuggestion?.city!,
+          country: retrievedSuggestion?.country!,
           hours: [],
-          name: retrievedSuggestion!.features[0]!.properties.name!,
-          longitude: retrievedSuggestion?.features[0]!.geometry.coordinates[0]!,
-          latitude: retrievedSuggestion?.features[0]!.geometry.coordinates[1]!,
+          name: retrievedSuggestion?.name!,
+          longitude: retrievedSuggestion?.longitude!,
+          latitude: retrievedSuggestion?.latitude!,
           priceRange: 0,
           status: "",
           website: "",
@@ -228,7 +162,6 @@ const PostScreen = () => {
         { ...newPost, id: "" },
         {
           onSuccess: (id) => {
-            console.log("Post created with ID:", id);
             // Clear states
             setRetrievedSuggestion(null);
             setSelectedSuggestion(null);
@@ -264,6 +197,49 @@ const PostScreen = () => {
       setSelectedTags, // Add this to the dependency array
     ]
   );
+
+  const handleNextPress = useCallback(async () => {
+    if (!retrievedSuggestion) {
+      Alert.alert("Error", "Please select a restaurant before proceeding.");
+      return;
+    }
+
+    if (selectedTags.length === 0) {
+      Alert.alert("Error", "Please select at least one tag before proceeding.");
+      return;
+    }
+
+    try {
+      // when next is click it should create the establishment if it doesn't exist
+      // then create the post
+      let establishmentId: string;
+
+      if (retrievedSuggestion.id !== "") {
+        // The establishment already exists in our database
+        establishmentId = retrievedSuggestion.id;
+      } else {
+        const newId = await new Promise<string>((resolve, reject) => {
+          createEstablishmentMutation(retrievedSuggestion, {
+            onSuccess: (newId) => resolve(newId),
+            onError: (error) => reject(error),
+          });
+        });
+
+        establishmentId = newId;
+      }
+
+      // Now create the post
+      createPost(establishmentId);
+    } catch (error) {
+      console.error("Error in handleNextPress:", error);
+      Alert.alert("Error", "There was an unexpected error. Please try again.");
+    }
+  }, [
+    retrievedSuggestion,
+    selectedTags,
+    createEstablishmentMutation,
+    createPost,
+  ]);
 
   const handleCategoryPress = (
     category: "cuisines" | "foodOccasions" | "restaurantVibes"

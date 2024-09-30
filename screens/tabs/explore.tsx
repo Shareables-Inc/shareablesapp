@@ -54,7 +54,7 @@ const SearchScreen = () => {
   const handleLocationSelection = (location: string) => {
     setSelectedLocation(location);
     setShowLocationDropdown(false);
-    console.log("selected location", location);
+  
   };
 
   const handleTabPress = (tab: "Profiles") => {

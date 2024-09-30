@@ -93,16 +93,12 @@ const RestaurantList = ({
         <TouchableOpacity onPress={() => onItemSelect(restaurant)}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
-            <Text
-              style={styles.title}
-              numberOfLines={1}  
-              ellipsizeMode="tail"  
-            >
-              {restaurant.establishmentName || "Unknown Name"}
-            </Text>
+              <Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+                {restaurant.establishmentName || "Unknown Name"}
+              </Text>
               <Text style={styles.location}>
                 {restaurant.city || "Unknown City"} •{" "}
-                {restaurant.priceRange || "No Price Range"} •{" "}
+                {restaurant.priceRange || 0} •{" "}
                 <Text style={styles.distance}>{distanceText}</Text>
               </Text>
             </View>
@@ -112,7 +108,7 @@ const RestaurantList = ({
           </View>
           <Text style={styles.tags}>
             {restaurant.tags && restaurant.tags.length > 0
-              ? restaurant.tags.slice(0,3).join(" • ")
+              ? restaurant.tags.slice(0, 3).join(" • ")
               : "No Tags Available"}
           </Text>
         </TouchableOpacity>
@@ -183,9 +179,8 @@ const RestaurantList = ({
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
-        ItemSeparatorComponent={() => <View style={styles.separator} />} 
+        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-
     </View>
   );
 };
@@ -208,7 +203,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.045,
     fontWeight: "bold",
     fontFamily: Fonts.Bold,
-    width: width * 0.75
+    width: width * 0.75,
   },
   ratingContainer: {
     backgroundColor: Colors.rating,
@@ -247,7 +242,7 @@ const styles = StyleSheet.create({
   filterSection: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center", 
+    alignItems: "center",
     paddingHorizontal: width * 0.05,
     marginBottom: height * 0.01,
   },

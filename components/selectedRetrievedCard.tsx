@@ -4,10 +4,10 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { X } from "lucide-react-native";
 import Colors from "../utils/colors";
 import { Fonts } from "../utils/fonts";
-import { RetrieveResponse } from "../types/mapbox.types";
+import { Establishment } from "../models/establishment";
 
 type SelectedRetrievedCardProps = {
-  retrievedSuggestion: RetrieveResponse;
+  retrievedSuggestion: Establishment;
   onClear: () => void;
 };
 
@@ -18,16 +18,12 @@ const SelectedRetrievedCard = ({
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Text style={styles.name}>
-          {retrievedSuggestion.features[0].properties.name}
-        </Text>
+        <Text style={styles.name}>{retrievedSuggestion.name}</Text>
         <TouchableOpacity onPress={onClear} style={styles.clearButton}>
           <X size={24} color={Colors.text} />
         </TouchableOpacity>
       </View>
-      <Text style={styles.fullAddress}>
-        {retrievedSuggestion.features[0].properties.full_address}
-      </Text>
+      <Text style={styles.fullAddress}>{retrievedSuggestion.address}</Text>
     </View>
   );
 };

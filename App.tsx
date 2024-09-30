@@ -118,7 +118,6 @@ const AppContent = () => {
   return <MainApp />;
 };
 
-const doNotPersistQueries: QueryKey[] = [["userPosts"]];
 const App = () => {
   return (
     <AuthProvider>
@@ -126,12 +125,6 @@ const App = () => {
         client={queryClient}
         persistOptions={{
           persister: asyncStoragePersister,
-          dehydrateOptions: {
-            shouldDehydrateQuery: (query) => {
-              // Ignore userPosts query from cache
-              return !query.queryKey.includes("userPosts");
-            },
-          },
         }}
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
