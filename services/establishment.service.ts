@@ -132,7 +132,7 @@ export class EstablishmentService {
           now.seconds - thirtyDaysInSeconds,
           now.nanoseconds
         );
-
+  
         let establishmentsQuery: Query;
         if (selectedTag) {
           establishmentsQuery = query(
@@ -152,17 +152,17 @@ export class EstablishmentService {
             limit(10)
           );
         }
-
+  
         const establishmentsSnapshot = await getDocs(establishmentsQuery);
-
+  
         const establishmentIds = establishmentsSnapshot.docs.map(
           (doc) => doc.id
         );
-
+  
         if (establishmentIds.length === 0) {
           return []; // No establishments found
         }
-
+  
         // Query posts based on the establishment IDs fetched above
         const postsQuery = query(
           this.postsCollection,
@@ -170,12 +170,18 @@ export class EstablishmentService {
           orderBy("createdAt", "desc"),
           limit(20)
         );
-
+  
         const postsSnapshot = await getDocs(postsQuery);
-
+  
+        // Filter the posts to only include those with images
+        const filteredPosts = postsSnapshot.docs.filter((doc) => {
+          const postData = doc.data() as Post;
+          return postData.imageUrls && postData.imageUrls.length > 0; // Ensure the post has images
+        });
+  
         // Process posts and associate them with establishments
         const uniqueEstablishments = new Map();
-        postsSnapshot.docs.forEach((doc) => {
+        filteredPosts.forEach((doc) => {
           const post = doc.data() as Post;
           const establishmentId = post.establishmentDetails.id;
           if (!uniqueEstablishments.has(establishmentId)) {
@@ -185,30 +191,32 @@ export class EstablishmentService {
             });
           }
         });
+  
         // Combine establishment data with post data
         const result = establishmentsSnapshot.docs.map((doc) => {
           const establishment = doc.data() as Establishment;
-
-          // extract the tags from the establishment and sort alphabetically
+  
+          // Extract the tags from the establishment and sort alphabetically
           const sortedTags = establishment.tags?.sort((a, b) =>
             a.localeCompare(b)
           );
-
+  
           const postData = uniqueEstablishments.get(establishment.id) || {};
-
+  
           return {
             ...establishment,
             ...postData,
             tags: sortedTags,
           } as FeaturedEstablishment;
         });
-
+  
         return result;
       });
     } catch (error) {
       return [];
     }
   }
+  
 
   async getEstablishmentById(establishmentId: string) {
     const establishmentDoc = doc(
@@ -258,7 +266,10 @@ export class EstablishmentService {
     );
 
     // map the profile picture to the that post that equals the post id
-    const gallery = postsSnapshot.docs.slice(0, 5).map((doc) => {
+    const gallery = postsSnapshot.docs
+      .filter(doc => doc.data().imageUrls && doc.data().imageUrls.length > 0)
+      .slice(0, 5)
+      .map((doc) => {
       const postData = doc.data() as Post;
       return {
         ...postData,

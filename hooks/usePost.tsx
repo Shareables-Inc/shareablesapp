@@ -76,11 +76,16 @@ export const usePostById = (postId: string) => {
 export function usePostsByUser(userId: string): UseQueryResult<Post[], Error> {
   return useQuery({
     queryKey: ["userPosts", userId],
-    queryFn: () => postService.getPostsByUser(userId),
+    queryFn: async () => {
+      const posts = await postService.getPostsByUser(userId);
+      // Filter out posts without images
+      return posts.filter((post) => post.imageUrls.length > 0);
+    },
     enabled: !!userId,
     refetchOnWindowFocus: true,
   });
 }
+
 
 // Create a new post
 
@@ -151,14 +156,23 @@ export function useMostRecentPosts(
 ): UseQueryResult<Post[], Error> {
   return useQuery({
     queryKey: ["mostRecentPosts", userId],
-    queryFn: () => postService.getMostRecentPosts(userId),
+    queryFn: async () => {
+      const posts = await postService.getMostRecentPosts(userId);
+      // Filter out posts without images
+      return posts.filter((post) => post.imageUrls.length > 0);
+    },
   });
 }
+
 
 // Get top posts
 export function useTopPosts(): UseQueryResult<Post[], Error> {
   return useQuery({
     queryKey: ["topPosts"],
-    queryFn: () => postService.getTopPosts(),
+    queryFn: async () => {
+      const posts = await postService.getTopPosts();
+      // Filter out posts without images
+      return posts.filter((post) => post.imageUrls.length > 0);
+    },
   });
 }

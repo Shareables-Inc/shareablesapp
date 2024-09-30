@@ -288,7 +288,9 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
       });
   };
 
-  const posts = establishmentData?.fewImagePostReview || [];
+  const posts = (establishmentData?.fewImagePostReview || []).filter(
+    (post) => post.imageUrls && post.imageUrls.length > 0
+  );
 
   const columnCount = 2; // Number of columns in the grid
   const columnWidth = (width * 0.89) / columnCount; // Width of each column
@@ -704,13 +706,13 @@ const styles = StyleSheet.create({
   restaurantNameReview: {
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    color: Colors.text,
+    color: Colors.highlightText,
     maxWidth: "70%",
   },
   dash: {
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    color: Colors.text,
+    color: Colors.highlightText,
   },
   scoreReview: {
     fontSize: width * 0.037,
