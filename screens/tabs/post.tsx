@@ -236,6 +236,8 @@ const PostScreen = () => {
             navigation.navigate("Review", {
               establishmentId: establishmentId,
               restaurantName: newPost.establishmentDetails.name,
+              city: newPost.establishmentDetails.city,
+              country: newPost.establishmentDetails.country,
               tags: selectedTags,
               postId: id,
             });

@@ -40,6 +40,8 @@ const ReviewScreen = ({ route }) => {
   const { user, userProfile } = useAuth();
   const {
     restaurantName,
+    city, 
+    country,
     tags,
     postId: initialPostId,
     establishmentId,
@@ -274,7 +276,7 @@ const ReviewScreen = ({ route }) => {
               style={styles.reviewInputContainer}
               keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
             >
-              <Text style={styles.restaurantInfo}>Pai Uptown | Toronto, ON</Text>
+              <Text style={styles.restaurantInfo}>{restaurantName} | {city}, {country}</Text>
 
               <TextInput
                 placeholder="Write your review here..."
