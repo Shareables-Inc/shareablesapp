@@ -527,13 +527,13 @@ const styles = StyleSheet.create({
   restaurantNameReview: {
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    color: Colors.text,
+    color: Colors.highlightText,
     maxWidth: "70%",
   },
   dash: {
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    color: Colors.text,
+    color: Colors.highlightText,
   },
   scoreReview: {
     fontSize: width * 0.037,

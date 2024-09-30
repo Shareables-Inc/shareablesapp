@@ -30,6 +30,8 @@ export type RootStackParamList = {
   Notifications: undefined;
   Mailbox: undefined;
   MainSettings: undefined;
+  ReportBug: undefined;
+  RequestFeature: undefined;
   AccountSettings: undefined;
   ChangePassword: undefined;
   EditProfile: undefined;

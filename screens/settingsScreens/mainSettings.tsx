@@ -76,23 +76,29 @@ const MainSettingsScreen = () => {
 
           <View style={styles.feedbackContainer}>
             <Text style={styles.loginSecurityText}>Feedback</Text>
-            <TouchableOpacity activeOpacity={1}>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate("ReportBug")}
+              activeOpacity={1}
+            >
               <Text style={styles.bodyText}>Report Bugs</Text>
             </TouchableOpacity>
 
             <View style={styles.separatorSmall} />
 
-            <TouchableOpacity activeOpacity={1}>
+            <TouchableOpacity 
+              onPress={() => navigation.navigate("RequestFeature")}
+              activeOpacity={1}
+            >
               <Text style={styles.bodyText}>Request Features</Text>
             </TouchableOpacity>
 
             <View style={styles.separatorSmall} />
 
-            <TouchableOpacity activeOpacity={1}>
+            {/* <TouchableOpacity activeOpacity={1}>
               <Text style={styles.bodyText}>Leave a Review</Text>
             </TouchableOpacity>
 
-            <View style={styles.separatorSmall} />
+            <View style={styles.separatorSmall} /> */}
           </View>
         </ScrollView>
       </View>

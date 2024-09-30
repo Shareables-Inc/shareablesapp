@@ -313,10 +313,9 @@ const styles = StyleSheet.create({
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
     marginBottom: height * 0.03,
     marginTop: height * 0.135,
-    marginLeft: width * 0.05,
+    paddingLeft: width * 0.05,
   },
   profileImageContainer: {
     alignItems: "center",
@@ -383,14 +382,16 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     backgroundColor: Colors.background,
-    width: width * 0.8,
+    width: width * 0.9 ,
     alignSelf: "flex-start",
-    marginLeft: width * 0.07,
+    paddingLeft: width * 0.05,
+    flex: 1
   },
   bioText: {
     fontSize: width * 0.037,
     color: Colors.text,
     fontFamily: Fonts.Regular,
+    alignSelf: "center",
   },
   featuredGalleryContainer: {
     marginTop: "5%",
@@ -488,13 +489,13 @@ const styles = StyleSheet.create({
   restaurantNameReview: {
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    color: Colors.text,
+    color: Colors.highlightText,
     maxWidth: "70%",
   },
   dash: {
     fontSize: width * 0.037,
     fontFamily: Fonts.Medium,
-    color: Colors.text,
+    color: Colors.highlightText,
   },
   scoreReview: {
     fontSize: width * 0.037,

@@ -10,7 +10,6 @@ import LoadingScreen from "../screens/loadingScreen";
 import FollowFriendsScreen from "../screens/loginScreens/followFriends";
 import InviteContactsScreen from "../screens/loginScreens/inviteContacts";
 import TopCuisinesScreen from "../screens/loginScreens/topCuisines";
-import MailboxScreen from "../screens/notificationScreens/mailbox";
 import NotificationsScreen from "../screens/notificationScreens/notifications";
 import LocationSelectionScreen from "../screens/postScreens/locationSelection";
 import ReviewScreen from "../screens/postScreens/postReview";
@@ -23,6 +22,8 @@ import EditProfileScreen from "../screens/settingsScreens/editProfile";
 import MainSettingsScreen from "../screens/settingsScreens/mainSettings";
 import NotificationsSettingsScreen from "../screens/settingsScreens/notificationsSettings";
 import PrivacySettingsScreen from "../screens/settingsScreens/privacySettings";
+import ReportBugScreen from "../screens/settingsScreens/reportBug";
+import RequestFeatureScreen from "../screens/settingsScreens/requestFeature";
 import NameInputScreen from "../screens/loginScreens/nameInput";
 import VerifyEmailScreen from "../screens/loginScreens/verifyEmail";
 import UsernameInputScreen from "../screens/loginScreens/usernameInput";
@@ -200,8 +201,18 @@ export const MainApp = () => {
               name="Notifications"
               component={NotificationsScreen}
             />
-            <Stack.Screen name="Mailbox" component={MailboxScreen} />
-            <Stack.Screen name="MainSettings" component={MainSettingsScreen} />
+            <Stack.Screen 
+              name="MainSettings" 
+              component={MainSettingsScreen} 
+            />
+            <Stack.Screen 
+              name="ReportBug" 
+              component={ReportBugScreen} 
+            />
+            <Stack.Screen
+              name="RequestFeature"
+              component={RequestFeatureScreen}
+            />
             <Stack.Screen
               name="AccountSettings"
               component={AccountSettingsScreen}

@@ -80,22 +80,8 @@ const AccountSettingsScreen = () => {
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-          <View style={styles.loginSecurityContainer}>
-            <Text style={styles.loginSecurityText}>Login & Security</Text>
-            <TouchableOpacity
-              activeOpacity={1}
-              onPress={() => navigation.navigate("ChangePassword")}
-            >
-              <Text style={styles.bodyText}>Change Password</Text>
-            </TouchableOpacity>
-            <View style={styles.separatorSmall} />
-            <TouchableOpacity activeOpacity={1} onPress={handleLogout}>
-              <Text style={styles.bodyText}>Logout</Text>
-            </TouchableOpacity>
-            <View style={styles.separatorSmall} />
-          </View>
 
-          <View style={styles.personalDetailsContainer}>
+        <View style={styles.personalDetailsContainer}>
             <Text style={styles.loginSecurityText}>Personal Details</Text>
             <TouchableOpacity
               activeOpacity={1}
@@ -106,6 +92,23 @@ const AccountSettingsScreen = () => {
             <View style={styles.separatorSmall} />
 
           </View>
+
+
+          <View style={styles.loginSecurityContainer}>
+            <Text style={styles.loginSecurityText}>Login & Security</Text>
+            {/* <TouchableOpacity
+              activeOpacity={1}
+              onPress={() => navigation.navigate("ChangePassword")}
+            >
+              <Text style={styles.bodyText}>Change Password</Text>
+            </TouchableOpacity>
+            <View style={styles.separatorSmall} /> */}
+            <TouchableOpacity activeOpacity={1} onPress={handleLogout}>
+              <Text style={styles.bodyText}>Logout</Text>
+            </TouchableOpacity>
+            <View style={styles.separatorSmall} />
+          </View>
+
         </ScrollView>
       </View>
     </SafeAreaView>
