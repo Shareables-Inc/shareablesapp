@@ -41,7 +41,7 @@ export const useUserUpdatePreferences = () => {
       };
     }) => userService.updateUserPreferences(uid, preferences),
     onSuccess: (_, variables) => {
-      console.log("Preferences updated successfully");
+  
       queryClient.invalidateQueries({
         queryKey: ["userDetails", variables.uid],
       });

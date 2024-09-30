@@ -42,7 +42,6 @@ const FeedScreen = () => {
   } = usePostPaginated(10);
 
   const posts = data?.pages.flatMap((page) => page.posts) || [];
-  console.log(posts);
 
   const handlePostPress = useCallback(
     (post: Post) => {
@@ -154,7 +153,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: height * 0.02,
-    fontFamily: Fonts.Medium, 
+    fontFamily: Fonts.Medium,
     color: Colors.text,
     textAlign: "center",
     marginBottom: height * 0.02,

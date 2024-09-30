@@ -39,7 +39,7 @@ export type MarkerType = {
   username?: string;
   averageRating: string;
   tags: string[];
-  priceRange: string;
+  priceRange: number;
 };
 
 export type MarkerTypeWithImage = MarkerType & {

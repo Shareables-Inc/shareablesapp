@@ -14,14 +14,6 @@ export function useUserFollowing(userId: string) {
   });
 }
 
-export function useUserFollowers(userId: string) {
-  return useQuery({
-    queryKey: ["followers", userId],
-    queryFn: () => followingService.getFollowers(userId),
-    enabled: !!userId,
-  });
-}
-
 export function useUserCounts(userId: string) {
   return useQuery({
     queryKey: ["userCounts", userId],

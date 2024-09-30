@@ -34,7 +34,7 @@ const MainTabNavigator = () => {
 
   // setup a listener to update the user profile picture when the userProfile changes in firebase
   useEffect(() => {
-    console.log("LISTER", userProfile?.id);
+
     if (userProfile?.id) {
       const unsubscribe = onSnapshot(
         doc(db, "users", userProfile.id),

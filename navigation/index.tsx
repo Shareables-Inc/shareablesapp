@@ -67,8 +67,6 @@ const NotificationHandler = () => {
       const screen = response?.notification?.request?.content?.data?.screen;
       const userId = response?.notification?.request?.content?.data?.userId;
 
-      console.log(response);
-
       if (screen) {
         switch (screen) {
           case "ExpandedPost":
@@ -110,7 +108,7 @@ const NotificationHandler = () => {
           };
 
           notificationStore.addNotification(newNotification);
-          console.log(notificationStore.notifications);
+       
         }
       });
 
