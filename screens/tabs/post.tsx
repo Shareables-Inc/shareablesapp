@@ -149,7 +149,7 @@ const PostScreen = () => {
           website: "",
         },
         tags: selectedTags,
-        ratings: { overall: "0", ambiance: 0, foodQuality: 0, service: 0 },
+        ratings: { overall: "0", ambiance: 0, foodQuality: 0, service: 0, priceRange: 0 },
         imageUrls: [],
         saveCount: 0,
         likeCount: 0,
@@ -169,6 +169,8 @@ const PostScreen = () => {
             navigation.navigate("Review", {
               establishmentId: establishmentId,
               restaurantName: newPost.establishmentDetails.name,
+              city: newPost.establishmentDetails.city,
+              country: newPost.establishmentDetails.country,
               tags: selectedTags,
               postId: id,
             });

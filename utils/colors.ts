@@ -19,7 +19,7 @@ export const Colors = {
   lavender: "#E6E6FA",
   circleCheck: "#02AA02",
   circleAlert: "#D50505",
-  skeleton: "#E0E0E0",
+  skeleton: "#D0D0D0",
   rating: "#FF2F07",
   tags: "#FF0040",
   filterBox: "#3F3333",

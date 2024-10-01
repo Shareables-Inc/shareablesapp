@@ -11,6 +11,7 @@ import { MapPin, Bookmark, User } from "lucide-react-native"; // Use the Flame i
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { MarkerType } from "../discover/MapViewWithMarkers";
+import { Circle, Path, Svg } from "react-native-svg";
 
 interface RestaurantListProps {
   restaurants: MarkerType[];
@@ -97,9 +98,7 @@ const RestaurantList = ({
                 {restaurant.establishmentName || "Unknown Name"}
               </Text>
               <Text style={styles.location}>
-                {restaurant.city || "Unknown City"} •{" "}
-                {restaurant.priceRange || 0} •{" "}
-                <Text style={styles.distance}>{distanceText}</Text>
+                {restaurant.city || "Unknown City"}{" "}–{" "}<Text style={styles.distance}>{distanceText}</Text>
               </Text>
             </View>
             <View style={styles.ratingContainer}>
@@ -145,7 +144,7 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("save")}
           >
-            <Bookmark fill={"white"} size={18} color="white" />
+            <Bookmark fill={"white"} size={20} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.8}
@@ -156,7 +155,19 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("post")}
           >
-            <MapPin fill={"white"} size={18} color="white" />
+            <Svg
+              width="23"
+              height="23"
+              viewBox="0 0 24 24"
+              fill="white"
+              stroke="white"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <Path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
+              <Circle cx="12" cy="10" r="4" fill="#22C7B8" />
+            </Svg>
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={0.8}
@@ -167,7 +178,7 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("following")}
           >
-            <User fill={"white"} size={18} color="white" />
+            <User fill={"white"} size={20} color="white" />
           </TouchableOpacity>
         </View>
       </View>

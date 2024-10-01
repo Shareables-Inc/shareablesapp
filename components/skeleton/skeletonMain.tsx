@@ -4,7 +4,7 @@ import Colors from "../../utils/colors";
 
 const { width, height } = Dimensions.get("window");
 
-const SkeletonFeed: React.FC = () => {
+const SkeletonMain: React.FC = () => {
   const fadeAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -28,6 +28,13 @@ const SkeletonFeed: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* Top Oval and Notification Bell Skeleton */}
+      <View style={styles.topSection}>
+        <AnimatedView style={[styles.ovalSkeleton, { opacity: fadeAnim }]} />
+        <AnimatedView
+          style={[styles.notificationBellSkeleton, { opacity: fadeAnim }]}
+        />
+      </View>
 
       {/* Post Card 1 */}
       <View
@@ -78,6 +85,22 @@ const SkeletonFeed: React.FC = () => {
           style={[styles.restaurantImageSkeleton, { opacity: fadeAnim }]}
         />
       </View>
+
+      {/* Tab Bar Skeleton */}
+      <View style={styles.tabBarSkeleton}>
+        <View style={styles.tabItem}>
+          <AnimatedView style={[styles.tabIconSkeleton, { opacity: fadeAnim }]} />
+        </View>
+        <View style={styles.tabItem}>
+          <AnimatedView style={[styles.tabIconSkeleton, { opacity: fadeAnim }]} />
+        </View>
+        <View style={styles.tabItem}>
+          <AnimatedView style={[styles.tabIconSkeleton, { opacity: fadeAnim }]} />
+        </View>
+        <View style={styles.tabItem}>
+          <AnimatedView style={[styles.tabIconSkeleton, { opacity: fadeAnim }]} />
+        </View>
+      </View>
     </View>
   );
 };
@@ -86,7 +109,26 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "flex-start",
+    marginTop: height * 0.1,
     paddingHorizontal: 20,
+  },
+  topSection: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20, // Add some spacing between the top section and the first post card
+  },
+  ovalSkeleton: {
+    width: width * 0.4,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.skeleton,
+  },
+  notificationBellSkeleton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.skeleton,
   },
   postCard: {
     backgroundColor: Colors.background,
@@ -134,6 +176,29 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.skeleton,
     borderRadius: 18,
   },
+  tabBarSkeleton: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+    height: 80,
+    width: width, 
+    borderTopWidth: 1,
+    borderTopColor: Colors.skeleton,
+    position: "absolute",
+    bottom: 0,
+  },
+  tabItem: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  tabIconSkeleton: {
+    width: 35,
+    height: 35,
+    borderRadius: 10,
+    backgroundColor: Colors.skeleton,
+    marginBottom: 5,
+  },
 });
 
-export default SkeletonFeed;
+export default SkeletonMain;

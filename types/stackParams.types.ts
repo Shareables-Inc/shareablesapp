@@ -24,6 +24,8 @@ export type RootStackParamList = {
   Review: {
     establishmentId: string;
     restaurantName: string;
+    city: string;
+    country: string;
     tags: string[];
     postId: string;
   };

@@ -35,6 +35,7 @@ import config from "../config";
 import useNotificationStore, {
   NotificationStoreProps,
 } from "../store/useNotificationStore";
+import SkeletonMain from "../components/skeleton/skeletonMain";
 const Stack = createStackNavigator<RootStackParamList>();
 
 const NotificationHandler = () => {
@@ -137,15 +138,25 @@ const MainTabNavigatorWithNotifications = () => (
   </>
 );
 
+const linking = {
+  prefixes: ['shareables://'], 
+  config: {
+    screens: {
+      RestaurantProfile: 'restaurant/:restaurantId', 
+    },
+  },
+};
+
+
 export const MainApp = () => {
   const { user, userProfile, profileLoading, loading } = useAuth();
 
   if (loading || profileLoading) {
-    return <LoadingScreen logoSource={require("../assets/images/logo.png")} />;
+    return <SkeletonMain/>;
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer linking={linking}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <>

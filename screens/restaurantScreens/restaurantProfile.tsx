@@ -271,9 +271,15 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
   };
 
   const handleInvite = () => {
-    const message = `Go checkout ${establishmentData?.name} on Shareables!`;
+    const restaurantName = establishmentData?.name;
+        
+    // Fallback URL if the user doesn't have the app installed
+    const fallbackUrl = `https://shareablesapp.com/discover.html`; 
+    
+    const message = `I just found this restaurant called ${restaurantName} on Shareables. We should go check it out! ${fallbackUrl}`;
+    
     const url = `sms:?body=${encodeURIComponent(message)}`;
-
+    
     Linking.canOpenURL(url)
       .then((supported) => {
         if (supported) {
@@ -287,6 +293,18 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
         Alert.alert("Error", "Failed to open messaging app.");
       });
   };
+
+  useEffect(() => {
+    console.log("Establishment ID from route:", establishmentId);
+  }, [establishmentId]);
+  
+  useEffect(() => {
+    console.log("Fetched establishment data:", establishmentData);
+  }, [establishmentData]);
+  
+  
+  
+  
 
   const posts = (establishmentData?.fewImagePostReview || []).filter(
     (post) => post.imageUrls && post.imageUrls.length > 0
@@ -375,7 +393,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
           blurRadius={2.5}
         >
           <LinearGradient
-            colors={["rgba(0,0,0,0.3)", "transparent"]}
+            colors={["rgba(0,0,0,0.4)", "transparent"]}
             style={styles.gradient}
           >
             <View style={styles.topIconContainer}>
@@ -393,7 +411,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
         <View style={styles.restaurantHeaderContainer}>
           <View style={styles.bookmarkContainer}>
             <Bookmark
-              size={20}
+              size={25}
               color={isSaved ? Colors.highlightText : Colors.text}
               onPress={handleSaveEstablishment}
             />
@@ -402,8 +420,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{establishmentData?.name}</Text>
               <Text style={styles.location}>
-                {establishmentData?.city} • {establishmentData?.priceRange || 0}{" "}
-                • <Text style={styles.distance}>{distanceText}</Text>
+                {establishmentData?.city}{" "}–{" "}<Text style={styles.distance}>{distanceText} away</Text>
               </Text>
             </View>
             <View style={styles.ratingContainer}>
@@ -579,9 +596,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Regular,
   },
   distance: {
-    color: Colors.highlightText,
+    color: Colors.text,
     fontSize: width * 0.04,
-    fontFamily: Fonts.SemiBold,
+    fontFamily: Fonts.Regular,
   },
   ratingContainer: {
     backgroundColor: Colors.rating,
@@ -595,7 +612,6 @@ const styles = StyleSheet.create({
   },
   rating: {
     color: "white",
-    fontWeight: "bold",
     fontFamily: Fonts.Bold,
     fontSize: width * 0.045,
   },
@@ -611,6 +627,8 @@ const styles = StyleSheet.create({
   actionButtonsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginLeft: -(width * 0.02),
+    marginRight: -(width * 0.02),
   },
   actionButton: {
     flexDirection: "column",
@@ -647,7 +665,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    marginRight: width * 0.01,
+    marginRight: width * 0.02,
   },
   galleryItem: {
     position: "relative",
@@ -679,6 +697,7 @@ const styles = StyleSheet.create({
     width: "40%",
     alignSelf: "center",
     opacity: 0.2,
+    marginTop: -height * 0.01,
   },
   remainingReviewsContainer: {
     marginTop: "4%",

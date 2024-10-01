@@ -292,7 +292,7 @@ const ReviewScreen = ({ route }) => {
 
             <View style={styles.headers}>
               <Text style={styles.ratingHeader}>Score</Text>
-              <Text style={styles.priceHeader}>Price</Text>
+              {/* <Text style={styles.priceHeader}>Price</Text> */}
             </View>
 
             <View style={styles.ratingsContainer}>
@@ -364,7 +364,7 @@ const ReviewScreen = ({ route }) => {
                 </View>
               </View>
 
-              <View style={styles.ratingSection}>
+              {/* <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={[
@@ -382,7 +382,7 @@ const ReviewScreen = ({ route }) => {
                 >
                   <Text style={styles.ratingScore}>{ratingService}</Text>
                 </TouchableOpacity>
-              </View>
+              </View> */}
             </View>
 
             <View style={styles.toggleContainer}>
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
   },
   restaurantInfo: {
     fontFamily: Fonts.SemiBold,
-    fontSize: width * 0.055,
+    fontSize: width * 0.045,
     color: Colors.text,
     marginTop: height * 0.01,
   },
@@ -473,7 +473,7 @@ const styles = StyleSheet.create({
     alignSelf: "flex-start",
   },
   ratingHeader: {
-    fontSize: width * 0.055,
+    fontSize: width * 0.05,
     fontFamily: Fonts.SemiBold,
     color: Colors.charcoal,
     alignSelf: "flex-start",
@@ -481,11 +481,11 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.015,
   },
   priceHeader: {
-    fontSize: width * 0.055,
+    fontSize: width * 0.05,
     fontFamily: Fonts.SemiBold,
     color: Colors.charcoal,
     alignSelf: "flex-start",
-    paddingLeft: width * 0.55,
+    paddingLeft: width * 0.56,
     marginBottom: height * 0.015,
   },
   ratingsContainer: {
@@ -496,8 +496,8 @@ const styles = StyleSheet.create({
   },
   ratingSection: {},
   ratingCircle: {
-    width: width * 0.13,
-    height: width * 0.13,
+    width: width * 0.12,
+    height: width * 0.12,
     borderRadius: 90,
     justifyContent: "center",
     alignItems: "center",
@@ -505,13 +505,13 @@ const styles = StyleSheet.create({
     marginRight: width * 0.06,
   },
   ratingSquare: {
-    width: width * 0.2,
-    height: width * 0.13,
+    width: width * 0.18,
+    height: width * 0.12,
     borderRadius: 10,
     justifyContent: "center",
     alignItems: "center",
     marginBottom: height * 0.01,
-    marginLeft: width * 0.11,
+    marginLeft: width * 0.13,
   },
   defaultRatingCircle: {
     backgroundColor: Colors.charcoal,
@@ -531,7 +531,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.1,
     marginTop: height * 0.057,
     width: width,
-    height: height * 0.15,
+    height: height * 0.13,
     backgroundColor: Colors.tags,
     borderRadius: 10,
   },
@@ -546,7 +546,7 @@ const styles = StyleSheet.create({
   },
   postButtonText: {
     color: Colors.tags,
-    fontSize: width * 0.055,
+    fontSize: width * 0.05,
     fontFamily: Fonts.SemiBold,
   },
   switch: {
