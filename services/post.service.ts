@@ -43,7 +43,7 @@ export class PostService {
   private userCollection = collection(db, "users");
 
   async getPostsPaginated(
-    pageSize = 10,
+    pageSize = 20,
     lastVisible?: QueryDocumentSnapshot<DocumentData>
   ): Promise<{
     posts: Post[];
