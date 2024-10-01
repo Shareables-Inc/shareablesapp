@@ -6,14 +6,17 @@ import { db } from "../firebase/firebaseConfig";
 import { collection, doc, getDoc, updateDoc } from "firebase/firestore";
 
 function handleRegistrationError(errorMessage: string) {
-  // alert(errorMessage);
-  // throw new Error(errorMessage);
+  // Handle error message
+}
+
+// Cancel all previously scheduled notifications
+async function cancelAllScheduledNotifications() {
+  await Notifications.cancelAllScheduledNotificationsAsync();
 }
 
 export async function scheduleWeeklyRestaurantNotification() {
-  const trigger = new Date();
-  trigger.setDate(trigger.getDate() + ((5 + 7 - trigger.getDay()) % 7)); // Next Friday
-  trigger.setHours(18, 0, 0, 0); // 6:00 PM
+  // Cancel any existing scheduled notifications to prevent duplication
+  await cancelAllScheduledNotifications();
 
   await Notifications.scheduleNotificationAsync({
     content: {
@@ -21,9 +24,9 @@ export async function scheduleWeeklyRestaurantNotification() {
       body: "It's Friday! Time to explore some new dining options in your area.",
     },
     trigger: {
-      weekday: trigger.getDay(), // Friday
-      hour: trigger.getHours(),
-      minute: trigger.getMinutes(),
+      weekday: 5, 
+      hour: 17, 
+      minute: 30,
       repeats: true,
     },
   });
@@ -101,10 +104,8 @@ async function updatePushNotificationTokenFirebase(
   userId: string
 ) {
   try {
-    // get the user's document from the users collection
     const userCollection = collection(db, "users");
     const userRef = doc(userCollection, userId);
-    // update the user's fcmToken field with the new token if it is different
     const userDoc = await getDoc(userRef);
     if (userDoc.data()?.fcmToken !== token) {
       await updateDoc(userRef, {

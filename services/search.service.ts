@@ -9,6 +9,7 @@ interface SuggestedSearchParams {
   query: string;
   sessionToken: string;
   language?: string;
+  city?: string;
   country?: string;
   poiCategory?: string[];
   origin?: string;

@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Switch,
   Dimensions,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation.types";
@@ -108,6 +110,12 @@ const NotificationsSettingsScreen = () => {
             <Text style={styles.headerTitle}>Notifications</Text>
           </View>
         </View>
+
+        <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
+          <Text style={styles.infoText}>
+            Our app sends notifications to keep you updated on your friend’s recommendations and the status of your posts, ensuring you don’t miss anything relevant.
+          </Text>
+        </TouchableWithoutFeedback>
 
         <View>
           <View style={styles.allowNotificationsContainer}>
@@ -243,6 +251,18 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.SemiBold,
     color: Colors.text,
     marginBottom: height * 0.01,
+    marginTop: height * 0.01,
+  },
+  infoContainer: {
+    paddingHorizontal: width * 0.07,
+    backgroundColor: Colors.background,
+    marginTop: height * 0.01,
+  },
+  infoText: {
+    fontSize: width * 0.04,
+    color: Colors.text,
+    fontFamily: Fonts.Regular,
+    paddingHorizontal: width * 0.07,
     marginTop: height * 0.01,
   },
   allowNotificationsContainer: {

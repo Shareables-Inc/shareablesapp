@@ -87,6 +87,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     paddingHorizontal: 20,
+    marginTop: "-5%"
   },
   postCard: {
     backgroundColor: Colors.background,

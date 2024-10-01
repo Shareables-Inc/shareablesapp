@@ -109,18 +109,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "flex-start",
-    marginTop: height * 0.1,
-    paddingHorizontal: 20,
+    marginTop: height * 0.08,
+    paddingHorizontal: width * 0.03,
   },
   topSection: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20, // Add some spacing between the top section and the first post card
+    marginBottom: 20, 
   },
   ovalSkeleton: {
     width: width * 0.4,
-    height: 40,
+    height: 35,
     borderRadius: 20,
     backgroundColor: Colors.skeleton,
   },

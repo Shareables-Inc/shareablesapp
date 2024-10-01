@@ -174,8 +174,8 @@ const EditProfileScreen = () => {
 
       <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
         <Text style={styles.infoText}>
-          Your first name, last name, and bio will be visible to other users. Phone number is used for verification purposes only.
-          Picking a location will help us find you the best recommendations.
+          Your name and bio will be visible to others. Choosing a location personalizes your feed. 
+          Your phone number will only be used for account verification later.
         </Text>
       </TouchableWithoutFeedback>
 

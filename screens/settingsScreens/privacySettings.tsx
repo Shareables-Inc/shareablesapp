@@ -8,6 +8,8 @@ import {
   Switch,
   Dimensions,
   Linking,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation.types";
@@ -42,6 +44,13 @@ const PrivacySettingsScreen = () => {
             <Text style={styles.headerTitle}>Privacy</Text>
           </View>
         </View>
+
+        <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
+          <Text style={styles.infoText}>
+            Our app uses your location to provide tailored recommendations and improve your experience by showing you relevant content, nearby places, and the best foodies in the area.
+            We use your photos to create a profile picture and to help you share your experiences with the community.
+          </Text>
+        </TouchableWithoutFeedback>
 
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <View style={styles.preferencesContainer}>
@@ -135,6 +144,19 @@ const styles = StyleSheet.create({
     color: Colors.text,
     marginBottom: height * 0.01,
     marginTop: height * 0.01,
+  },
+  infoContainer: {
+    paddingHorizontal: width * 0.07,
+    backgroundColor: Colors.background,
+    marginTop: height * 0.01,
+  },
+  infoText: {
+    fontSize: width * 0.04,
+    color: Colors.text,
+    fontFamily: Fonts.Regular,
+    paddingHorizontal: width * 0.07,
+    marginTop: height * 0.01,
+    marginBottom: height * 0.02,
   },
   preferencesContainer: {
     backgroundColor: Colors.background,

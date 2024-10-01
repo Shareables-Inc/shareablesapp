@@ -136,7 +136,7 @@ const RestaurantList = ({
 
         <View style={styles.filterContainer}>
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={1}
             style={[
               styles.filterIcon,
               selectedFilter === "save" && styles.activeFilter,
@@ -147,7 +147,7 @@ const RestaurantList = ({
             <Bookmark fill={"white"} size={20} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={1}
             style={[
               styles.filterIcon,
               selectedFilter === "post" && styles.activeFilter,
@@ -166,15 +166,15 @@ const RestaurantList = ({
               stroke-linejoin="round"
             >
               <Path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-              <Circle cx="12" cy="10" r="4" fill="#22C7B8" />
+              <Circle cx="12" cy="10" r="4" fill="#161ECE" />
             </Svg>
           </TouchableOpacity>
           <TouchableOpacity
-            activeOpacity={0.8}
+            activeOpacity={1}
             style={[
               styles.filterIcon,
               selectedFilter === "following" && styles.activeFilter,
-              { backgroundColor: Colors.highlightText }, // Fire icon background color
+              { backgroundColor: Colors.tags }, // Fire icon background color
             ]}
             onPress={() => handleFilterPress("following")}
           >
@@ -263,7 +263,6 @@ const styles = StyleSheet.create({
   filterIcon: {
     borderRadius: 90,
     marginHorizontal: width * 0.01,
-    backgroundColor: Colors.inputBackground,
     width: width * 0.09,
     height: width * 0.09,
     justifyContent: "center",
@@ -271,7 +270,7 @@ const styles = StyleSheet.create({
   },
   activeFilter: {
     borderWidth: 3,
-    borderColor: Colors.placeholderText,
+    borderColor: Colors.filterBox,
   },
   filterLabelText: {
     fontSize: width * 0.045,

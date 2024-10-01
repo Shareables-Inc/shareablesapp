@@ -56,6 +56,8 @@ export type Suggestion = {
   feature_type: string;
   address: string;
   full_address: string;
+  city: string;
+  country: string;
   place_formatted: string;
   context: Context;
   language: string;
@@ -97,6 +99,8 @@ type Properties = {
   feature_type: string;
   address: string;
   full_address: string;
+  city: string;
+  country: string;
   place_formatted: string;
   context: Context;
   coordinates: Coordinates;

@@ -23,11 +23,11 @@ import FastImage from "react-native-fast-image";
 
 // Add these color pairs at the top of the file
 const markerColors = {
-  bookmark: { main: Colors.saveBookmarkMarker, textShadow: "#FFD700" }, // Gold
-  placesReviewed: { main: Colors.placesReviewedMarker, textShadow: "#FF6B6B" }, // Soft Red
-  trending: { main: Colors.trendingMarker, textShadow: "#4ECDC4" }, // Turquoise
-  user: { main: Colors.highlightText, textShadow: "#FF9FF3" }, // Soft Pink
-  restaurant: { main: Colors.highlightText, textShadow: "#FF6B6B" }, // Soft Red
+  bookmark: { main: Colors.saveBookmarkMarker, textShadow: "#000000" },
+  placesReviewed: { main: Colors.placesReviewedMarker, textShadow: "#000000" }, 
+  trending: { main: Colors.trendingMarker, textShadow: "#000000" }, 
+  user: { main: Colors.tags, textShadow: "#000000" }, 
+  restaurant: { main: Colors.tags, textShadow: "#000000" }, 
 };
 
 interface MarkerProps {
@@ -68,22 +68,22 @@ export const RestaurantMarker = ({
           style={[
             styles.markerText,
             {
-              textShadowColor: Colors.highlightText,
+              textShadowColor: Colors.tags,
               textShadowOffset: { width: -1, height: -1 },
               textShadowRadius: 1,
             },
             {
-              textShadowColor: Colors.highlightText,
+              textShadowColor: Colors.tags,
               textShadowOffset: { width: 1, height: -1 },
               textShadowRadius: 1,
             },
             {
-              textShadowColor: Colors.highlightText,
+              textShadowColor: Colors.tags,
               textShadowOffset: { width: -1, height: 1 },
               textShadowRadius: 1,
             },
             {
-              textShadowColor: Colors.highlightText,
+              textShadowColor: Colors.tags,
               textShadowOffset: { width: 1, height: 1 },
               textShadowRadius: 1,
             },
@@ -126,22 +126,22 @@ export const BookmarkMarker = ({
             style={[
               styles.markerText,
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: 1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: 1 },
                 textShadowRadius: 1,
               },
@@ -188,7 +188,7 @@ export const PlacesReviewedMarker = ({
               stroke-linejoin="round"
             >
               <Path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-              <Circle cx="12" cy="10" r="4" fill="#22C7B8" />
+              <Circle cx="12" cy="10" r="4" fill="#161ECE" />
             </Svg>
           </View>
           <Text
@@ -196,22 +196,22 @@ export const PlacesReviewedMarker = ({
               styles.markerText,
               { color: Colors.placesReviewedMarker },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: 1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: 1 },
                 textShadowRadius: 1,
               },
@@ -250,22 +250,22 @@ export const TrendingMarker = ({ coordinate, title, onPress }: MarkerProps) => {
               styles.markerText,
               { color: Colors.trendingMarker },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: 1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: 1 },
                 textShadowRadius: 1,
               },
@@ -313,24 +313,24 @@ export const UserMarker = ({
           <Text
             style={[
               styles.markerText,
-              { color: Colors.highlightText },
+              { color: Colors.tags },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: -1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: -1, height: 1 },
                 textShadowRadius: 1,
               },
               {
-                textShadowColor: Colors.lavender,
+                textShadowColor: Colors.markerShadow,
                 textShadowOffset: { width: 1, height: 1 },
                 textShadowRadius: 1,
               },
@@ -376,6 +376,6 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 2,
-    borderColor: Colors.highlightText,
+    borderColor: Colors.tags,
   },
 });

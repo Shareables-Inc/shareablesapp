@@ -23,7 +23,7 @@ const SelectedRetrievedCard = ({
           <X size={24} color={Colors.text} />
         </TouchableOpacity>
       </View>
-      <Text style={styles.fullAddress}>{retrievedSuggestion.address}</Text>
+      <Text style={styles.fullAddress}>{retrievedSuggestion.address}, {retrievedSuggestion.city}, {retrievedSuggestion.country}</Text>
     </View>
   );
 };

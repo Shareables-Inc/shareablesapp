@@ -294,18 +294,6 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
       });
   };
 
-  useEffect(() => {
-    console.log("Establishment ID from route:", establishmentId);
-  }, [establishmentId]);
-  
-  useEffect(() => {
-    console.log("Fetched establishment data:", establishmentData);
-  }, [establishmentData]);
-  
-  
-  
-  
-
   const posts = (establishmentData?.fewImagePostReview || []).filter(
     (post) => post.imageUrls && post.imageUrls.length > 0
   );

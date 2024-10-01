@@ -166,8 +166,10 @@ const PlaceSuggestionList = ({ suggestions, onPlaceSelect }) => {
     [onPlaceSelect]
   );
 
+
   const renderItem = useCallback(
     ({ item, index }: { item: Suggestion; index: number }) => (
+
       <TouchableOpacity
         style={[
           styles.suggestionItem,
@@ -179,8 +181,12 @@ const PlaceSuggestionList = ({ suggestions, onPlaceSelect }) => {
           {item.name || item.place_formatted || "Unknown location"}
         </Text>
         {item.address && (
-          <Text style={styles.suggestionSubtext}>{item.address}</Text>
-        )}
+        <Text style={styles.suggestionSubtext}>
+          {item.address}
+          {item.context?.place?.name ? `, ${item.context?.place?.name}` : ""}
+          {item.context?.country?.name ? `, ${item.context?.country?.name}` : ""}
+        </Text>
+      )}
       </TouchableOpacity>
     ),
     [handleSuggestionPress, suggestions.length]

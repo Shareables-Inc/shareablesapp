@@ -13,17 +13,17 @@ export const Colors = {
   header: "#F3F3F3",
   followed: "#3ADB5E",
   contactCard: "#FF5656",
-  saveBookmarkMarker: "#7F5BAC",
-  placesReviewedMarker: "#26D5B6",
+  saveBookmarkMarker: "#7949B6",
+  placesReviewedMarker: "#161ECE",
   trendingMarker: "#EB5757",
-  lavender: "#E6E6FA",
+  markerShadow: "#E6E6FA",
   circleCheck: "#02AA02",
   circleAlert: "#D50505",
   skeleton: "#D0D0D0",
   rating: "#FF2F07",
   tags: "#FF0040",
   filterBox: "#3F3333",
-  profileBorder: "#DFDFDF"
+  profileBorder: "#DFDFDF"  
 };
 
 export default Colors;

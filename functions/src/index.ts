@@ -69,8 +69,8 @@ export const sendCommentNotification = onDocumentCreated(
       const message: CommentNotification = {
         to: userData.fcmToken,
         sound: "default",
-        title: "New Comment on Your Post",
-        body: `${comment.userName} commented: ${comment.comment.substring(
+        title: `${comment.userName} commented on your review`,
+        body: `${comment.comment.substring(
           0,
           100
         )}...`,
@@ -134,8 +134,8 @@ export const sendFollowNotification = onDocumentCreated(
       const message: FollowerNotification = {
         to: followedUserData.fcmToken,
         sound: "default",
-        title: "New Follower",
-        body: `${followerUserData.username} started following you!`,
+        title: `${followerUserData.username} started following you!`,
+        body: `They trust your taste in food and want more recommendations!`,
         data: {
           id: uuidv4(),
           screen: "UserProfile",
@@ -210,7 +210,7 @@ export const sendLikeNotification = onDocumentCreated(
       const message: LikeNotification = {
         to: ownerData.fcmToken,
         sound: "default",
-        title: "New Like on Your Post",
+        title: "Your review was worth some love!",
         body: `${likerData.username} liked your post!`,
         data: {
           id: uuidv4(),
@@ -286,8 +286,8 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
         const message: PostNotification = {
           to: follower.fcmToken,
           sound: "default",
-          title: "Your Friend Made a New Post!",
-          body: `${userData.username} made a new post!`,
+          title: `${userData.username} visited somewhere new!`,
+          body: `Check out their latest review!`,
           data: {
             id: uuidv4(),
             screen: "ExpandedPost",

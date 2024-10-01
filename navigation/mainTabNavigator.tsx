@@ -50,13 +50,13 @@ const MainTabNavigator = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: Colors.highlightText,
+        tabBarActiveTintColor: Colors.tags,
         tabBarInactiveTintColor: Colors.placeholderText,
         tabBarShowLabel: true,
         tabBarLabelStyle: {
           fontFamily: Fonts.Light,
           fontSize: 11,
-          marginTop: 2,
+          marginTop: 3,
         },
         tabBarStyle: { backgroundColor: Colors.background },
         tabBarIcon: ({ focused, color, size }) => {
@@ -69,14 +69,14 @@ const MainTabNavigator = () => {
           } else if (route.name === "Post") {
             icon = <CirclePlus size={iconSize} color={color} />;
           } else if (route.name === "Profile") {
-            iconSize = 30;
+            iconSize = 27;
             iconStyle = {
               width: iconSize,
               height: iconSize,
               borderRadius: iconSize / 2,
               borderWidth: 2,
               borderColor: focused
-                ? Colors.highlightText
+                ? Colors.tags
                 : Colors.placeholderText,
             };
             icon = userProfile?.profilePicture ? (
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   tabIconContainer: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 10,
+    paddingTop: 12,
   },
   activeTabIconContainer: {
     borderRadius: 90,

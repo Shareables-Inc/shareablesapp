@@ -209,7 +209,7 @@ export class PostService {
       this.postsCollection,
       where("userId", "==", userId),
       orderBy("createdAt", "desc"),
-      limit(9)
+      limit(20)
     );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(this.documentToPost);
