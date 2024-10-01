@@ -300,7 +300,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
     }
 
     // delay the notification by 1 minute
-    await new Promise((resolve) => setTimeout(resolve, 60000));
+    await new Promise((resolve) => setTimeout(resolve, 600000));
 
     await sendPushNotifications(notifications);
   }
