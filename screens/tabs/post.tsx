@@ -76,6 +76,7 @@ const PostScreen = () => {
           key={index}
           style={[styles.tag, selectedTags.includes(tag) && styles.selectedTag]}
           onPress={() => handleSelectTag(tag)}
+          activeOpacity={0.8}
         >
           <Text
             style={[
@@ -252,6 +253,7 @@ const PostScreen = () => {
       <TouchableOpacity
         onPress={handleNextPress}
         style={styles.nextButtonContainer}
+        activeOpacity={1}
       >
         <Text style={styles.nextButton}>Next</Text>
       </TouchableOpacity>
@@ -288,6 +290,7 @@ const PostScreen = () => {
               activeCategory === "cuisines" && styles.activeTagButton,
             ]}
             onPress={() => handleCategoryPress("cuisines")}
+            activeOpacity={1}
           >
             <Text style={styles.tagType}>Cuisine</Text>
           </TouchableOpacity>
@@ -297,6 +300,7 @@ const PostScreen = () => {
               activeCategory === "foodOccasions" && styles.activeTagButton,
             ]}
             onPress={() => handleCategoryPress("foodOccasions")}
+            activeOpacity={1}
           >
             <Text style={styles.tagType}>Occasion</Text>
           </TouchableOpacity>
@@ -306,6 +310,7 @@ const PostScreen = () => {
               activeCategory === "restaurantVibes" && styles.activeTagButton,
             ]}
             onPress={() => handleCategoryPress("restaurantVibes")}
+            activeOpacity={1}
           >
             <Text style={styles.tagType}>Atmosphere</Text>
           </TouchableOpacity>

@@ -39,10 +39,16 @@ export function useIsFollowing(userId: string, followingId: string) {
 export function useFriendDiscoverPosts(userId: string) {
   return useQuery({
     queryKey: ["friendDiscoverPosts", userId],
-    queryFn: () => followingService.getFollowingPosts(userId),
+    queryFn: async () => {
+      const posts = await followingService.getFollowingPosts(userId);
+
+      // Filter out posts without images
+      return posts.filter((post) => post.imageUrls && post.imageUrls.length > 0);
+    },
     enabled: !!userId,
   });
 }
+
 
 export const useFollowingPosts = (
   currentUserId: string
@@ -54,15 +60,13 @@ export const useFollowingPosts = (
 
       const posts = await followingService.getFollowingPosts(currentUserId);
 
-      if (posts.length === 0) {
-        return [];
-      }
-
-      return posts;
+      // Filter out posts without images
+      return posts.filter((post) => post.imageUrls && post.imageUrls.length > 0);
     },
     enabled: !!currentUserId,
   });
 };
+
 
 export const useFollowingActions = (
   followingId: string,

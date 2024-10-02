@@ -2,6 +2,7 @@ import {
   onDocumentCreated,
   onDocumentDeleted,
 } from "firebase-functions/v2/firestore";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as admin from "firebase-admin";
 import {
   CommentNotification,
@@ -72,7 +73,7 @@ export const sendCommentNotification = onDocumentCreated(
         title: `${comment.userName} commented on your review`,
         body: `${comment.comment.substring(
           0,
-          100
+          50
         )}...`,
         data: {
           id: uuidv4(),
@@ -134,8 +135,8 @@ export const sendFollowNotification = onDocumentCreated(
       const message: FollowerNotification = {
         to: followedUserData.fcmToken,
         sound: "default",
-        title: `${followerUserData.username} started following you!`,
-        body: `They trust your taste in food and want more recommendations!`,
+        title: `${followerUserData.username} started following you`,
+        body: `They trust your taste in food!`,
         data: {
           id: uuidv4(),
           screen: "UserProfile",
@@ -211,7 +212,7 @@ export const sendLikeNotification = onDocumentCreated(
         to: ownerData.fcmToken,
         sound: "default",
         title: "Your review was worth some love!",
-        body: `${likerData.username} liked your post!`,
+        body: `${likerData.username} liked your post`,
         data: {
           id: uuidv4(),
           screen: "ExpandedPost",
@@ -286,7 +287,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
         const message: PostNotification = {
           to: follower.fcmToken,
           sound: "default",
-          title: `${userData.username} visited somewhere new!`,
+          title: `${userData.username} posted`,
           body: `Check out their latest review!`,
           data: {
             id: uuidv4(),
@@ -358,3 +359,54 @@ export const decrementLikeCount = onDocumentDeleted(
     }
   }
 );
+
+export const autoDeletePostIfNoImages = onDocumentCreated('posts/{postId}', async (event) => {
+  const postId = event.params?.postId;
+
+  try {
+    // Wait for 10 minutes (600,000 milliseconds)
+    await new Promise((resolve) => setTimeout(resolve, 480000));
+
+    const postRef = admin.firestore().collection('posts').doc(postId);
+    const postDoc = await postRef.get();
+
+    if (!postDoc.exists) {
+      console.log(`Post ${postId} does not exist, skipping deletion.`);
+      return;
+    }
+
+    const postData = postDoc.data();
+    if (postData && postData.imageUrls && postData.imageUrls.length === 0) {
+      // Delete post if imageUrls is still empty
+      await postRef.delete();
+      console.log(`Deleted post ${postId} due to empty imageUrls field.`);
+    } else {
+      console.log(`Post ${postId} has images, skipping deletion.`);
+    }
+  } catch (error) {
+    console.error(`Error deleting post ${postId}:`, error);
+  }
+});
+
+
+export const scheduledDeleteIncompletePosts = onSchedule(
+  {
+    schedule: "0 4 * * *", // Run at 2:00 AM every day
+    timeZone: "America/Toronto" // Set the timezone to EST (Toronto)
+  },
+  async (event) => {
+    const postsRef = admin.firestore().collection('posts');
+    const incompletePostsSnapshot = await postsRef
+      .where('imageUrls', '==', [])
+      .get();
+
+    incompletePostsSnapshot.forEach(async (doc) => {
+      await doc.ref.delete();
+      console.log(`Deleted post ${doc.id} due to empty imageUrls.`);
+    });
+  }
+);
+
+
+
+

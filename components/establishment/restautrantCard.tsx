@@ -228,7 +228,7 @@ const RestaurantCard = ({
                   horizontal
                   getItemCount={(data) => data.length}
                   getItem={(data, index) => data[index]}
-                  data={restaurant.gallery}
+                  data={restaurant.gallery.filter((item) => item.imageUrls && item.imageUrls.length > 0)}
                   renderItem={({ item }) => (
                     <TouchableOpacity
                       onPress={() => onOpenReviewPost(item)}
@@ -273,9 +273,12 @@ const RestaurantCard = ({
         const columnWidth = (width * 0.89) / columnCount;
         const columnItems: Post[][] = Array.from({ length: columnCount }, () => []);
 
-        restaurant.fewImagePostReview.forEach((post, index) => {
+        restaurant.fewImagePostReview
+        .filter((post) => post.imageUrls && post.imageUrls.length > 0)
+        .forEach((post, index) => {
           columnItems[index % columnCount].push(post);
         });
+      
 
         const renderColumn = (items, columnIndex) => {
           return (
@@ -455,7 +458,7 @@ const styles = StyleSheet.create({
   galleryContainer: {
     marginTop: height * 0.01,
     overflow: "visible",
-    paddingLeft: "5%",
+    paddingLeft: "3%",
   },
   galleryItemContainer: {
     flexDirection: "column",
