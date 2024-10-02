@@ -5,6 +5,7 @@ export interface Post extends FirebasePost {
 }
 
 interface FirebasePost {
+  id: string;
   userId: string;
   profilePicture: string;
   username: string;

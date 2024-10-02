@@ -230,7 +230,10 @@ export const sendLikeNotification = onDocumentCreated(
 );
 
 export const sendFollowedUserPostNotification = onDocumentCreated(
-  "posts/{postId}",
+  {
+    document: "posts/{postId}",
+    timeoutSeconds: 960,
+  },
   async (event) => {
     const postId = event.params?.postId;
     const postData = event.data?.data() as Post | undefined;
@@ -371,14 +374,21 @@ export const decrementLikeCount = onDocumentDeleted(
   }
 );
 
+
 export const autoDeletePostIfNoImages = onDocumentCreated(
-  'posts/{postId}',
+  {
+    document: 'posts/{postId}',
+    timeoutSeconds: 540, // 9-minute timeout to cover your 8-minute delay
+  },
   async (event) => {
     const postId = event.params?.postId;
 
     try {
+      console.log(`Function triggered for post ${postId}`);
+
       // Wait for 8 minutes (480,000 milliseconds)
       await new Promise((resolve) => setTimeout(resolve, 480000));
+      console.log(`Waited for 8 minutes for post ${postId}`);
 
       const postRef = admin.firestore().collection('posts').doc(postId);
       const postDoc = await postRef.get();
@@ -389,9 +399,12 @@ export const autoDeletePostIfNoImages = onDocumentCreated(
       }
 
       const postData = postDoc.data();
-      
+      console.log(`Post data for ${postId}:`, postData);
+
       // Handle case where imageUrls is undefined or missing
       if (postData && postData.imageUrls && postData.imageUrls.length === 0) {
+        console.log(`Post ${postId} has no images, proceeding with deletion.`);
+
         // Delete post if imageUrls is still empty
         await postRef.delete();
         console.log(`Deleted post ${postId} due to empty imageUrls.`);
@@ -399,11 +412,14 @@ export const autoDeletePostIfNoImages = onDocumentCreated(
         // Now, check the related establishment
         const establishmentId = postData.establishmentDetails?.id;
         if (establishmentId) {
+          console.log(`Checking establishment ${establishmentId}`);
           const establishmentRef = admin.firestore().collection('establishments').doc(establishmentId);
           const establishmentDoc = await establishmentRef.get();
 
           if (establishmentDoc.exists) {
             const establishmentData = establishmentDoc.data();
+            console.log(`Establishment data for ${establishmentId}:`, establishmentData);
+
             if (establishmentData && establishmentData.postCount === 0) {
               // If postCount is 0, delete the establishment
               await establishmentRef.delete();
