@@ -105,10 +105,10 @@ const NotificationsScreen = () => {
                         style={styles.avatar}
                       />
                     ) : (
-                      <User style={styles.avatar} color={Colors.text} />
+                      <Image style={styles.avatarLogo} source={require("../../assets/images/icon.png")} />
                     )}
                     <View style={styles.notificationTextContainer}>
-                      <Text style={styles.username}>@{notification.title}</Text>
+                      <Text style={styles.username}>{notification.title}</Text>
                       <Text style={styles.notificationText}>
                         {notification.message}
                       </Text>
@@ -185,6 +185,12 @@ const styles = StyleSheet.create({
     width: width * 0.1,
     height: width * 0.1,
     borderRadius: 90,
+    marginRight: width * 0.03,
+  },
+  avatarLogo: {
+    width: width * 0.1,
+    height: width * 0.1,
+    borderRadius: 10,
     marginRight: width * 0.03,
   },
   notificationTextContainer: {

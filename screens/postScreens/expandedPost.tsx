@@ -775,7 +775,7 @@ const styles = StyleSheet.create({
   },
   overallRating: {
     fontSize: width * 0.04,
-    color: Colors.placeholderText,
+    color: Colors.text,
     fontFamily: Fonts.SemiBold,
     alignSelf: "flex-start",
   },

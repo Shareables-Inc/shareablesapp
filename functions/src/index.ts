@@ -232,6 +232,7 @@ export const sendLikeNotification = onDocumentCreated(
 export const sendFollowedUserPostNotification = onDocumentCreated(
   "posts/{postId}",
   async (event) => {
+    const postId = event.params?.postId;
     const postData = event.data?.data() as Post | undefined;
     if (!postData) {
       return;
@@ -279,6 +280,18 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       return;
     }
 
+    // Delay the notification by 15 minutes
+    await new Promise((resolve) => setTimeout(resolve, 900000));
+
+    // Check if the post still exists after the delay
+    const postRef = admin.firestore().collection("posts").doc(postId);
+    const postDoc = await postRef.get();
+
+    if (!postDoc.exists) {
+      console.log(`Post ${postId} was deleted. Skipping notification.`);
+      return;
+    }
+
     // send a notification to each follower
     const notifications: PostNotification[] = [];
 
@@ -300,12 +313,10 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       }
     }
 
-    // delay the notification by 1 minute
-    await new Promise((resolve) => setTimeout(resolve, 600000));
-
     await sendPushNotifications(notifications);
   }
 );
+
 
 export const incrementLikeCount = onDocumentCreated(
   "/likes/{likeId}",
@@ -360,52 +371,111 @@ export const decrementLikeCount = onDocumentDeleted(
   }
 );
 
-export const autoDeletePostIfNoImages = onDocumentCreated('posts/{postId}', async (event) => {
-  const postId = event.params?.postId;
+export const autoDeletePostIfNoImages = onDocumentCreated(
+  'posts/{postId}',
+  async (event) => {
+    const postId = event.params?.postId;
 
-  try {
-    // Wait for 10 minutes (600,000 milliseconds)
-    await new Promise((resolve) => setTimeout(resolve, 480000));
+    try {
+      // Wait for 8 minutes (480,000 milliseconds)
+      await new Promise((resolve) => setTimeout(resolve, 480000));
 
-    const postRef = admin.firestore().collection('posts').doc(postId);
-    const postDoc = await postRef.get();
+      const postRef = admin.firestore().collection('posts').doc(postId);
+      const postDoc = await postRef.get();
 
-    if (!postDoc.exists) {
-      console.log(`Post ${postId} does not exist, skipping deletion.`);
-      return;
+      if (!postDoc.exists) {
+        console.log(`Post ${postId} does not exist, skipping deletion.`);
+        return;
+      }
+
+      const postData = postDoc.data();
+      
+      // Handle case where imageUrls is undefined or missing
+      if (postData && postData.imageUrls && postData.imageUrls.length === 0) {
+        // Delete post if imageUrls is still empty
+        await postRef.delete();
+        console.log(`Deleted post ${postId} due to empty imageUrls.`);
+
+        // Now, check the related establishment
+        const establishmentId = postData.establishmentDetails?.id;
+        if (establishmentId) {
+          const establishmentRef = admin.firestore().collection('establishments').doc(establishmentId);
+          const establishmentDoc = await establishmentRef.get();
+
+          if (establishmentDoc.exists) {
+            const establishmentData = establishmentDoc.data();
+            if (establishmentData && establishmentData.postCount === 0) {
+              // If postCount is 0, delete the establishment
+              await establishmentRef.delete();
+              console.log(`Deleted establishment ${establishmentId} because postCount is 0.`);
+            } else {
+              console.log(`Establishment ${establishmentId} has postCount > 0, skipping deletion.`);
+            }
+          } else {
+            console.log(`Establishment ${establishmentId} does not exist.`);
+          }
+        } else {
+          console.log(`Post ${postId} does not have an associated establishment.`);
+        }
+      } else {
+        console.log(`Post ${postId} has images, skipping deletion.`);
+      }
+    } catch (error) {
+      console.error(`Error deleting post ${postId} or establishment:`, error);
     }
-
-    const postData = postDoc.data();
-    if (postData && postData.imageUrls && postData.imageUrls.length === 0) {
-      // Delete post if imageUrls is still empty
-      await postRef.delete();
-      console.log(`Deleted post ${postId} due to empty imageUrls field.`);
-    } else {
-      console.log(`Post ${postId} has images, skipping deletion.`);
-    }
-  } catch (error) {
-    console.error(`Error deleting post ${postId}:`, error);
   }
-});
+);
+
+
 
 
 export const scheduledDeleteIncompletePosts = onSchedule(
   {
-    schedule: "0 4 * * *", // Run at 2:00 AM every day
+    schedule: "0 4 * * *", // Run at 4:00 AM every day
     timeZone: "America/Toronto" // Set the timezone to EST (Toronto)
   },
   async (event) => {
     const postsRef = admin.firestore().collection('posts');
-    const incompletePostsSnapshot = await postsRef
-      .where('imageUrls', '==', [])
-      .get();
+    const establishmentsRef = admin.firestore().collection('establishments');
+    
+    try {
+      // Step 1: Find and delete posts with empty imageUrls
+      const incompletePostsSnapshot = await postsRef
+        .where('imageUrls', '==', [])
+        .get();
 
-    incompletePostsSnapshot.forEach(async (doc) => {
-      await doc.ref.delete();
-      console.log(`Deleted post ${doc.id} due to empty imageUrls.`);
-    });
+      const batch = admin.firestore().batch();
+
+      incompletePostsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+        console.log(`Deleted post ${doc.id} due to empty imageUrls.`);
+      });
+
+      await batch.commit();
+
+      // Step 2: Find and delete establishments with postCount of 0
+      const establishmentsSnapshot = await establishmentsRef
+        .where('postCount', '==', 0)
+        .get();
+
+      if (!establishmentsSnapshot.empty) {
+        const establishmentBatch = admin.firestore().batch();
+
+        establishmentsSnapshot.forEach((doc) => {
+          establishmentBatch.delete(doc.ref);
+          console.log(`Deleted establishment ${doc.id} due to postCount being 0.`);
+        });
+
+        await establishmentBatch.commit();
+      } else {
+        console.log('No establishments with postCount of 0 found.');
+      }
+    } catch (error) {
+      console.error('Error deleting incomplete posts or empty establishments:', error);
+    }
   }
 );
+
 
 
 

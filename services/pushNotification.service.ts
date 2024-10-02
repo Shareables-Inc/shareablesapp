@@ -20,11 +20,11 @@ export async function scheduleWeeklyRestaurantNotification() {
 
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: "Discover New Restaurants!",
-      body: "It's Friday! Time to explore some new dining options in your area.",
+      title: "Dinner plans?",
+      body: "Capture & share your experience with friends!",
     },
     trigger: {
-      weekday: 5, 
+      weekday: 6, 
       hour: 17, 
       minute: 30,
       repeats: true,

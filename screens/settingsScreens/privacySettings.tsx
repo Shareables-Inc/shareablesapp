@@ -47,7 +47,7 @@ const PrivacySettingsScreen = () => {
 
         <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
           <Text style={styles.infoText}>
-            Our app uses your location to provide tailored recommendations and improve your experience by showing you relevant content, nearby places, and the best foodies in the area.
+            Our app uses your location to provide tailored recommendations and improve your experience by showing you relevant content.
             We use your photos to create a profile picture and to help you share your experiences with the community.
           </Text>
         </TouchableWithoutFeedback>
@@ -89,10 +89,10 @@ const PrivacySettingsScreen = () => {
             <View style={styles.separatorSmall} />
             </View>
 
-            <View style={styles.preferencesContainer}>
+            {/* <View style={styles.preferencesContainer}>
               <Text style={styles.preferencesText}>Policies</Text>
 
-            {/* Privacy Policy */}
+
             <View style={styles.preferenceContainer}>
               <Text style={styles.bodyText}>Privacy Policy</Text>
               <TouchableOpacity>
@@ -102,7 +102,7 @@ const PrivacySettingsScreen = () => {
 
             <View style={styles.separatorSmall} />
 
-            {/* Terms of Service */}
+
             <View style={styles.preferenceContainer}>
               <Text style={styles.bodyText}>Terms of Service</Text>
               <TouchableOpacity>
@@ -112,7 +112,7 @@ const PrivacySettingsScreen = () => {
 
             <View style={styles.separatorSmall} />
 
-          </View>
+          </View> */}
         </ScrollView>
       </View>
     </SafeAreaView>
