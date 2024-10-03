@@ -1,11 +1,10 @@
 {
   "expo": {
     "name": "Shareables",
-    "slug": "shareables",
+    "slug": "shareablesapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "darkModeIcon": "./assets/images/icon-dark.png",
     "userInterfaceStyle": "light",
     "plugins": [
       [
@@ -20,29 +19,39 @@
         {
           "locationAlwaysAndWhenInUsePermission": "Allow Shareables to use your location."
         }
-      ]
+      ],
+      "expo-font"
     ],
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["assets/images/*"],
+    "assetBundlePatterns": [
+      "assets/images/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.shareablesinc.shareables",
+      "buildNumber": "1.0.1",
       "infoPlist": {
-        "LSApplicationQueriesSchemes": ["maps", "comgooglemaps", "waze"],
+        "LSApplicationQueriesSchemes": [
+          "maps",
+          "comgooglemaps",
+          "waze"
+        ],
         "NSContactsUsageDescription": "This app uses contacts to invite friends.",
         "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select photos.",
         "NSCameraUsageDescription": "This app needs access to your camera to take photos.",
-        "UIBackgroundModes": ["fetch", "remote-notification"],
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow Shareables to use your location.",
         "NSLocationAlwaysUsageDescription": "Allow Shareables to access your location",
         "NSLocationWhenInUseUsageDescription": "Allow Shareables to access your location"
       },
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "scheme": "shareables"
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -60,21 +69,13 @@
         "VIBRATE",
         "WAKE_LOCK"
       ],
-      "googleServicesFile": "./google-services.json",
-      "useNextNotificationsApi": true,
-      "notification": {
-        "icon": "./assets/images/icon.png",
-        "color": "#ffffff",
-        "sound": true,
-        "vibrationPattern": [0, 250, 250, 250]
-      },
-      "scheme": "shareables"
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
     },
     "extra": {
-      "jiraApiToken": "${EXPO_PUBLIC_JIRA_API_TOKEN}", 
+      "jiraApiToken": "${EXPO_PUBLIC_JIRA_API_TOKEN}",
       "eas": {
         "projectId": "ef6370a3-a025-4a4c-920d-69ff87de0a82"
       }

@@ -10,7 +10,20 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {}
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "sk.eyJ1IjoiZHBhdGVsc2hhcmVhYmxlcyIsImEiOiJjbTFjcG1ydWEweWI0Mm5vbXZhMTc0MDZ5In0.-KSYx2Pk-UbntE0OyDn3LQ",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyBTF0pS16rwgqYYVBRiyq0rJ0mCUlbwYiI",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "shareablesapp-b7366.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "shareablesapp-b7366",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "shareablesapp-b7366.appspot.com",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "670420221545",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:670420221545:web:3f14e31499b93105e1ecf8",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-2YX597F0GC",
+        "EXPO_PUBLIC_JIRA_API_TOKEN": "ATATT3xFfGF0gssDK70YFfEw5eTuDHs-DvapyJioDJCCcLAVQpO-2_iSVwQExlh5-q34kmlfSVTJ5f6E8RNfGEAVDLDSmUHcZ2I9_S3hFx4ADIOWsmiWanso-FP7IKqFJsSwf2ctbGpGP0-j5ar51PTqYGQCtiimmbarexMNDqhfGRn-gPauq2U=9BC60415",
+        "NODE_ENV": "production"
+      }
+    }
   },
   "submit": {
     "production": {}
