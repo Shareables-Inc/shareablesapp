@@ -37,6 +37,9 @@ yarn-error.*
 
 # local env files
 .env*.local
+env.d.ts
+*.production
+*.development
 
 # typescript
 *.tsbuildinfo
@@ -45,5 +48,7 @@ shareablesapp-b7366-firebase-adminsdk-m8491-3c4bc3b2e2.json
 
 google-services.json
 GoogleService-Info.plist
+google-services-dev.json
+GoogleService-Info-Dev.plist
 .env
 

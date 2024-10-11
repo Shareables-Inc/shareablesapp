@@ -32,7 +32,7 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.shareablesinc.shareables",
+      "bundleIdentifier": "${EXPO_BUNDLE_IDENTIFIER}",
       "buildNumber": "1.0.1",
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
@@ -51,13 +51,13 @@
         "NSLocationAlwaysUsageDescription": "Allow Shareables to access your location",
         "NSLocationWhenInUseUsageDescription": "Allow Shareables to access your location"
       },
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "${EXPO_GOOGLE_SERVICES_FILE_IOS}"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#ffffff"
       },
-      "package": "com.shareablesinc.shareables",
+      "package": "${EXPO_PACKAGE_NAME}",
       "permissions": [
         "READ_CONTACTS",
         "READ_EXTERNAL_STORAGE",
@@ -69,7 +69,7 @@
         "VIBRATE",
         "WAKE_LOCK"
       ],
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "${EXPO_GOOGLE_SERVICES_FILE_ANDROID}"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"

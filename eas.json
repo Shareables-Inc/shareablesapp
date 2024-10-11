@@ -5,10 +5,26 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
-    },
-    "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN": "sk.eyJ1IjoiZHBhdGVsc2hhcmVhYmxlcyIsImEiOiJjbTFjcG1ydWEweWI0Mm5vbXZhMTc0MDZ5In0.-KSYx2Pk-UbntE0OyDn3LQ",
+        "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCYMwFQ2Nx_1pLbDU8nk-5UYdoT_pZJzlU",
+        "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "shareables-development-b0a88.firebaseapp.com",
+        "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "shareables-development-b0a88",
+        "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "shareables-development-b0a88.appspot.com",
+        "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "867806774693",
+        "EXPO_PUBLIC_FIREBASE_APP_ID": "1:867806774693:web:a6e30f36e9fbaf0f9c144c",
+        "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-40L19CQZQ8",
+        "EXPO_PUBLIC_JIRA_API_TOKEN": "ATATT3xFfGF0gssDK70YFfEw5eTuDHs-DvapyJioDJCCcLAVQpO-2_iSVwQExlh5-q34kmlfSVTJ5f6E8RNfGEAVDLDSmUHcZ2I9_S3hFx4ADIOWsmiWanso-FP7IKqFJsSwf2ctbGpGP0-j5ar51PTqYGQCtiimmbarexMNDqhfGRn-gPauq2U=9BC60415",
+        "NODE_ENV": "development",
+        "EXPO_BUNDLE_IDENTIFIER": "com.shareablesinc.shareablesdev",
+        "EXPO_PACKAGE_NAME": "com.shareablesinc.shareablesdev",
+        "EXPO_GOOGLE_SERVICES_FILE_IOS": "./GoogleService-Info-Dev.plist",
+        "EXPO_GOOGLE_SERVICES_FILE_ANDROID": "./google-services-dev.json"
+      },
+      "hooks": {
+        "preBuild": "cp ./GoogleService-Info-Dev.plist ./ios/GoogleService-Info.plist && cp ./google-services-dev.json ./android/app/google-services.json"
+      }
     },
     "production": {
       "env": {
@@ -21,7 +37,14 @@
         "EXPO_PUBLIC_FIREBASE_APP_ID": "1:670420221545:web:3f14e31499b93105e1ecf8",
         "EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID": "G-2YX597F0GC",
         "EXPO_PUBLIC_JIRA_API_TOKEN": "ATATT3xFfGF0gssDK70YFfEw5eTuDHs-DvapyJioDJCCcLAVQpO-2_iSVwQExlh5-q34kmlfSVTJ5f6E8RNfGEAVDLDSmUHcZ2I9_S3hFx4ADIOWsmiWanso-FP7IKqFJsSwf2ctbGpGP0-j5ar51PTqYGQCtiimmbarexMNDqhfGRn-gPauq2U=9BC60415",
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "EXPO_BUNDLE_IDENTIFIER": "com.shareablesinc.shareables",
+        "EXPO_PACKAGE_NAME": "com.shareablesinc.shareables",
+        "EXPO_GOOGLE_SERVICES_FILE_IOS": "./GoogleService-Info.plist",
+        "EXPO_GOOGLE_SERVICES_FILE_ANDROID": "./google-services.json"
+      },
+      "hooks": {
+        "preBuild": "cp ./GoogleService-Info.plist ./ios/GoogleService-Info.plist && cp ./google-services.json ./android/app/google-services.json"
       }
     }
   },

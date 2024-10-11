@@ -18,6 +18,8 @@ coverage/
 .env
 .local
 .DS_Store
+.production
+.development
 
 # Exclude test files
 __tests__/
