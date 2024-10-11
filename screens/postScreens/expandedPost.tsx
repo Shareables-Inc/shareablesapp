@@ -891,6 +891,8 @@ const styles = StyleSheet.create({
     height: width * 0.115,
     borderRadius: 90,
     marginRight: width * 0.035,
+    borderColor: Colors.profileBorder,
+    borderWidth: 1,
   },
   addCommentInput: {
     flex: 0.95,

@@ -21,7 +21,7 @@ import { auth, db, storage } from "../../firebase/firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
-import { Menu } from "lucide-react-native";
+import { Menu, NotepadText } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import { usePostsByUser } from "../../hooks/usePost";
 import { useUserCounts } from "../../hooks/useUserFollowing";
@@ -244,117 +244,132 @@ const ProfileScreen = () => {
           </Text>
         </View>
       )}
-      <ScrollView
-        style={styles.container}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-      >
-        <StatusBar style="auto" />
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      bounces={false}
+      onScroll={handleScroll}
+      scrollEventThrottle={16}
+    >
+      <StatusBar style="auto" />
 
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => navigation.navigate("MainSettings")}>
-            <Menu color={Colors.text} size={28} />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.topBar}>
+        <TouchableOpacity onPress={() => navigation.navigate("MainSettings")}>
+          <Menu color={Colors.text} size={28} />
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.profileSection}>
-          <TouchableOpacity onPress={pickImage}>
-            <FastImage
-              source={{
-                uri: updatedProfilePicture || userProfile.profilePicture,
-                priority: FastImage.priority.normal,
-                cache: FastImage.cacheControl.web,
-              }}
-              style={styles.profilePic}
-            />
-          </TouchableOpacity>
-          <View style={styles.detailsSection}>
-            <Text style={styles.name}>
-              {userProfile.firstName} {userProfile.lastName}
-            </Text>
-            <Text style={styles.username}>@{userProfile.username}</Text>
-            <View style={styles.ovalsContainer}>
-              <View style={styles.followerOval}>
-                <Text style={styles.ovalText}>
-                  {userCounts?.followerCount}
-                  {userCounts?.followerCount === 1 ? " Follower" : " Followers"}
-                </Text>
-              </View>
-              <View style={styles.followerOval}>
-                <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
-              </View>
+      <View style={styles.profileSection}>
+        <TouchableOpacity onPress={pickImage}>
+          <FastImage
+            source={{
+              uri: updatedProfilePicture || userProfile.profilePicture,
+              priority: FastImage.priority.normal,
+              cache: FastImage.cacheControl.web,
+            }}
+            style={styles.profilePic}
+          />
+        </TouchableOpacity>
+        <View style={styles.detailsSection}>
+          <Text style={styles.name}>
+            {userProfile.firstName} {userProfile.lastName ? userProfile.lastName : ""}
+          </Text>
+          <Text style={styles.username}>@{userProfile.username}</Text>
+          <View style={styles.ovalsContainer}>
+            <View style={styles.followerOval}>
+              <Text style={styles.ovalText}>
+                {userCounts?.followerCount}
+                {userCounts?.followerCount === 1 ? " Follower" : " Followers"}
+              </Text>
+            </View>
+            <View style={styles.followerOval}>
+              <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
             </View>
           </View>
         </View>
+      </View>
 
-        <View style={styles.bioContainer}>
-          <Text style={styles.bioText}>
-            {userProfile.bio ? userProfile.bio : ""}
-          </Text>
-        </View>
+      <View style={styles.bioContainer}>
+        <Text style={styles.bioText}>
+          {userProfile.bio ? userProfile.bio : ""}
+        </Text>
+      </View>
 
-        <View style={styles.featuredGalleryContainer}>
-          <Text style={styles.featuredGalleryText}>Top Picks</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.galleryScrollView}
-            bounces={true}
-          >
-            {topPosts.map((post, index) => (
-              <View style={styles.imageGalleryContainer} key={index}>
-                <TouchableOpacity
-                  onPress={() => navigateToExpandedPost(post)}
-                  key={index}
-                  activeOpacity={1}
-                >
-                  <FastImage
-                    source={{
-                      uri: post.imageUrls[0],
-                      priority: FastImage.priority.normal,
-                      cache: FastImage.cacheControl.immutable,
-                    }}
-                    style={styles.galleryImage}
-                  />
-                  <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreText}>
-                      {post.ratings!.overall}
+      {reviewCount > 0 ? (
+        <>
+          <View style={styles.featuredGalleryContainer}>
+            <Text style={styles.featuredGalleryText}>Top Picks</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.galleryScrollView}
+              bounces={true}
+            >
+              {topPosts.map((post, index) => (
+                <View style={styles.imageGalleryContainer} key={index}>
+                  <TouchableOpacity
+                    onPress={() => navigateToExpandedPost(post)}
+                    key={index}
+                    activeOpacity={1}
+                  >
+                    <FastImage
+                      source={{
+                        uri: post.imageUrls[0],
+                        priority: FastImage.priority.normal,
+                        cache: FastImage.cacheControl.immutable,
+                      }}
+                      style={styles.galleryImage}
+                    />
+                    <View style={styles.scoreContainer}>
+                      <Text style={styles.scoreText}>
+                        {post.ratings!.overall}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                  <View style={styles.profileDetails}>
+                    <Text
+                      style={styles.restaurantTopPicks}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {post.establishmentDetails.name}
                     </Text>
                   </View>
-                </TouchableOpacity>
-                <View style={styles.profileDetails}>
-                  <Text
-                    style={styles.restaurantTopPicks}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {post.establishmentDetails.name}
-                  </Text>
                 </View>
+              ))}
+            </ScrollView>
+
+            <View style={styles.separator} />
+          </View>
+
+          <View style={styles.remainingReviewsContainer}>
+            <Text style={styles.remainingReviewsText}>All Reviews</Text>
+          </View>
+
+          <View style={styles.gridGallery}>
+            {columnItems.map((items, index) => (
+              <View key={index} style={styles.gridColumn}>
+                {renderColumn(items, index)}
               </View>
             ))}
-          </ScrollView>
+          </View>
+        </>
+      ) : (
+        <View style={styles.noReviewContainer}>
 
-          <View style={styles.separator} />
-        </View>
+          <View style={styles.iconContainer}>
+          <NotepadText color={Colors.noReviews} size={width * 0.08}/>
+          </View>
 
-        <View style={styles.remainingReviewsContainer}>
-          <Text style={styles.remainingReviewsText}>All Reviews</Text>
+          <Text style={styles.noReviewText}>
+            No reviews yet
+          </Text>
         </View>
-
-        <View style={styles.gridGallery}>
-          {columnItems.map((items, index) => (
-            <View key={index} style={styles.gridColumn}>
-              {renderColumn(items, index)}
-            </View>
-          ))}
-        </View>
-      </ScrollView>
+      )}
+    </ScrollView>
     </>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -556,6 +571,34 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Bold,
     fontSize: width * 0.037,
     color: Colors.background,
+  },
+  noReviewContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginTop: "30%",
+    marginRight: "1%",
+    paddingHorizontal: "5%",
+    height: width * 0.4,
+    width: width * 0.4,
+    backgroundColor: Colors.noReviews,
+    borderRadius: 20,
+  },
+  noReviewText: {
+    fontSize: width * 0.055,
+    fontFamily: Fonts.SemiBold,
+    color: Colors.text,
+    textAlign: "center",
+    marginTop: "10%",
+  },
+  iconContainer: {
+    width: width * 0.15,
+    height: width * 0.15,
+    borderRadius: 90,
+    backgroundColor: Colors.text,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

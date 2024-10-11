@@ -218,6 +218,8 @@ const styles = StyleSheet.create({
     height: width * 0.13,
     borderRadius: 90,
     marginRight: width * 0.03,
+    borderColor: Colors.profileBorder,
+    borderWidth: 1,
   },
   profileInfo: {
     flex: 1,

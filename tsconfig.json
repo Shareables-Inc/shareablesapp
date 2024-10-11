@@ -12,6 +12,6 @@
       "*": ["node_modules/*"]
     }
   },
-  "include": ["components/**/*", "firebase/**/*", "navigation/**/*", "screens/**/*", "tabs/**/*", "utils/**/*", "*.d.ts"],
+  "include": ["components/**/*", "firebase/**/*", "navigation/**/*", "screens/**/*", "tabs/**/*", "utils/**/*", "*.d.ts", "scripts/**/*"],
   "extends": "expo/tsconfig.base"
 }

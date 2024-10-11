@@ -45,7 +45,7 @@ const ThreePhotoScroll: React.FC<ThreePhotoScrollProps> = ({ post }) => {
     >
       <TouchableOpacity activeOpacity={1} onPress={handleProfilePress}>
         <View style={styles.userContainer}>
-          <TouchableOpacity activeOpacity={1}>
+          <TouchableOpacity activeOpacity={1} onPress={handleProfilePress}>
             <Image
               source={{ uri: post.profilePicture }}
               style={styles.userImage}

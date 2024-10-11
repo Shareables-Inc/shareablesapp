@@ -49,6 +49,8 @@ export default function NameInputScreen() {
     setShowLocationDropdown(false);
   };
 
+  const DEFAULT_PROFILE_PICTURE_URL = "https://firebasestorage.googleapis.com/v0/b/shareables-development-b0a88.appspot.com/o/profilePictures%2Fuser.png?alt=media&token=16d8e2c7-907c-4db3-acc8-df84b2249dbf";
+
   const handleNextStep = async () => {
     if (firstName.trim() === "") {
       Alert.alert("Required", "Please enter your first name.");
@@ -77,6 +79,7 @@ export default function NameInputScreen() {
           lastName: lastName.trim() || null,
           phoneNumber: phoneNumber.trim() || null,
           location: selectedLocation !== "Nearest City" ? selectedLocation : null,
+          profilePicture: DEFAULT_PROFILE_PICTURE_URL,
           createdAt: serverTimestamp(),
           onboardingComplete: false,
         },

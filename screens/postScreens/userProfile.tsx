@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  Image,
   TouchableOpacity,
   ScrollView,
   Animated,
@@ -22,8 +21,7 @@ import { RootStackParamList } from "../../types/navigation.types";
 import Colors from "../../utils/colors";
 import { StatusBar } from "expo-status-bar";
 import { Fonts } from "../../utils/fonts";
-import { auth, db } from "../../firebase/firebaseConfig";
-import { CircleArrowLeft, CircleCheck } from "lucide-react-native";
+import { CircleArrowLeft, CircleCheck, NotepadText } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import {
   useFollowingActions,
@@ -103,58 +101,57 @@ const UserProfileScreen = () => {
     return isFollowing ? <CircleCheck color={Colors.background} size={22} /> : <Text style={styles.followButtonText}>Follow</Text>;
   }, [isFollowing, isToggling]);
 
-    // Custom Masonry Grid layout
-    const columnCount = 2;
-    const columnWidth = (width * 0.89) / columnCount;
-    const columnItems = Array.from({ length: columnCount }, () => []);
-  
-    recentPosts.forEach((post, index) => {
-      columnItems[index % columnCount].push(post);
-    });
-  
-    const renderColumn = (items, columnIndex) => {
-      return (
-        <View style={{ flex: 1, marginHorizontal: 5 }}>
-          {items.map((post, index) => {
-            const isOddColumn = columnIndex % 2 !== 0;
-            const imageHeight = isOddColumn
-              ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
-              : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
-  
-            return (
-              <TouchableOpacity
-                key={index}
-                style={{ marginBottom: 10 }}
-                onPress={() => navigateToExpandedPost(post)}
-                activeOpacity={1}
-              >
-                <FastImage
-                  source={{ uri: post.imageUrls[0] }}
-                  style={{
-                    width: columnWidth,
-                    height: imageHeight,
-                    borderRadius: 10,
-                    marginTop: 5,
-                  }}
-                />
-                {/* Inline layout for trimming and score alignment */}
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text
-                    style={styles.restaurantNameReview}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {post.establishmentDetails.name}
-                  </Text>
-                  <Text style={styles.dash}> - </Text>
-                  <Text style={styles.scoreReview}>{post.ratings.overall}</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      );
-    };
+  // Custom Masonry Grid layout
+  const columnCount = 2;
+  const columnWidth = (width * 0.89) / columnCount;
+  const columnItems = Array.from({ length: columnCount }, () => []);
+
+  recentPosts.forEach((post, index) => {
+    columnItems[index % columnCount].push(post);
+  });
+
+  const renderColumn = (items, columnIndex) => {
+    return (
+      <View style={{ flex: 1, marginHorizontal: 5 }}>
+        {items.map((post, index) => {
+          const isOddColumn = columnIndex % 2 !== 0;
+          const imageHeight = isOddColumn
+            ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
+            : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
+
+          return (
+            <TouchableOpacity
+              key={index}
+              style={{ marginBottom: 10 }}
+              onPress={() => navigateToExpandedPost(post)}
+              activeOpacity={1}
+            >
+              <FastImage
+                source={{ uri: post.imageUrls[0] }}
+                style={{
+                  width: columnWidth,
+                  height: imageHeight,
+                  borderRadius: 10,
+                  marginTop: 5,
+                }}
+              />
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text
+                  style={styles.restaurantNameReview}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {post.establishmentDetails.name}
+                </Text>
+                <Text style={styles.dash}> - </Text>
+                <Text style={styles.scoreReview}>{post.ratings.overall}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    );
+  };
 
   // Loading states
   if (userDataLoading) {
@@ -210,13 +207,13 @@ const UserProfileScreen = () => {
                   <CircleCheck color={Colors.background} size={22} />
                 ) : (
                   <Text style={styles.followButtonText}>Follow</Text>
-                              )}
+                )}
               </TouchableOpacity>
             )}
           </View>
           <View style={styles.detailsSection}>
             <Text style={styles.name}>
-              {`${userData!.firstName} ${userData!.lastName}`}
+              {userData ? (userData.lastName ? `${userData.firstName} ${userData.lastName}` : userData.firstName) : ""}
             </Text>
             <Text style={styles.username}>{`@${userData!.username}`}</Text>
             <View style={styles.ovalsContainer}>
@@ -233,69 +230,80 @@ const UserProfileScreen = () => {
         </View>
 
         <View style={styles.bioContainer}>
-        <Text style={styles.bioText}>
+          <Text style={styles.bioText}>
             {userData?.bio ? userData.bio : ""}
           </Text>
         </View>
 
-        <View style={styles.featuredGalleryContainer}>
-          <Text style={styles.featuredGalleryText}>Top Picks</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.galleryScrollView}
-            bounces={true}
-          >
-            {topPosts?.map((post, index) => (
-              <View style={styles.imageGalleryContainer} key={index}>
-                <TouchableOpacity
-                  activeOpacity={1}
-                  onPress={() => navigateToExpandedPost(post)}
-                >
-                  <FastImage
-                    source={{
-                      uri: post.imageUrls[0],
-                      priority: FastImage.priority.normal,
-                      cache: FastImage.cacheControl.immutable,
-                    }}
-                    style={styles.galleryImage}
-                  />
-                  <View style={styles.scoreContainer}>
-                    <Text style={styles.scoreText}>{post.ratings.overall}</Text>
-                  </View>
-                </TouchableOpacity>
-                <View style={styles.profileDetails}>
-                <Text
-                style={styles.restaurantTopPicks}
-                numberOfLines={1} 
-                ellipsizeMode="tail" 
+        {reviewCount > 0 ? (
+          <>
+            <View style={styles.featuredGalleryContainer}>
+              <Text style={styles.featuredGalleryText}>Top Picks</Text>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.galleryScrollView}
+                bounces={true}
               >
-                {post.establishmentDetails.name}
-              </Text>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
+                {topPosts?.map((post, index) => (
+                  <View style={styles.imageGalleryContainer} key={index}>
+                    <TouchableOpacity
+                      activeOpacity={1}
+                      onPress={() => navigateToExpandedPost(post)}
+                    >
+                      <FastImage
+                        source={{
+                          uri: post.imageUrls[0],
+                          priority: FastImage.priority.normal,
+                          cache: FastImage.cacheControl.immutable,
+                        }}
+                        style={styles.galleryImage}
+                      />
+                      <View style={styles.scoreContainer}>
+                        <Text style={styles.scoreText}>{post.ratings.overall}</Text>
+                      </View>
+                    </TouchableOpacity>
+                    <View style={styles.profileDetails}>
+                      <Text
+                        style={styles.restaurantTopPicks}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {post.establishmentDetails.name}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
 
-          <View style={styles.separator} />
-        </View>
-
-        <View style={styles.remainingReviewsContainer}>
-          <Text style={styles.remainingReviewsText}>All Reviews</Text>
-        </View>
-
-        {/* Render masonry grid layout for recent posts */}
-        <View style={styles.gridGallery}>
-          {columnItems.map((items, index) => (
-            <View key={index} style={styles.gridColumn}>
-              {renderColumn(items, index)}
+              <View style={styles.separator} />
             </View>
-          ))}
-        </View>
+
+            <View style={styles.remainingReviewsContainer}>
+              <Text style={styles.remainingReviewsText}>All Reviews</Text>
+            </View>
+
+            <View style={styles.gridGallery}>
+              {columnItems.map((items, index) => (
+                <View key={index} style={styles.gridColumn}>
+                  {renderColumn(items, index)}
+                </View>
+              ))}
+            </View>
+          </>
+        ) : (
+          <View style={styles.noReviewContainer}>
+            <View style={styles.iconContainer}>
+              <NotepadText color={Colors.noReviews} size={width * 0.08} />
+            </View>
+            <Text style={styles.noReviewText}>No reviews yet</Text>
+          </View>
+        )}
       </ScrollView>
     </>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -518,6 +526,34 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Bold,
     fontSize: width * 0.037,
     color: Colors.background,
+  },
+  noReviewContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    alignSelf: "center",
+    marginTop: "30%",
+    marginRight: "1%",
+    paddingHorizontal: "5%",
+    height: width * 0.4,
+    width: width * 0.4,
+    backgroundColor: Colors.noReviews,
+    borderRadius: 20,
+  },
+  noReviewText: {
+    fontSize: width * 0.055,
+    fontFamily: Fonts.SemiBold,
+    color: Colors.text,
+    textAlign: "center",
+    marginTop: "10%",
+  },
+  iconContainer: {
+    width: width * 0.15,
+    height: width * 0.15,
+    borderRadius: 90,
+    backgroundColor: Colors.text,
+    justifyContent: "center",
+    alignItems: "center",
   },
   });
 

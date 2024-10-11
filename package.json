@@ -5,7 +5,8 @@
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
-    "prebuild": "expo prebuild --clean",
+    "prebuild": "npm run build:scripts",
+    "build:scripts": "tsc scripts/googleServices.ts --outDir dist/scripts",
     "ios": "expo run:ios",
     "web": "expo start --web"
   },
