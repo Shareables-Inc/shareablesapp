@@ -11,11 +11,10 @@ import {
   Platform,
   Dimensions,
   Keyboard,
-  TouchableWithoutFeedback
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Search } from "lucide-react-native";
 import Colors from "../../utils/colors";
-import { useUserGetByUsername } from "../../hooks/useUser";
 import { UserProfile } from "../../models/userProfile";
 import { UserService } from "../../services/user.service";
 import { useAuth } from "../../context/auth.context";
@@ -23,7 +22,7 @@ import { useFollowingActions } from "../../hooks/useUserFollowing";
 import { useNavigation } from "@react-navigation/native";
 import { Fonts } from "../../utils/fonts";
 
-const {width , height}=Dimensions.get("window")
+const { width, height } = Dimensions.get("window");
 
 const ProfilesView = () => {
   const { user, userProfile } = useAuth();
@@ -40,7 +39,6 @@ const ProfilesView = () => {
   const userService = new UserService();
   const handleSearch = async () => {
     if (searchQuery.trim() === "") {
-      // Reset to default state
       setSearchResults(undefined);
       setError(undefined);
       setIsLoading(false);
@@ -52,7 +50,6 @@ const ProfilesView = () => {
 
     const lowercaseQuery = searchQuery.toLowerCase();
 
-    // Check if the search query matches the current user's username
     if (lowercaseQuery === userProfile?.username.toLowerCase()) {
       setError("You cannot search for your own profile.");
       setSearchResults(undefined);
@@ -85,7 +82,7 @@ const ProfilesView = () => {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}> 
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
@@ -98,7 +95,7 @@ const ProfilesView = () => {
             placeholderTextColor={Colors.placeholderText}
             selectionColor={Colors.tags}
             value={searchQuery}
-            onChangeText={(text) => setSearchQuery(text.trim())} 
+            onChangeText={(text) => setSearchQuery(text.trim())}
             onSubmitEditing={handleSearch}
             returnKeyType="search"
             autoCapitalize="none"
@@ -109,7 +106,7 @@ const ProfilesView = () => {
         <Text style={styles.searchTip}>
           Spell the username correctly for accurate results.
         </Text>
-  
+
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.tags} />
@@ -132,7 +129,9 @@ const ProfilesView = () => {
             </TouchableOpacity>
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>@{searchResults.username}</Text>
-              <Text style={styles.profileReviews}>{searchResults.firstName} {searchResults.lastName} • {searchResults.location}</Text>
+              <Text style={styles.profileReviews}>
+                {searchResults.firstName} {searchResults.lastName} • {searchResults.location}
+              </Text>
             </View>
             <TouchableOpacity
               style={[styles.followButton, isFollowing && styles.followButton]}
@@ -184,14 +183,14 @@ const styles = StyleSheet.create({
     height: width * 0.1,
     color: Colors.text,
     fontFamily: Fonts.Regular,
-    fontSize: width * 0.04
+    fontSize: width * 0.04,
   },
   searchTip: {
     color: Colors.circleCheck,
     marginBottom: width * 0.05,
     paddingLeft: width * 0.03,
     fontFamily: Fonts.Regular,
-    fontSize: width * 0.035
+    fontSize: width * 0.035,
   },
   loadingContainer: {
     flex: 1,

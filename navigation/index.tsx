@@ -28,6 +28,7 @@ import NameInputScreen from "../screens/loginScreens/nameInput";
 import VerifyEmailScreen from "../screens/loginScreens/verifyEmail";
 import UsernameInputScreen from "../screens/loginScreens/usernameInput";
 import ExpandedPost from "../screens/postScreens/expandedPost";
+import FollowersListScreen from "../screens/postScreens/followerList";
 import { AppState, AppStateStatus } from "react-native";
 import * as Notifications from "expo-notifications";
 import { Subscription } from "expo-notifications";
@@ -255,6 +256,7 @@ export const MainApp = () => {
               name="RestaurantProfile"
               component={RestaurantProfileScreen}
             />
+            <Stack.Screen name="FollowerList" component={FollowersListScreen} />
           </>
         )}
       </Stack.Navigator>

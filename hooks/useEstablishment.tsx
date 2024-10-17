@@ -83,7 +83,6 @@ export const useEstablishmentProfileData = (establishmentId: string) => {
       return profileData;
     },
     enabled: !!establishmentId,
-    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -102,6 +101,5 @@ export const useGetFeaturedEstablishments = (
       );
     },
     enabled: !!location,
-    staleTime: 5 * 60 * 1000, 
   });
 };

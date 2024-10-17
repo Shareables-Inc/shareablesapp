@@ -14,14 +14,17 @@ import {
   orderBy,
   limit,
   DocumentData,
+  startAfter,
 } from "firebase/firestore";
 import { Post } from "../models/post";
 import { getDownloadURL, ref } from "firebase/storage";
+import { DocumentSnapshot } from "firebase/firestore";
 
 export class FollowingService {
   private followingCollection = collection(db, "following");
   private userStatsCollection = collection(db, "userStats");
   private postsCollection = collection(db, "posts");
+
   async followUser(followerId: string, followingId: string): Promise<void> {
     const relationshipId = `${followerId}_${followingId}`;
     const relationshipDocRef = doc(this.followingCollection, relationshipId);
@@ -74,49 +77,67 @@ export class FollowingService {
     });
   }
 
-  async getFollowing(userId: string): Promise<string[]> {
-    const followingQuery = query(
-      this.followingCollection,
-      where("followerId", "==", userId)
-    );
-    const followingSnapshot = await getDocs(followingQuery);
-    return followingSnapshot.docs.map((doc) => doc.data().followingId);
+  // New method to get the list of users that follow the current user
+  async getFollowersList(userId: string): Promise<string[]> {
+    try {
+      const followersQuery = query(
+        this.followingCollection,
+        where("followingId", "==", userId)
+      );
+      const followersSnapshot = await getDocs(followersQuery);
+      return followersSnapshot.docs.map((doc) => doc.data().followerId);
+    } catch (error) {
+      console.error("Error fetching followers list:", error);
+      return [];
+    }
   }
 
-  // Get all followerIDs that the user is following
-  // Get all posts from the followerIDs
-  // Return an array of the posts limited to 10
-  async getFollowingPosts(userId: string): Promise<Post[]> {
+  // New method to get the list of users the current user is following
+  async getFollowing(userId: string): Promise<string[]> {
     try {
-      // Get users that the current user is following
-      const followingSnapshot = await getDocs(
-        query(this.followingCollection, where("followerId", "==", userId))
+      const followingQuery = query(
+        this.followingCollection,
+        where("followerId", "==", userId)
       );
+      const followingSnapshot = await getDocs(followingQuery);
+      return followingSnapshot.docs.map((doc) => doc.data().followingId);
+    } catch (error) {
+      console.error("Error fetching following list:", error);
+      return [];
+    }
+  }
 
-      if (followingSnapshot.empty) {
-        return [];
-      }
+  
 
-      const followingIds = followingSnapshot.docs.map(
-        (doc) => doc.id.split("_")[1]
-      );
+  async getFollowingPosts(
+    userId: string,
+    lastVisiblePost?: DocumentSnapshot
+  ): Promise<{ posts: Post[]; lastVisible: DocumentSnapshot | null }> {
+    try {
+      const followingIds = await this.getFollowing(userId);
 
       if (followingIds.length === 0) {
-        return [];
+        return { posts: [], lastVisible: null };
+      }
+
+      // Prepare the query to fetch posts, add pagination
+      let postsQuery = query(
+        this.postsCollection,
+        where("userId", "in", followingIds),
+        orderBy("createdAt", "desc"),
+        limit(20) // Set the limit to control how many posts are loaded per page
+      );
+
+      if (lastVisiblePost) {
+        // If a last visible post is provided, start after that document
+        postsQuery = query(postsQuery, startAfter(lastVisiblePost));
       }
 
       // Get posts from all users being followed
-      const postsSnapshot = await getDocs(
-        query(
-          this.postsCollection,
-          where("userId", "in", followingIds),
-          orderBy("createdAt", "desc"),
-          limit(10)
-        )
-      );
+      const postsSnapshot = await getDocs(postsQuery);
 
       if (postsSnapshot.empty) {
-        return [];
+        return { posts: [], lastVisible: null };
       }
 
       const posts = postsSnapshot.docs.map(
@@ -151,10 +172,13 @@ export class FollowingService {
       // Remove duplicates
       const uniquePosts = this.removeDuplicates(processedPosts);
 
-      return uniquePosts;
+      // Get the last visible post for pagination
+      const lastVisible = postsSnapshot.docs[postsSnapshot.docs.length - 1];
+
+      return { posts: uniquePosts, lastVisible };
     } catch (error) {
       console.error("Error fetching following posts:", error);
-      return [];
+      return { posts: [], lastVisible: null };
     }
   }
 
@@ -219,6 +243,7 @@ export class FollowingService {
       ...new Set([...uniqueEstablishments.values(), ...uniqueImages.values()]),
     ];
   }
+
   async getFollowers(userId: string): Promise<string[]> {
     const followersQuery = query(
       this.followingCollection,

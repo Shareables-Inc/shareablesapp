@@ -141,7 +141,7 @@ export class EstablishmentService {
             where("updatedAt", ">=", thirtyDaysAgo),
             where("tags", "array-contains", selectedTag),
             orderBy("updatedAt", "desc"),
-            limit(10)
+            limit(20)
           );
         } else {
           establishmentsQuery = query(
@@ -149,7 +149,7 @@ export class EstablishmentService {
             where("city", "==", city),
             where("updatedAt", ">=", thirtyDaysAgo),
             orderBy("updatedAt", "desc"),
-            limit(10)
+            limit(20)
           );
         }
   
@@ -248,7 +248,7 @@ export class EstablishmentService {
       collection(db, "posts"),
       where("establishmentDetails.id", "==", establishmentId),
       orderBy("createdAt", "desc"),
-      limit(10)
+      limit(20)
     );
     const postsSnapshot = await getDocs(postsQuery);
 

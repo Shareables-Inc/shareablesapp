@@ -43,6 +43,10 @@ const FeedScreen = () => {
 
   const posts = data?.pages.flatMap((page) => page.posts) || [];
 
+  useEffect(() => {
+    refetch();
+  }, []);
+
   const handlePostPress = useCallback(
     (post: Post) => {
       return navigation.navigate("ExpandedPost", { postId: post.id });

@@ -128,9 +128,8 @@ const EditProfileScreen = () => {
   
     try {
       await setDoc(userDocRef, updatedData, { merge: true });
-      Alert.alert("Your details have been updated! Please restart the app to see the changes.");
       setHasChanges(false); // Reset changes tracker after save
-      navigation.navigate("AccountSettings");
+      navigation.navigate("Profile");
     } catch (error) {
       console.error("Firestore Error:", error);
       Alert.alert("Update Failed", "Failed to save your details. Please try again.");

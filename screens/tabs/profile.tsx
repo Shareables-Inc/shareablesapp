@@ -11,6 +11,7 @@ import {
   Platform,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  RefreshControl,
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/stackParams.types";
@@ -21,10 +22,11 @@ import { auth, db, storage } from "../../firebase/firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import * as ImagePicker from "expo-image-picker";
-import { Menu, NotepadText } from "lucide-react-native";
+import { Menu, NotepadText, SquarePen } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import { usePostsByUser } from "../../hooks/usePost";
 import { useUserCounts } from "../../hooks/useUserFollowing";
+import { useUserGetByUid } from "../../hooks/useUser";
 import { Timestamp } from "firebase/firestore";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
@@ -34,16 +36,25 @@ const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = height * 0.12;
 
 const ProfileScreen = () => {
-  const { user, userProfile } = useAuth();
-  const posts = usePostsByUser(user!.uid);
-  const { data: userCounts, isLoading } = useUserCounts(user!.uid);
+  const userId = auth.currentUser?.uid; // Retrieve the current user's UID
+  const { data: userProfile, isLoading: userLoading } = useUserGetByUid(userId!); // Fetch user profile with real-time updates
+  const posts = usePostsByUser(userId!);
+  const { data: userCounts, isLoading: countsLoading, refetch: refetchUserCounts } = useUserCounts(userId!);
+  const [refreshing, setRefreshing] = useState(false);
 
-
-  // need to refetch posts when userProfile is updated
-  useEffect(() => {
-    
-    posts.refetch();
-  }, [userProfile]);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Refetch user profile data, user counts, and posts
+      await Promise.all([refetchUserCounts(), posts.refetch()]);
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+      Alert.alert("Error", "Failed to refresh profile. Please try again.");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+   
 
   const { topPosts, recentPosts, reviewCount } = useMemo(() => {
     if (!posts.data) return { topPosts: [], recentPosts: [], reviewCount: 0 };
@@ -247,9 +258,12 @@ const ProfileScreen = () => {
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
-      bounces={false}
+      bounces={true}
       onScroll={handleScroll}
       scrollEventThrottle={16}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
     >
       <StatusBar style="auto" />
 
@@ -260,6 +274,28 @@ const ProfileScreen = () => {
       </View>
 
       <View style={styles.profileSection}>
+        <View style={styles.detailsSection}>
+          <Text style={styles.name}>
+            {userProfile.firstName} {userProfile.lastName ? userProfile.lastName : ""}
+          </Text>
+          <Text style={styles.username}>@{userProfile.username}</Text>
+          <View style={styles.ovalsContainer}>
+            <View style={styles.followerOval}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => navigation.navigate("FollowerList")}
+              >
+              <Text style={styles.ovalText}>
+                {userCounts?.followerCount}
+                {userCounts?.followerCount === 1 ? " Follower" : " Followers"}
+              </Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.followerOval}>
+              <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
+            </View>
+          </View>
+        </View>
         <TouchableOpacity onPress={pickImage}>
           <FastImage
             source={{
@@ -270,30 +306,24 @@ const ProfileScreen = () => {
             style={styles.profilePic}
           />
         </TouchableOpacity>
-        <View style={styles.detailsSection}>
-          <Text style={styles.name}>
-            {userProfile.firstName} {userProfile.lastName ? userProfile.lastName : ""}
-          </Text>
-          <Text style={styles.username}>@{userProfile.username}</Text>
-          <View style={styles.ovalsContainer}>
-            <View style={styles.followerOval}>
-              <Text style={styles.ovalText}>
-                {userCounts?.followerCount}
-                {userCounts?.followerCount === 1 ? " Follower" : " Followers"}
-              </Text>
-            </View>
-            <View style={styles.followerOval}>
-              <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
-            </View>
-          </View>
-        </View>
       </View>
 
       <View style={styles.bioContainer}>
         <Text style={styles.bioText}>
           {userProfile.bio ? userProfile.bio : ""}
         </Text>
+        <TouchableOpacity
+          style={styles.editProfileContainer}
+          onPress={() => navigation.navigate("EditProfile")}
+        >
+          <View style={styles.iconCircle}>
+            <SquarePen size={18} color={Colors.background} />
+          </View>
+          <Text style={styles.editProfileText}>Edit Profile</Text>
+        </TouchableOpacity>
       </View>
+
+
 
       {reviewCount > 0 ? (
         <>
@@ -358,7 +388,7 @@ const ProfileScreen = () => {
         <View style={styles.noReviewContainer}>
 
           <View style={styles.iconContainer}>
-          <NotepadText color={Colors.noReviews} size={width * 0.08}/>
+            <NotepadText color={Colors.noReviews} size={width * 0.08}/>
           </View>
 
           <Text style={styles.noReviewText}>
@@ -390,21 +420,19 @@ const styles = StyleSheet.create({
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
-    marginBottom: height * 0.03,
+    justifyContent: "space-between",
+    marginBottom: height * 0.02,
     marginTop: height * 0.135,
-    paddingLeft: width * 0.05,
+    paddingHorizontal: width * 0.05
   },
   profilePic: {
     width: width * 0.28,
     height: width * 0.28,
     borderRadius: 90,
-    marginRight: width * 0.03,
     borderColor: Colors.profileBorder,
     borderWidth: 4,
   },
   detailsSection: {
-    marginLeft: width * 0.035,
   },
   ovalsContainer: {
     flexDirection: "row",
@@ -435,7 +463,7 @@ const styles = StyleSheet.create({
   },
   bioContainer: {
     backgroundColor: Colors.background,
-    width: width * 0.9,
+    width: width * 0.93,
     alignSelf: "flex-start",
     paddingLeft: width * 0.05,
     flex: 1,
@@ -444,8 +472,27 @@ const styles = StyleSheet.create({
     fontSize: width * 0.037,
     color: Colors.text,
     fontFamily: Fonts.Regular,
-    alignSelf: "center",
+    alignSelf: "flex-start",
   },
+  editProfileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 15,
+  },
+  iconCircle: {
+    width: width * 0.08,
+    height: width * 0.08,
+    borderRadius: width * 0.05,
+    backgroundColor: Colors.text,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 10,
+  },
+  editProfileText: {
+    fontSize: width * 0.035,
+    color: Colors.text,
+    fontFamily: Fonts.SemiBold,
+  },  
   featuredGalleryContainer: {
     marginTop: "5%",
   },

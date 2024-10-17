@@ -292,7 +292,7 @@ const ReviewScreen = ({ route }) => {
 
             <View style={styles.headers}>
               <Text style={styles.ratingHeader}>Score</Text>
-              {/* <Text style={styles.priceHeader}>Price</Text> */}
+              {/* <Text style={styles.priceHeader}>Overall</Text> */}
             </View>
 
             <View style={styles.ratingsContainer}>
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignSelf: "flex-start",
-    paddingLeft: width * 0.04,
+    paddingLeft: width * 0.05,
   },
   ratingSection: {},
   ratingCircle: {

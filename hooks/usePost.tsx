@@ -15,7 +15,7 @@ import { queryClient } from "../utils/query.client";
 const postService = new PostService();
 
 // Fetch all posts
-export const usePostPaginated = (limit = 10) => {
+export const usePostPaginated = (limit = 20) => {
   return useInfiniteQuery({
     queryKey: ["infinitePosts", limit],
     queryFn: async ({ pageParam }) => {
@@ -136,7 +136,6 @@ export function useTopPosters(): UseQueryResult<TopPoster[], Error> {
   return useQuery({
     queryKey: ["topPosters"],
     queryFn: () => postService.getTopPosters(),
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
   });
 }
 

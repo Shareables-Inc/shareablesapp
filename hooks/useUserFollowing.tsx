@@ -1,19 +1,21 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { FollowingService } from "../services/following.service";
-
 import type { Post } from "../models/post";
 import { queryClient } from "../utils/query.client";
 
 const followingService = new FollowingService();
 
+// Hook to get a list of users the current user is following
 export function useUserFollowing(userId: string) {
   return useQuery({
     queryKey: ["following", userId],
     queryFn: () => followingService.getFollowing(userId),
+    enabled: !!userId,
   });
 }
 
+// Hook to get the follower and following counts for a user
 export function useUserCounts(userId: string) {
   return useQuery({
     queryKey: ["userCounts", userId],
@@ -28,6 +30,7 @@ export function useUserCounts(userId: string) {
   });
 }
 
+// Hook to check if the current user is following another user
 export function useIsFollowing(userId: string, followingId: string) {
   return useQuery({
     queryKey: ["isFollowing", userId, followingId],
@@ -36,11 +39,14 @@ export function useIsFollowing(userId: string, followingId: string) {
   });
 }
 
+// Hook to get posts from friends of the user
 export function useFriendDiscoverPosts(userId: string) {
   return useQuery({
     queryKey: ["friendDiscoverPosts", userId],
     queryFn: async () => {
-      const posts = await followingService.getFollowingPosts(userId);
+      const response = await followingService.getFollowingPosts(userId);
+      // Extract posts from the response
+      const posts = response.posts;
 
       // Filter out posts without images
       return posts.filter((post) => post.imageUrls && post.imageUrls.length > 0);
@@ -50,6 +56,7 @@ export function useFriendDiscoverPosts(userId: string) {
 }
 
 
+// Hook to get posts from users that the current user follows
 export const useFollowingPosts = (
   currentUserId: string
 ): UseQueryResult<Post[], Error> => {
@@ -58,7 +65,9 @@ export const useFollowingPosts = (
     queryFn: async (): Promise<Post[]> => {
       if (!currentUserId) throw new Error("User not authenticated");
 
-      const posts = await followingService.getFollowingPosts(currentUserId);
+      const response = await followingService.getFollowingPosts(currentUserId);
+      // Extract posts from the response
+      const posts = response.posts;
 
       // Filter out posts without images
       return posts.filter((post) => post.imageUrls && post.imageUrls.length > 0);
@@ -68,10 +77,12 @@ export const useFollowingPosts = (
 };
 
 
+// Hook to handle follow/unfollow actions
 export const useFollowingActions = (
   followingId: string,
   currentUserId: string
 ) => {
+  const queryClient = useQueryClient();
   const { data: isFollowing, isLoading } = useIsFollowing(
     currentUserId,
     followingId
@@ -86,12 +97,10 @@ export const useFollowingActions = (
       );
       queryClient.invalidateQueries({ queryKey: ["following", currentUserId] });
       queryClient.invalidateQueries({ queryKey: ["followers", followingId] });
-      queryClient.invalidateQueries({
-        queryKey: ["followingCount", currentUserId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["followerCount", followingId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["userCounts", currentUserId] });
+      queryClient.invalidateQueries({ queryKey: ["userCounts", followingId] });
+      queryClient.invalidateQueries({ queryKey: ["following", followingId] });
+      queryClient.invalidateQueries({ queryKey: ["isFollowing", currentUserId] }); // Added to update any existing cache for isFollowing
     },
   });
 
@@ -104,12 +113,10 @@ export const useFollowingActions = (
       );
       queryClient.invalidateQueries({ queryKey: ["following", currentUserId] });
       queryClient.invalidateQueries({ queryKey: ["followers", followingId] });
-      queryClient.invalidateQueries({
-        queryKey: ["followingCount", currentUserId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["followerCount", followingId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["userCounts", currentUserId] });
+      queryClient.invalidateQueries({ queryKey: ["userCounts", followingId] });
+      queryClient.invalidateQueries({ queryKey: ["following", followingId] });
+      queryClient.invalidateQueries({ queryKey: ["isFollowing", currentUserId] }); // Added to update any existing cache for isFollowing
     },
   });
 
@@ -128,3 +135,4 @@ export const useFollowingActions = (
     toggleFollow,
   };
 };
+

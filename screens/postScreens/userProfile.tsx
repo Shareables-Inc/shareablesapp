@@ -10,6 +10,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import {
   useNavigation,
@@ -22,7 +23,6 @@ import Colors from "../../utils/colors";
 import { StatusBar } from "expo-status-bar";
 import { Fonts } from "../../utils/fonts";
 import { CircleArrowLeft, CircleCheck, NotepadText } from "lucide-react-native";
-import { useAuth } from "../../context/auth.context";
 import {
   useFollowingActions,
   useUserCounts,
@@ -33,21 +33,67 @@ import { Post } from "../../models/post";
 import { Timestamp } from "firebase/firestore";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
+import { useAuth } from "../../context/auth.context";
+
 const { width, height } = Dimensions.get("window");
 
 const HEADER_HEIGHT = 100;
 
 const UserProfileScreen = () => {
+  const { user } = useAuth(); // Get the authenticated user's information
   const route = useRoute<RouteProp<RootStackParamList, "UserProfile">>();
   const { userId: postUserId } = route.params;
 
-  const { user } = useAuth();
   const posts = usePostsByUser(postUserId);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  // Fetch user data
-  const { data: userData, isLoading: userDataLoading } =
-    useUserGetByUid(postUserId);
+  // Fetch user data with real-time updates
+  const { data: userData, isLoading: userDataLoading } = useUserGetByUid(postUserId);
+  const {
+    data: userCounts,
+    isLoading: countsLoading,
+    refetch: refetchUserCounts,
+  } = useUserCounts(postUserId);
+
+  // Correct the IDs being passed to useFollowingActions
+  const { isFollowing, isToggling, toggleFollow } = useFollowingActions(postUserId, user!.uid);
+
+  const [isHeaderVisible, setHeaderVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const offsetY = event.nativeEvent.contentOffset.y;
+        setHeaderVisible(offsetY > HEADER_HEIGHT);
+      },
+    }
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      // Refetch user data, counts, and posts
+      await Promise.all([refetchUserCounts(), posts.refetch()]);
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Force refresh userCounts after toggle follow/unfollow
+  const handleToggleFollow = async () => {
+    try {
+      await toggleFollow();
+      refetchUserCounts(); // Refresh user counts after follow/unfollow
+    } catch (error) {
+      console.error("Error toggling follow state:", error);
+    }
+  };
 
   const { topPosts, recentPosts, reviewCount } = useMemo(() => {
     if (!posts.data) return { topPosts: [], recentPosts: [], reviewCount: 0 };
@@ -69,37 +115,11 @@ const UserProfileScreen = () => {
     };
   }, [posts]);
 
-  const { isFollowing, isToggling, toggleFollow } = useFollowingActions(
-    postUserId,
-    user!.uid
-  );
-
-  const { data: userCounts, isLoading } = useUserCounts(postUserId);
-
-  const [isHeaderVisible, setHeaderVisible] = useState(false);
-  const scrollY = useRef(new Animated.Value(0)).current;
-
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    {
-      useNativeDriver: false,
-      listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        setHeaderVisible(offsetY > HEADER_HEIGHT);
-      },
-    }
-  );
-
   const navigateToExpandedPost = (post: Post) => {
     navigation.navigate("ExpandedPost", {
       postId: post.id,
     });
   };
-
-  const followButtonText = useMemo(() => {
-    if (isToggling) return null;
-    return isFollowing ? <CircleCheck color={Colors.background} size={22} /> : <Text style={styles.followButtonText}>Follow</Text>;
-  }, [isFollowing, isToggling]);
 
   // Custom Masonry Grid layout
   const columnCount = 2;
@@ -154,7 +174,7 @@ const UserProfileScreen = () => {
   };
 
   // Loading states
-  if (userDataLoading) {
+  if (userDataLoading || countsLoading) {
     return <SkeletonUserProfile />;
   }
 
@@ -170,9 +190,12 @@ const UserProfileScreen = () => {
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
-        bounces={false}
+        bounces={true}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         <StatusBar style="auto" />
 
@@ -192,13 +215,13 @@ const UserProfileScreen = () => {
               }}
               style={styles.profilePic}
             />
-            {user!.uid !== postUserId && (
+            {postUserId && (
               <TouchableOpacity
                 style={[
                   styles.followButton,
                   isFollowing && styles.followingButton,
                 ]}
-                onPress={toggleFollow}
+                onPress={handleToggleFollow}
                 disabled={isToggling}
               >
                 {isToggling ? (
@@ -213,7 +236,11 @@ const UserProfileScreen = () => {
           </View>
           <View style={styles.detailsSection}>
             <Text style={styles.name}>
-              {userData ? (userData.lastName ? `${userData.firstName} ${userData.lastName}` : userData.firstName) : ""}
+              {userData
+                ? userData.lastName
+                  ? `${userData.firstName} ${userData.lastName}`
+                  : userData.firstName
+                : ""}
             </Text>
             <Text style={styles.username}>{`@${userData!.username}`}</Text>
             <View style={styles.ovalsContainer}>
@@ -260,7 +287,9 @@ const UserProfileScreen = () => {
                         style={styles.galleryImage}
                       />
                       <View style={styles.scoreContainer}>
-                        <Text style={styles.scoreText}>{post.ratings.overall}</Text>
+                        <Text style={styles.scoreText}>
+                          {post.ratings.overall}
+                        </Text>
                       </View>
                     </TouchableOpacity>
                     <View style={styles.profileDetails}>
