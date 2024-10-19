@@ -60,3 +60,68 @@ For CI servers and headless environments, generate a new token with firebase log
     at async chain (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/deploy/index.js:40:9)
 [error] 
 [error] Error: Failed to get Firebase project shareablesapp-b7366. Please make sure the project exists and your account has permission to access it.
+[debug] [2024-10-17T15:58:25.761Z] ----------------------------------------------------------------------
+[debug] [2024-10-17T15:58:25.762Z] Command:       /Users/devenpatel/.nvm/versions/node/v20.17.0/bin/node /Users/devenpatel/.nvm/versions/node/v20.17.0/bin/firebase deploy --only functions
+[debug] [2024-10-17T15:58:25.763Z] CLI Version:   13.20.1
+[debug] [2024-10-17T15:58:25.763Z] Platform:      darwin
+[debug] [2024-10-17T15:58:25.763Z] Node Version:  v20.17.0
+[debug] [2024-10-17T15:58:25.763Z] Time:          Thu Oct 17 2024 11:58:25 GMT-0400 (Eastern Daylight Time)
+[debug] [2024-10-17T15:58:25.763Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2024-10-17T15:58:25.764Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2024-10-17T15:58:25.827Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2024-10-17T15:58:25.827Z] > authorizing via signed-in user (deven@shareablesapp.com)
+[debug] [2024-10-17T15:58:25.827Z] [iam] checking project shareablesapp-b7366 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2024-10-17T15:58:25.828Z] Checked if tokens are valid: false, expires at: 1727899005058
+[debug] [2024-10-17T15:58:25.828Z] Checked if tokens are valid: false, expires at: 1727899005058
+[debug] [2024-10-17T15:58:25.828Z] > refreshing access token with scopes: []
+[debug] [2024-10-17T15:58:25.828Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2024-10-17T15:58:25.828Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-10-17T15:58:25.962Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2024-10-17T15:58:25.962Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2024-10-17T15:58:26.004Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2024-10-17T15:58:26.004Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-10-17T15:58:26.005Z] [iam] error while checking permissions, command may fail: FirebaseError: Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2024-10-17T15:58:26.005Z] Checked if tokens are valid: false, expires at: 1727899005058
+[debug] [2024-10-17T15:58:26.005Z] Checked if tokens are valid: false, expires at: 1727899005058
+[debug] [2024-10-17T15:58:26.005Z] > refreshing access token with scopes: []
+[debug] [2024-10-17T15:58:26.005Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2024-10-17T15:58:26.005Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-10-17T15:58:26.100Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2024-10-17T15:58:26.101Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-10-17T15:58:26.101Z] [functions] service account IAM check errored, deploy may fail: Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci {"name":"FirebaseError","children":[],"exit":1,"message":"Authentication Error: Your credentials are no longer valid. Please run \u001b[1mfirebase login --reauth\u001b[22m\n\nFor CI servers and headless environments, generate a new token with \u001b[1mfirebase login:ci\u001b[22m","status":500}
+[info] 
+[info] === Deploying to 'shareablesapp-b7366'...
+[info] 
+[info] i  deploying functions 
+[info] Running command: npm --prefix "$RESOURCE_DIR" run build
+[info] ✔  functions: Finished running predeploy script. 
+[debug] [2024-10-17T15:58:29.555Z] Checked if tokens are valid: false, expires at: 1727899005058
+[debug] [2024-10-17T15:58:29.555Z] Checked if tokens are valid: false, expires at: 1727899005058
+[debug] [2024-10-17T15:58:29.555Z] > refreshing access token with scopes: []
+[debug] [2024-10-17T15:58:29.555Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2024-10-17T15:58:29.555Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-10-17T15:58:29.667Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 400
+[debug] [2024-10-17T15:58:29.667Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2024-10-17T15:58:29.667Z] Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+[debug] [2024-10-17T15:58:29.667Z] FirebaseError: Authentication Error: Your credentials are no longer valid. Please run firebase login --reauth
+
+For CI servers and headless environments, generate a new token with firebase login:ci
+    at invalidCredentialError (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/auth.js:140:12)
+    at refreshTokens (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/auth.js:526:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async getAccessToken (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/apiv2.js:42:18)
+    at async Client.addAuthHeader (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/apiv2.js:169:21)
+    at async Client.request (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/apiv2.js:120:34)
+    at async getFirebaseProject (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/management/projects.js:295:21)
+    at async needProjectNumber (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/projectUtils.js:46:22)
+    at async prepare (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/deploy/functions/prepare.js:35:27)
+    at async chain (/Users/devenpatel/.nvm/versions/node/v20.17.0/lib/node_modules/firebase-tools/lib/deploy/index.js:40:9)
+[error] 
+[error] Error: Failed to get Firebase project shareablesapp-b7366. Please make sure the project exists and your account has permission to access it.

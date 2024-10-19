@@ -14,7 +14,6 @@ export interface FirebasePost {
     ambiance: number; // Ambiance rating (0-5)
     foodQuality: number; // Food quality rating (0-5)
     service: number; // Service rating (0-5)
-    priceRange: number; // Price range rating (0-5)
   };
   review: string;
   imageUrls: string[]; // Array of image URLs associated with the post

@@ -16,10 +16,11 @@ import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/navigation.types";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
-import { auth, db } from "../../firebase/firebaseConfig";
+import { auth, db, storage } from "../../firebase/firebaseConfig";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { ChevronDown } from "lucide-react-native";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const { width, height } = Dimensions.get("window");
 
@@ -56,20 +57,33 @@ export default function NameInputScreen() {
       Alert.alert("Required", "Please enter your first name.");
       return;
     }
-
+  
     if (phoneNumber && !/^\d+$/.test(phoneNumber)) {
       Alert.alert("Invalid Input", "Please enter a valid phone number with digits only.");
       return;
     }
-
+  
     const userId = auth.currentUser?.uid;
     if (!userId) {
       Alert.alert("Error", "No user found. Please login again.");
       return;
     }
-
+  
     const userDocRef = doc(db, "users", userId);
+    const storageRef = ref(storage, `profilePictures/${userId}`);
+  
     try {
+      // Fetch the default image from its URL
+      const response = await fetch(DEFAULT_PROFILE_PICTURE_URL);
+      const blob = await response.blob();
+  
+      // Upload the default image to the user's unique profile picture path
+      await uploadBytes(storageRef, blob);
+  
+      // Get the download URL for the uploaded image
+      const downloadURL = await getDownloadURL(storageRef);
+  
+      // Save user details to Firestore with the unique profile picture URL
       await setDoc(
         userDocRef,
         {
@@ -79,13 +93,19 @@ export default function NameInputScreen() {
           lastName: lastName.trim() || null,
           phoneNumber: phoneNumber.trim() || null,
           location: selectedLocation !== "Nearest City" ? selectedLocation : null,
-          profilePicture: DEFAULT_PROFILE_PICTURE_URL,
+          profilePicture: downloadURL, // Use the uploaded image's URL
           createdAt: serverTimestamp(),
           onboardingComplete: false,
+          // Set all notification preferences to true by default
+          reviewReminder: true,
+          newFollowerNotification: true,
+          likeNotification: true,
+          commentOnPostNotification: true,
+          friendPostsNotification: true,
         },
         { merge: true }
       );
-
+  
       navigation.navigate("UsernameInput");
     } catch (error) {
       console.error("Firestore Error:", error);

@@ -9,14 +9,22 @@ import {
   getDocs,
   updateDoc,
   onSnapshot,
+  orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "../firebase/firebaseConfig";
 import { UserProfile } from "../models/userProfile";
 
 export class UserService {
   private userCollection = collection(db, "users");
+  private userStatsCollection = collection(db, "userStats");
 
-  // Existing method to get user profile by UID
+  // Cache for top-followed users
+  private cachedTopUsers: (UserProfile & { followerCount: number })[] | null = null;
+  private cacheTimestamp: number | null = null;
+  private CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+  // Method to get user profile by UID
   public async getUserByUid(userId: string) {
     const docRef = doc(this.userCollection, userId);
     const docSnap = await getDoc(docRef);
@@ -24,14 +32,98 @@ export class UserService {
     return docSnap.exists() ? this.documentToUserProfile(docSnap) : null;
   }
 
-  // Existing method to get user by username
+  // Method to get user by username
   public async getUserByUsername(username: string) {
     const q = query(this.userCollection, where("username", "==", username));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map((doc) => this.documentToUserProfile(doc));
   }
 
-  // New method to subscribe to real-time updates for a user's profile
+  // Method to get followerCount from userStats collection
+  public async getUserFollowerCount(userId: string): Promise<number> {
+    const userStatsRef = doc(this.userStatsCollection, userId);
+    const docSnap = await getDoc(userStatsRef);
+  
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return data.followerCount || 0;
+    } else {
+      return 0; // Return 0 if no followerCount is found
+    }
+  }
+
+  // Method to get top 10 users with the most followers using userStats and cache for 24 hours
+  public async getTopFollowedUsers(location?: string): Promise<(UserProfile & { followerCount: number })[]> {
+    const now = Date.now();
+  
+    // Check if cached data exists and is still valid
+    if (this.cachedTopUsers && this.cacheTimestamp && (now - this.cacheTimestamp) < this.CACHE_DURATION && !location) {
+      console.log("Returning cached top-followed users");
+      return this.cachedTopUsers;
+    }
+  
+    try {
+      console.log("Fetching top-followed users from Firestore");
+  
+      // Query userStats collection to get top users with most followers
+      let statsQuery = query(
+        this.userStatsCollection,
+        orderBy("followerCount", "desc"),
+        limit(10)
+      );
+  
+      // If a location is provided, filter by location
+      if (location) {
+        const usersInLocationQuery = query(
+          this.userCollection,
+          where("location", "==", location) // Filter by location
+        );
+  
+        const usersInLocationSnapshot = await getDocs(usersInLocationQuery);
+        const userIdsInLocation = usersInLocationSnapshot.docs.map((doc) => doc.id);
+  
+        // Add the user IDs filter to the stats query
+        if (userIdsInLocation.length > 0) {
+          statsQuery = query(
+            this.userStatsCollection,
+            where("__name__", "in", userIdsInLocation), // Filter userStats based on the user IDs in the location
+            orderBy("followerCount", "desc"),
+            limit(10)
+          );
+        } else {
+          return []; // If no users in the location, return an empty array
+        }
+      }
+  
+      const statsSnapshot = await getDocs(statsQuery);
+      const topUserIds = statsSnapshot.docs.map((doc) => doc.id);
+  
+      // Fetch user profiles and followerCount for these top userIds
+      const userProfilesWithFollowerCount: (UserProfile & { followerCount: number })[] = [];
+  
+      for (const userId of topUserIds) {
+        const userProfile = await this.getUserByUid(userId); // Fetch user profile by UID
+        const followerCount = await this.getUserFollowerCount(userId); // Fetch follower count
+  
+        if (userProfile) {
+          userProfilesWithFollowerCount.push({ ...userProfile, followerCount }); // Merge follower count
+        }
+      }
+  
+      // Cache the data and update the cache timestamp
+      if (!location) {
+        this.cachedTopUsers = userProfilesWithFollowerCount;
+        this.cacheTimestamp = Date.now();
+      }
+  
+      return userProfilesWithFollowerCount;
+    } catch (error) {
+      console.error("Error fetching top-followed users:", error);
+      throw new Error("Failed to fetch top-followed users");
+    }
+  }
+
+  // Method to subscribe to real-time updates for a user's profile
   public subscribeToUserByUid(userId: string, callback: (userProfile: UserProfile | null) => void) {
     const userDocRef = doc(this.userCollection, userId);
     return onSnapshot(userDocRef, (docSnap) => {
@@ -43,7 +135,7 @@ export class UserService {
     });
   }
 
-  // Existing method to update user profile information
+  // Method to update user profile information
   public async updateUserProfile(
     userId: string,
     updatedData: Partial<{ firstName: string; lastName: string; profilePicture: string }>
@@ -62,7 +154,7 @@ export class UserService {
     }
   }
 
-  // Existing method to update user preferences
+  // Method to update user preferences
   public async updateUserPreferences(
     userId: string,
     preferences: {
@@ -114,5 +206,11 @@ export class UserService {
       id: doc.id,
       ...data,
     } as unknown as UserProfile;
+  }
+
+  // Optional: Method to manually clear the cache
+  public clearCache() {
+    this.cachedTopUsers = null;
+    this.cacheTimestamp = null;
   }
 }

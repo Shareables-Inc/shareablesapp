@@ -109,25 +109,21 @@ const SearchScreen = () => {
           ref={locationTabRef}
           style={[styles.tabButton]}
           onPress={() => setShowLocationDropdown(!showLocationDropdown)}
-          onLayout={(event) => {
-            const { width, x } = event.nativeEvent.layout;
-            setDropdownLayout({ width, x });
-          }}
-          activeOpacity={1}
         >
           <MapPin color={Colors.placeholderText} size={20} />
           <Text style={[styles.tabButtonText]}>{selectedLocation}</Text>
           <ChevronDown color={Colors.placeholderText} size={20} />
         </TouchableOpacity>
       </View>
+
       {showLocationDropdown && (
         <ScrollView
           showsVerticalScrollIndicator={false}
           style={[
             styles.dropdown,
             {
-              width: dropdownLayout.width, // Use dynamic width from layout
-              left: dropdownLayout.x, // Align dropdown with the tab button
+              width: dropdownLayout.width,
+              left: dropdownLayout.x,
             },
           ]}
         >
@@ -143,9 +139,10 @@ const SearchScreen = () => {
           ))}
         </ScrollView>
       )}
+
       <View style={styles.container}>
         {activeTab === null && <RestaurantsView location={selectedLocation!} />}
-        {activeTab === "Profiles" && <ProfilesView />}
+        {activeTab === "Profiles" && <ProfilesView location={selectedLocation} />}
       </View>
     </SafeAreaView>
   );

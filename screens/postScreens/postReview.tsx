@@ -12,6 +12,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -32,7 +33,7 @@ import ThreePhotoGridPost from "../../components/posts/threePhotoGridPost";
 import { useAuth } from "../../context/auth.context";
 import { useUpdatePost } from "../../hooks/usePost";
 import { EstablishmentDetails } from "../../models/post";
-import { Sparkle, Utensils, HandPlatter, ImagePlus } from "lucide-react-native";
+import { Sparkle, Utensils, HandPlatter, ImagePlus, Info } from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -59,7 +60,12 @@ const ReviewScreen = ({ route }) => {
   const [ratingAmbiance, setRatingAmbiance] = useState<number>(0);
   const [ratingFoodQuality, setRatingFoodQuality] = useState<number>(0);
   const [ratingService, setRatingService] = useState<number>(0);
-  const [priceRange, setPriceRange] = useState<number>(0);
+  const [overallRating, setOverallRating] = useState<number>(0);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+  const [infoModalVisible, setInfoModalVisible] = useState(false);
+
+  const toggleInfoModal = () => setInfoModalVisible(!infoModalVisible);
 
   const pickImages = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -67,38 +73,55 @@ const ReviewScreen = ({ route }) => {
       allowsMultipleSelection: true,
       allowsEditing: false,
       quality: 1,
+      selectionLimit: 3,
     });
-
-    console.log("Image Picker Result:", result);
-
+  
     if (!result.canceled && result.assets && result.assets.length > 0) {
+      setUploading(true); // Show loading indicator while uploading images
       const selectedImageUris = result.assets
         .slice(0, 3)
         .map((asset) => asset.uri);
-
-      const processedImages = await Promise.all(
-        selectedImageUris.map(async (uri) => await processImage(uri))
-      );
-
-      setImages(processedImages);
+  
+      try {
+        const processedImages = await Promise.all(
+          selectedImageUris.map(async (uri) => await processImage(uri))
+        );
+  
+        // Upload images right after processing
+        const uploadedUrls = await Promise.all(
+          processedImages.map(async (imageUri, index) => {
+            const downloadUrl = await uploadImageToFirebase(imageUri, index);
+            return downloadUrl;
+          })
+        );
+  
+        // Set uploaded image URLs in state
+        setUploadedImageUrls(uploadedUrls.filter((url) => url !== null));
+      } catch (error) {
+        console.error("Error uploading images:", error);
+        Alert.alert("Image Upload Error", "There was an error uploading images.");
+      } finally {
+        setUploading(false); // Hide loading indicator
+      }
     }
   };
-
+  
+  
   const processImage = async (uri: string) => {
     try {
       const manipResult = await ImageManipulator.manipulateAsync(
         uri,
         [{ resize: { width: 1080 } }],
-        { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
+        { compress: 0.65, format: ImageManipulator.SaveFormat.JPEG } 
       );
-
+  
       const response = await fetch(manipResult.uri);
       const blob = await response.blob();
-
+  
       if (blob.size > 2 * 1024 * 1024) {
         throw new Error("File size exceeds the limit of 2MB after processing");
       }
-
+  
       return manipResult.uri;
     } catch (error) {
       console.error("Error processing image:", error);
@@ -108,7 +131,7 @@ const ReviewScreen = ({ route }) => {
       );
       return uri;
     }
-  };
+  };  
 
   const handleReviewChange = (text: string) => {
     setReview(text);
@@ -126,7 +149,14 @@ const ReviewScreen = ({ route }) => {
     if (field === "ambiance") setRatingAmbiance(value);
     if (field === "foodQuality") setRatingFoodQuality(value);
     if (field === "service") setRatingService(value);
-    if (field === "priceRange") setPriceRange(value);
+  
+    // Update the overall rating when any rating changes
+    const newOverallRating = calculateOverallRating(
+      field === "ambiance" ? value : ratingAmbiance,
+      field === "foodQuality" ? value : ratingFoodQuality,
+      field === "service" ? value : ratingService
+    );
+    setOverallRating(parseFloat(newOverallRating));
   };
 
   const uploadImagesToFirebase = async () => {
@@ -146,79 +176,88 @@ const ReviewScreen = ({ route }) => {
       const processedUri = await processImage(uri);
       const response = await fetch(processedUri);
       const blob = await response.blob();
-
+  
       const storageRef = ref(
         storage,
         `images/${user!.uid}_${Date.now()}_${index}`
       );
       await uploadBytes(storageRef, blob);
-
+  
       const downloadURL = await getDownloadURL(storageRef);
-      console.log("Download URL:", downloadURL);
-
       return downloadURL;
     } catch (error) {
-      console.error("Error uploading image:", error);
-
       if (retries > 0) {
-        console.log("Retrying upload...");
         return uploadImageToFirebase(uri, index, retries - 1);
       } else {
-        Alert.alert("Upload Error", "There was an error uploading the image.");
         return null;
       }
     }
   };
 
   const getComponentType = () => {
-    if (images.length === 1) {
+    if (uploadedImageUrls.length === 1) {
       return "singlePhoto";
-    } else if (images.length === 2) {
+    } else if (uploadedImageUrls.length === 2) {
       return isGridView ? "TwoPhotoGrid" : "TwoPhotoScroll";
-    } else if (images.length === 3) {
+    } else if (uploadedImageUrls.length === 3) {
       return isGridView ? "ThreePhotoGrid" : "ThreePhotoScroll";
     }
     return null;
   };
+  
 
   const handlePost = async () => {
     console.log("handlePost clicked");
-
-    if (images.length === 0) {
-      Alert.alert("No Image", "Please select an image before posting.");
+  
+    // Ensure there are uploaded images before proceeding
+    if (uploadedImageUrls.length === 0) {
+      Alert.alert("No Image", "Please upload an image before posting.");
       return;
     }
-
+  
+    // Ensure the review is not empty
+    if (!review.trim()) {
+      Alert.alert("Incomplete Review", "Please write a review before posting.");
+      return;
+    }
+  
+    // Ensure all scores are above 0
+    if (ratingAmbiance === 0 || ratingFoodQuality === 0 || ratingService === 0) {
+      Alert.alert(
+        "Incomplete Ratings",
+        "Please provide ratings for ambiance, food quality, and service."
+      );
+      return;
+    }
+  
     const overallRating = calculateOverallRating(
       ratingAmbiance,
       ratingFoodQuality,
       ratingService
     );
-
+  
     try {
-      console.log("Uploading images...");
-      const imageUrls = await uploadImagesToFirebase();
-      console.log("Image upload complete");
       const componentType = getComponentType();
-
+  
+      // Update the existing post document with the new data
       updatePost({
-        id: initialPostId,
+        id: initialPostId, // Use the postId passed from the previous screen
         data: {
-          imageUrls: imageUrls.filter((url): url is string => url !== null),
+          imageUrls: uploadedImageUrls, // The URLs of the uploaded images
           imageComponent: componentType ?? "singlePhoto",
-          review: review,
-          tags: tags,
+          review: review, // The user's review
+          tags: tags, // Tags selected on the previous screen
           ratings: {
             ambiance: ratingAmbiance,
             foodQuality: ratingFoodQuality,
             service: ratingService,
-            priceRange: priceRange,
-            overall: overallRating,
+            overall: overallRating, // Calculated overall score
           },
         },
-        establishmentId: establishmentId,
+        establishmentId: establishmentId, // The restaurant or establishment ID
       });
-
+  
+      // Navigate to the home screen after the post is created
       navigation.navigate("MainTabNavigator", {
         screen: "Home",
         params: { screen: "Home" },
@@ -228,38 +267,61 @@ const ReviewScreen = ({ route }) => {
       Alert.alert("Post Error", "There was an error creating your post.");
     }
   };
+  
 
   const renderPhotoComponent = () => {
-    if (images.length === 1) {
+    if (uploading) {
+      // Show loading indicator while images are being uploaded
       return (
-        <SinglePhotoPost post={{ photo: images[0] }} onRePick={pickImages} />
-      );
-    } else if (images.length === 2) {
-      return isGridView ? (
-        <TwoPhotoGridPost post={{ photos: images }} onRePick={pickImages} />
-      ) : (
-        <TwoPhotoScrollPost post={{ photos: images }} onRePick={pickImages} />
-      );
-    } else if (images.length === 3) {
-      return isGridView ? (
-        <ThreePhotoGridPost post={{ photos: images }} onRePick={pickImages} />
-      ) : (
-        <ThreePhotoScrollPost post={{ photos: images }} onRePick={pickImages} />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.tags} />
+          <Text style={styles.loadingText}>Uploading images...</Text>
+        </View>
       );
     }
+  
+    if (uploadedImageUrls.length === 1) {
+      return (
+        <SinglePhotoPost
+          post={{ photo: uploadedImageUrls[0] }}
+          onRePick={pickImages}
+        />
+      );
+    } else if (uploadedImageUrls.length === 2) {
+      return isGridView ? (
+        <TwoPhotoGridPost
+          post={{ photos: uploadedImageUrls }}
+          onRePick={pickImages}
+        />
+      ) : (
+        <TwoPhotoScrollPost
+          post={{ photos: uploadedImageUrls }}
+          onRePick={pickImages}
+        />
+      );
+    } else if (uploadedImageUrls.length === 3) {
+      return isGridView ? (
+        <ThreePhotoGridPost
+          post={{ photos: uploadedImageUrls }}
+          onRePick={pickImages}
+        />
+      ) : (
+        <ThreePhotoScrollPost
+          post={{ photos: uploadedImageUrls }}
+          onRePick={pickImages}
+        />
+      );
+    }
+  
+    // Default state when no images are selected
     return (
-      <TouchableOpacity
-        onPress={pickImages}
-        style={[
-          styles.imagePicker,
-          { width: height * 0.35 * 0.8, height: height * 0.35 },
-        ]}
-      >
+      <TouchableOpacity onPress={pickImages} style={styles.imagePicker}>
         <ImagePlus color={Colors.tags} size={40} />
         <Text style={styles.addImageText}>add photos</Text>
       </TouchableOpacity>
     );
   };
+  
 
   return (
     <SafeAreaView
@@ -290,10 +352,48 @@ const ReviewScreen = ({ route }) => {
               />
             </KeyboardAvoidingView>
 
-            <View style={styles.headers}>
-              <Text style={styles.ratingHeader}>Score</Text>
-              {/* <Text style={styles.priceHeader}>Overall</Text> */}
+            <View style={styles.headersContainer}>
+              <View style={styles.scoresContainer}>
+                <Text style={styles.ratingHeader}>Scores</Text>
+                <TouchableOpacity onPress={toggleInfoModal}>
+                  <Info style={styles.infoIcon} color={Colors.tags} size={18} />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.overallContainer}>
+                <Text style={styles.priceHeader}>Overall</Text>
+              </View>
             </View>
+
+            {/* Info Modal */}
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={infoModalVisible}
+              onRequestClose={toggleInfoModal}
+            >
+              <View style={styles.modalBackground}>
+                <View style={styles.modalContainer}>
+                  <Text style={styles.modalTitle}>What Do These Icons Mean?</Text>
+                  <View style={styles.modalContent}>
+                    <View style={styles.iconRow}>
+                      <Sparkle color={Colors.charcoal} size={25} />
+                      <Text style={styles.iconDescription}>Ambiance</Text>
+                    </View>
+                    <View style={styles.iconRow}>
+                      <Utensils color={Colors.charcoal} size={25} />
+                      <Text style={styles.iconDescription}>Food Quality</Text>
+                    </View>
+                    <View style={styles.iconRow}>
+                      <HandPlatter color={Colors.charcoal} size={25} />
+                      <Text style={styles.iconDescription}>Service Quality</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={toggleInfoModal} style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>Got It!</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
 
             <View style={styles.ratingsContainer}>
               <View style={styles.ratingSection}>
@@ -364,25 +464,18 @@ const ReviewScreen = ({ route }) => {
                 </View>
               </View>
 
-              {/* <View style={styles.ratingSection}>
+              <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={[
-                    styles.ratingSquare,
-                    ratingService >= 8
-                      ? styles.highlightedRatingCircle
-                      : styles.defaultRatingCircle,
+                    styles.ratingSquare, // Adjust the styling as needed
+                    overallRating >= 8 ? styles.highlightedRatingCircle : styles.defaultRatingCircle,
                   ]}
-                  onPress={() =>
-                    handleRatingChange(
-                      "priceRange",
-                      priceRange === 10 ? 0 : priceRange + 1
-                    )
-                  }
                 >
-                  <Text style={styles.ratingScore}>{ratingService}</Text>
+                  <Text style={styles.ratingScore}>{overallRating}</Text>
                 </TouchableOpacity>
-              </View> */}
+              </View>
+
             </View>
 
             <View style={styles.toggleContainer}>
@@ -422,6 +515,18 @@ const styles = StyleSheet.create({
     marginTop: height * 0.01,
     justifyContent: "center",
     alignItems: "center",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: height * 0.035,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontFamily: Fonts.Medium,
+    fontSize: width * 0.045,
+    color: Colors.tags,
   },
   imagePickerContainer: {
     width: "100%",
@@ -468,25 +573,29 @@ const styles = StyleSheet.create({
     color: Colors.charcoal,
     borderRadius: 10,
   },
-  headers: {
+  headersContainer: {
     flexDirection: "row",
-    alignSelf: "flex-start",
+    marginBottom: height * 0.015,
   },
+  scoresContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  overallContainer: {
+    justifyContent: "center", 
+  },  
   ratingHeader: {
     fontSize: width * 0.05,
     fontFamily: Fonts.SemiBold,
     color: Colors.charcoal,
-    alignSelf: "flex-start",
-    paddingLeft: width * 0.05,
-    marginBottom: height * 0.015,
   },
   priceHeader: {
     fontSize: width * 0.05,
     fontFamily: Fonts.SemiBold,
     color: Colors.charcoal,
-    alignSelf: "flex-start",
-    paddingLeft: width * 0.56,
-    marginBottom: height * 0.015,
+    alignSelf: "center", 
+    marginLeft: width * 0.1,
+    paddingRight: width * 0.09
   },
   ratingsContainer: {
     flexDirection: "row",
@@ -511,7 +620,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginBottom: height * 0.01,
-    marginLeft: width * 0.13,
+    marginLeft: width * 0.12,
   },
   defaultRatingCircle: {
     backgroundColor: Colors.charcoal,
@@ -552,6 +661,53 @@ const styles = StyleSheet.create({
   switch: {
     backgroundColor: Colors.background,
     borderRadius: 30,
+  },
+  infoIcon: {
+    marginLeft: 5, 
+    marginRight: width * 0.38
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    width: width * 0.7,
+    padding: 15,
+    backgroundColor: Colors.background,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontFamily: Fonts.SemiBold,
+    fontSize: width * 0.05,
+    marginBottom: 15,
+  },
+  modalContent: {
+    alignItems: "flex-start",
+  },
+  iconRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  iconDescription: {
+    marginLeft: 10,
+    fontFamily: Fonts.Medium,
+    fontSize: width * 0.04,
+  },
+  closeButton: {
+    marginTop: 15,
+    paddingHorizontal: 25,
+    paddingVertical: 10,
+    backgroundColor: Colors.charcoal,
+    borderRadius: 10,
+  },
+  closeButtonText: {
+    color: Colors.background,
+    fontFamily: Fonts.SemiBold,
+    fontSize: width * 0.04
   },
 });
 

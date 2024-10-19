@@ -23,18 +23,37 @@ const { width, height } = Dimensions.get("window");
 const FollowerListScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<"followers" | "following">("following");
+  const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
   const [loading, setLoading] = useState(true);
   const [followers, setFollowers] = useState<any[]>([]);
   const [following, setFollowing] = useState<any[]>([]);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const userService = new UserService();
   const followingService = new FollowingService();
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const [followersCount, followingCount] = await Promise.all([
+          followingService.getFollowersCount(user!.uid),
+          followingService.getFollowingCount(user!.uid),
+        ]);
+        setFollowerCount(followersCount);
+        setFollowingCount(followingCount);
+      } catch (error) {
+        console.error("Error fetching followers/following count:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        if (activeTab === "following") {
+        if (activeTab === "following" && following.length === 0) {
           const followingList = await followingService.getFollowing(user!.uid);
           const detailedFollowing = await Promise.all(
             followingList.map(async (userId: string) => {
@@ -43,7 +62,7 @@ const FollowerListScreen = () => {
             })
           );
           setFollowing(detailedFollowing);
-        } else {
+        } else if (activeTab === "followers" && followers.length === 0) {
           const followersList = await followingService.getFollowersList(user!.uid);
           const detailedFollowers = await Promise.all(
             followersList.map(async (userId: string) => {
@@ -102,17 +121,21 @@ const FollowerListScreen = () => {
           style={[styles.tab, activeTab === "followers" && styles.activeTab]}
           onPress={() => setActiveTab("followers")}
         >
-          <Text style={[styles.tabText, activeTab === "followers" && styles.activeTabText]}>Followers</Text>
+          <Text style={[styles.tabText, activeTab === "followers" && styles.activeTabText]}>
+            Followers ({followerCount})
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === "following" && styles.activeTab]}
           onPress={() => setActiveTab("following")}
         >
-          <Text style={[styles.tabText, activeTab === "following" && styles.activeTabText]}>Following</Text>
+          <Text style={[styles.tabText, activeTab === "following" && styles.activeTabText]}>
+            Following ({followingCount})
+          </Text>
         </TouchableOpacity>
       </View>
       {loading ? (
-        <ActivityIndicator size="large" color={Colors.highlightText} style={{ marginTop: 20 }} />
+        <ActivityIndicator size="small" color={Colors.highlightText} style={{ marginTop: 50 }} />
       ) : (
         <ScrollView>
           {activeTab === "followers" && renderUserList(followers)}

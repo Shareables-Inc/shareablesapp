@@ -23,7 +23,7 @@ import { tagsData } from "../../config/constants";
 const { width, height } = Dimensions.get("window");
 
 const TopCuisinesScreen = () => {
-  const { user } = useAuth();
+  const { user, refreshUserProfile } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [firstName, setFirstName] = useState("there");
@@ -83,20 +83,33 @@ const TopCuisinesScreen = () => {
       Alert.alert("Selection Error", "Please select at least 5 tags.");
       return;
     }
-
+  
     try {
       const userDocRef = doc(db, "users", user!.uid);
+  
+      // Save the selected cuisines and mark onboarding as complete
       await setDoc(
         userDocRef,
-        { favoriteCuisines: selectedTags },
+        {
+          favoriteCuisines: selectedTags,
+          onboardingComplete: true, // Mark onboarding as complete
+        },
         { merge: true }
       );
-      navigation.navigate("InviteContacts");
+  
+      await refreshUserProfile(); // Refresh the user profile after the update
+  
+      // Navigate to the main feed (MainTabNavigator)
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "MainTabNavigator" }],
+      });
     } catch (error) {
       console.error("Firestore Error:", error);
       Alert.alert("Update Failed", "Failed to save your favorite cuisines.");
     }
   };
+  
 
   const handleCategoryPress = (category: "cuisines" | "foodOccasions" | "restaurantVibes") => {
     setActiveCategory(category);
@@ -117,7 +130,7 @@ const TopCuisinesScreen = () => {
       <Text style={styles.title}>
         <Text style={styles.nameText}>{firstName},</Text> our goal is to help you find amazing, unique places to eat.
       </Text>
-      <Text style={styles.description}>Choose 5 to 10 of your favorite cuisines.</Text>
+      <Text style={styles.description}>Choose 5 to 10 of your favorite tags.</Text>
 
       {/* Tag Category Buttons */}
       <View style={styles.tagContainer}>
@@ -154,7 +167,7 @@ const TopCuisinesScreen = () => {
       {/* Next Step Button */}
       <View style={styles.nextButtonContainer}>
         <TouchableOpacity style={styles.nextButton} onPress={handleNextStep}>
-          <Text style={styles.nextButtonText}>Next Step</Text>
+          <Text style={styles.nextButtonText}>Let's Go!</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Dimensions,
   Keyboard,
   TouchableWithoutFeedback,
+  FlatList,
 } from "react-native";
 import { Search } from "lucide-react-native";
 import Colors from "../../utils/colors";
@@ -24,19 +25,39 @@ import { Fonts } from "../../utils/fonts";
 
 const { width, height } = Dimensions.get("window");
 
-const ProfilesView = () => {
+const ProfilesView = ({ location }: { location?: string }) => {
   const { user, userProfile } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<UserProfile | undefined>();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Loading state for fetching users
   const [error, setError] = useState<string | undefined>();
+  const [topFollowedUsers, setTopFollowedUsers] = useState<UserProfile[]>([]); // Store top followed users
+
+  const navigation = useNavigation<any>();
+  const userService = new UserService();
+
+  // Hook to handle follow state for search result
   const { isFollowing, isToggling, toggleFollow } = useFollowingActions(
     searchResults?.id,
     user!.uid
   );
-  const navigation = useNavigation<any>();
 
-  const userService = new UserService();
+  useEffect(() => {
+    setIsLoading(true); // Start loading when location is switched
+    fetchTopFollowedUsers(location); // Fetch top followed users on mount or location change
+  }, [location]);
+
+  const fetchTopFollowedUsers = async (location?: string) => {
+    try {
+      const users = await userService.getTopFollowedUsers(location);
+      setTopFollowedUsers(users);
+    } catch (error) {
+      console.error("Error fetching top followed users:", error);
+    } finally {
+      setIsLoading(false); // Stop loading after fetch is done
+    }
+  };
+
   const handleSearch = async () => {
     if (searchQuery.trim() === "") {
       setSearchResults(undefined);
@@ -75,18 +96,77 @@ const ProfilesView = () => {
     }
   };
 
-  const handleOpeningUserProfile = () => {
-    if (searchResults) {
-      navigation.navigate("UserProfile", { userId: searchResults.id });
-    }
+  const handleOpeningUserProfile = (userId: string) => {
+    navigation.navigate("UserProfile", { userId });
   };
 
+  // Render the search result profile
+  const renderSearchResult = () => (
+    <View style={styles.profileItem}>
+      <TouchableOpacity onPress={() => handleOpeningUserProfile(searchResults!.id)}>
+        <Image
+          source={{
+            uri:
+              searchResults?.profilePicture || "https://example.com/default-profile.jpg",
+          }}
+          style={styles.profileImage}
+        />
+      </TouchableOpacity>
+      <View style={styles.profileInfo}>
+        <Text style={styles.profileName}>@{searchResults?.username}</Text>
+        <Text style={styles.profileReviews}>
+          {searchResults?.firstName} {searchResults?.lastName} • {searchResults?.location}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={[styles.followButton, isFollowing && styles.followButton]}
+        onPress={toggleFollow}
+        disabled={isToggling}
+      >
+        {isToggling ? (
+          <ActivityIndicator color={Colors.background} size="small" />
+        ) : (
+          <Text style={styles.followButtonText}>
+            {isFollowing ? "Following" : "Follow"}
+          </Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Render top followed users in a FlatList
+  const renderTopFollowedUser = ({ item }: { item: UserProfile & { followerCount: number } }) => (
+    <View style={styles.profileItem}>
+      <TouchableOpacity onPress={() => handleOpeningUserProfile(item.id)}>
+        <Image
+          source={{
+            uri: item.profilePicture || "https://example.com/default-profile.jpg",
+          }}
+          style={styles.profileImage}
+        />
+      </TouchableOpacity>
+      <View style={styles.profileInfo}>
+        <Text style={styles.profileName}>@{item.username}</Text>
+        <Text style={styles.profileReviews}>
+          {item.followerCount} followers
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={styles.followButton} 
+        onPress={() => handleOpeningUserProfile(item.id)} 
+      >
+        <Text style={styles.followButtonText}>View Profile</Text>
+      </TouchableOpacity>
+    </View>
+  );
+  
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
+        {/* Search bar */}
         <View style={styles.searchContainer}>
           <Search size={20} color={Colors.placeholderText} style={styles.searchIcon} />
           <TextInput
@@ -107,47 +187,33 @@ const ProfilesView = () => {
           Spell the username correctly for accurate results.
         </Text>
 
-        {isLoading ? (
+        {/* Always display the section title */}
+        <Text style={styles.sectionTitle}>Notable Foodies</Text>
+
+        {/* Show loading spinner with "finding locals" */}
+        {isLoading && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.tags} />
+            <Text style={styles.loadingText}>Finding locals...</Text>
           </View>
-        ) : error ? (
+        )}
+
+        {/* Show no foodies message if no users found */}
+        {!isLoading && topFollowedUsers.length === 0 && (
           <View style={styles.noResultsContainer}>
-            <Text style={styles.noResultsText}>{error}</Text>
+            <Text style={styles.noResultsText}>No foodies in the area yet</Text>
           </View>
-        ) : searchResults ? (
-          <View style={styles.profileItem}>
-            <TouchableOpacity onPress={handleOpeningUserProfile}>
-              <Image
-                source={{
-                  uri:
-                    searchResults.profilePicture ||
-                    "https://example.com/default-profile.jpg",
-                }}
-                style={styles.profileImage}
-              />
-            </TouchableOpacity>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>@{searchResults.username}</Text>
-              <Text style={styles.profileReviews}>
-                {searchResults.firstName} {searchResults.lastName} • {searchResults.location}
-              </Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.followButton, isFollowing && styles.followButton]}
-              onPress={toggleFollow}
-              disabled={isToggling}
-            >
-              {isToggling ? (
-                <ActivityIndicator color={Colors.background} size="small" />
-              ) : (
-                <Text style={styles.followButtonText}>
-                  {isFollowing ? "Following" : "Follow"}
-                </Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        ) : null}
+        )}
+
+        {/* Render top followed users */}
+        {!isLoading && topFollowedUsers.length > 0 && (
+          <FlatList
+            data={topFollowedUsers}
+            renderItem={renderTopFollowedUser}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
   );
@@ -193,10 +259,12 @@ const styles = StyleSheet.create({
     fontSize: width * 0.035,
   },
   loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     marginTop: 50,
+  },
+  loadingText: {
+    fontSize: width * 0.04,
+    color: Colors.tags,
   },
   noResultsContainer: {
     flex: 1,
@@ -234,14 +302,20 @@ const styles = StyleSheet.create({
   },
   followButton: {
     backgroundColor: Colors.inputBackground,
-    paddingHorizontal: width * 0.04,
-    paddingVertical: width * 0.025,
+    paddingHorizontal: width * 0.035,
+    paddingVertical: width * 0.02,
     borderRadius: 10,
   },
   followButtonText: {
     color: Colors.text,
     fontSize: width * 0.035,
     fontFamily: Fonts.Regular,
+  },
+  sectionTitle: {
+    fontSize: width * 0.045,
+    fontFamily: Fonts.SemiBold,
+    marginTop: 20,
+    marginBottom: 10,
   },
 });
 

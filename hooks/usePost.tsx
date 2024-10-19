@@ -31,8 +31,13 @@ export const usePostPaginated = (limit = 20) => {
           post.id &&
           post.imageUrls &&
           Array.isArray(post.imageUrls) &&
-          post.imageUrls.length > 0 &&
-          post.profilePicture
+          post.imageUrls.length > 0 && // Ensure there is at least 1 image
+          post.profilePicture && // Ensure the profile picture is present
+          post.review && post.review.trim().length > 0 && // Ensure review text is present
+          post.ratings && // Ensure ratings object is present
+          post.ratings.ambiance !== undefined &&
+          post.ratings.foodQuality !== undefined &&
+          post.ratings.service !== undefined // Ensure scores for all ratings are present
         );
       });
 
@@ -43,7 +48,7 @@ export const usePostPaginated = (limit = 20) => {
       ]);
       FastImage.preload(imagesToPreload);
 
-      // remove any post that are missing a imageUrl
+      // Return only valid posts
       return {
         ...result,
         posts: validPosts,
@@ -58,6 +63,7 @@ export const usePostPaginated = (limit = 20) => {
     refetchInterval: false,
   });
 };
+
 
 export const usePostById = (postId: string) => {
   return useQuery({

@@ -100,6 +100,8 @@ const styles = StyleSheet.create({
     height: width * 0.1,
     borderRadius: 90,
     marginRight: width * 0.035,
+    borderColor: Colors.profileBorder,
+    borderWidth: 0.75
   },
   userInfo: {
     flex: 1,

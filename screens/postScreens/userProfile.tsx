@@ -206,6 +206,26 @@ const UserProfileScreen = () => {
         </View>
 
         <View style={styles.profileSection}>
+          <View style={styles.detailsSection}>
+            <Text style={styles.name}>
+              {userData
+                ? userData.lastName
+                  ? `${userData.firstName} ${userData.lastName}`
+                  : userData.firstName
+                : ""}
+            </Text>
+            <Text style={styles.username}>{`@${userData!.username}`}</Text>
+            <View style={styles.ovalsContainer}>
+              <View style={styles.followerOval}>
+                <Text style={styles.ovalText}>
+                  {userCounts?.followerCount || 0} Followers
+                </Text>
+              </View>
+              <View style={styles.followerOval}>
+                <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
+              </View>
+            </View>
+          </View>
           <View style={styles.profileImageContainer}>
             <FastImage
               source={{
@@ -233,26 +253,6 @@ const UserProfileScreen = () => {
                 )}
               </TouchableOpacity>
             )}
-          </View>
-          <View style={styles.detailsSection}>
-            <Text style={styles.name}>
-              {userData
-                ? userData.lastName
-                  ? `${userData.firstName} ${userData.lastName}`
-                  : userData.firstName
-                : ""}
-            </Text>
-            <Text style={styles.username}>{`@${userData!.username}`}</Text>
-            <View style={styles.ovalsContainer}>
-              <View style={styles.followerOval}>
-                <Text style={styles.ovalText}>
-                  {userCounts?.followerCount || 0} Followers
-                </Text>
-              </View>
-              <View style={styles.followerOval}>
-                <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
-              </View>
-            </View>
           </View>
         </View>
 
@@ -350,15 +350,24 @@ const styles = StyleSheet.create({
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: height * 0.03,
+    justifyContent: "space-between",
+    marginBottom: height * 0.02,
     marginTop: height * 0.135,
-    paddingLeft: width * 0.05,
+    paddingHorizontal: width * 0.05
+  },
+  profilePic: {
+    width: width * 0.28,
+    height: width * 0.28,
+    borderRadius: 90,
+    borderColor: Colors.profileBorder,
+    borderWidth: 4,
+  },
+  detailsSection: {
   },
   profileImageContainer: {
     alignItems: "center",
     justifyContent: "center",
     position: "relative", 
-    marginRight: width * 0.03,
   },
   followButton: {
     backgroundColor: Colors.inputBackground,
@@ -379,16 +388,6 @@ const styles = StyleSheet.create({
     color: Colors.text,
     fontSize: width * 0.035,
     fontFamily: Fonts.Medium,
-  },
-  profilePic: {
-    width: width * 0.28,
-    height: width * 0.28,
-    borderRadius: 90,
-    borderColor: Colors.profileBorder,
-    borderWidth: 4,
-  },
-  detailsSection: {
-    marginLeft: width * 0.035,
   },
   ovalsContainer: {
     flexDirection: "row",
