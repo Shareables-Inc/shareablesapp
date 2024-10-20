@@ -35,7 +35,7 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: process.env.EXPO_BUNDLE_IDENTIFIER,
-      buildNumber: "1.0.1",
+      buildNumber: "1.0.2",
       infoPlist: {
         LSApplicationQueriesSchemes: [
           "maps",
