@@ -137,7 +137,10 @@ const ProfilesView = ({ location }: { location?: string }) => {
   // Render top followed users in a FlatList
   const renderTopFollowedUser = ({ item }: { item: UserProfile & { followerCount: number } }) => (
     <View style={styles.profileItem}>
-      <TouchableOpacity onPress={() => handleOpeningUserProfile(item.id)}>
+      <TouchableOpacity 
+        onPress={() => handleOpeningUserProfile(item.id)}
+        activeOpacity={1}
+        >
         <Image
           source={{
             uri: item.profilePicture || "https://example.com/default-profile.jpg",
@@ -154,6 +157,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
       <TouchableOpacity
         style={styles.followButton} 
         onPress={() => handleOpeningUserProfile(item.id)} 
+        activeOpacity={1}
       >
         <Text style={styles.followButtonText}>View Profile</Text>
       </TouchableOpacity>
@@ -161,7 +165,9 @@ const ProfilesView = ({ location }: { location?: string }) => {
   );
   
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback 
+      onPress={Keyboard.dismiss}
+    >
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
@@ -187,11 +193,24 @@ const ProfilesView = ({ location }: { location?: string }) => {
           Spell the username correctly for accurate results.
         </Text>
 
+        {/* Search results */}
+        {isLoading && searchQuery ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.tags} />
+          </View>
+        ) : error ? (
+          <View style={styles.noResultsContainer}>
+            <Text style={styles.noResultsText}>{error}</Text>
+          </View>
+        ) : searchResults ? (
+          renderSearchResult()
+        ) : null}
+
         {/* Always display the section title */}
-        <Text style={styles.sectionTitle}>Notable Foodies</Text>
+        <Text style={styles.sectionTitle}>Notable Foodies in {location} </Text>
 
         {/* Show loading spinner with "finding locals" */}
-        {isLoading && (
+        {isLoading && !searchQuery && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.tags} />
             <Text style={styles.loadingText}>Finding locals...</Text>

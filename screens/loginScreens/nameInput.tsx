@@ -50,7 +50,7 @@ export default function NameInputScreen() {
     setShowLocationDropdown(false);
   };
 
-  const DEFAULT_PROFILE_PICTURE_URL = "https://firebasestorage.googleapis.com/v0/b/shareables-development-b0a88.appspot.com/o/profilePictures%2Fuser.png?alt=media&token=16d8e2c7-907c-4db3-acc8-df84b2249dbf";
+  const DEFAULT_PROFILE_PICTURE_URL = "https://firebasestorage.googleapis.com/v0/b/shareablesapp-b7366.appspot.com/o/profilePictures%2Fuser.png?alt=media&token=c817700c-bbfc-4f0e-99ee-a59a21761117";
 
   const handleNextStep = async () => {
     if (firstName.trim() === "") {

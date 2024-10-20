@@ -171,10 +171,12 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBackground,
     zIndex: 1000,
     maxHeight: height * 0.2,
-    minWidth: width * 0.1,
+    minWidth: width * 0.33,  
   },
   dropdownItem: {
     padding: width * 0.03,
+    minWidth: width * 0.33, 
+    justifyContent: 'center', 
     borderBottomWidth: 1,
     borderBottomColor: Colors.inputBackground,
   },
@@ -199,5 +201,6 @@ const styles = StyleSheet.create({
     color: Colors.background,
   },
 });
+
 
 export default SearchScreen;

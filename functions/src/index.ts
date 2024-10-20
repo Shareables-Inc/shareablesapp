@@ -230,10 +230,7 @@ export const sendLikeNotification = onDocumentCreated(
 );
 
 export const sendFollowedUserPostNotification = onDocumentCreated(
-  {
-    document: "posts/{postId}",
-    timeoutSeconds: 960,
-  },
+  "posts/{postId}",
   async (event) => {
     const postId = event.params?.postId;
     const postData = event.data?.data() as Post | undefined;
@@ -319,6 +316,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
     await sendPushNotifications(notifications);
   }
 );
+
 
 
 export const incrementLikeCount = onDocumentCreated(
