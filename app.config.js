@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Shareables",
     slug: "shareablesapp",
-    version: "1.0.1",
+    version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
@@ -35,7 +35,7 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.shareablesinc.shareables",
-      buildNumber: "1.0.2",
+      buildNumber: "1.0.3",
       infoPlist: {
         LSApplicationQueriesSchemes: [
           "maps",
