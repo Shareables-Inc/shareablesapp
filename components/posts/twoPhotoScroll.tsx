@@ -14,6 +14,7 @@ import { Fonts } from "../../utils/fonts";
 import { RootStackParamList } from "../../types/stackParams.types";
 import { Post } from "../../models/post";
 import FastImage from "react-native-fast-image";
+import { useAuth } from "../../context/auth.context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,6 +24,7 @@ interface TwoPhotoScrollProps {
 
 const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
   const handleScroll = (event: any) => {
@@ -36,7 +38,13 @@ const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
   };
 
   const handleProfilePress = () => {
-    navigation.navigate("UserProfile", { userId: post.userId });
+    if (post.userId === user!.uid) {
+      // If it's the current user's profile, switch to the profile tab
+      navigation.navigate("Profile"); // This should match the name of your Profile tab in the navigation stack
+    } else {
+      // Navigate to the user's profile screen
+      navigation.navigate("UserProfile", { userId: post.userId });
+    }
   };
 
   return (

@@ -242,7 +242,7 @@ const UserProfileScreen = () => {
               }}
               style={styles.profilePic}
             />
-            {postUserId && (
+            {postUserId !== user!.uid && (
               <TouchableOpacity
                 style={[
                   styles.followButton,

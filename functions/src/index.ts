@@ -234,24 +234,30 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
   async (event) => {
     const postId = event.params?.postId;
     const postData = event.data?.data() as Post | undefined;
+    
     if (!postData) {
+      console.log(`Post ${postId} data is missing.`);
       return;
     }
 
     if (!postData.userId) {
+      console.log(`Post ${postId} has no userId.`);
       return;
     }
 
-    // get the user who made the post
+    // Fetch the user who made the post
     const userRef = admin.firestore().collection("users").doc(postData.userId);
     const userDoc = await userRef.get();
     const userData = userDoc.data() as UserProfile | undefined;
 
     if (!userData) {
+      console.log(`User ${postData.userId} does not exist.`);
       return;
     }
 
-    // grab all list of people who are following the user
+    console.log(`Fetching followers of user ${postData.userId}`);
+
+    // Grab all followers of the user
     const followersRef = admin
       .firestore()
       .collection("following")
@@ -259,7 +265,14 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
     const followersDoc = await followersRef.get();
     const followersData = followersDoc.docs.map((doc) => doc.data());
 
-    // I need to then get the follower's username and fcm token
+    if (followersData.length === 0) {
+      console.log(`User ${postData.userId} has no followers.`);
+      return;
+    }
+
+    console.log(`User ${postData.userId} has ${followersData.length} followers`);
+
+    // Fetch FCM tokens for all followers
     const followerUsernames = await Promise.all(
       followersData.map(async (follower) => {
         const followerRef = admin
@@ -275,15 +288,19 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       })
     );
 
-    // check if the user has enabled friend posts notifications
+    console.log("Fetched FCM tokens for followers:", followerUsernames);
+
+    // Check if the user has enabled friend posts notifications
     if (!userData.friendPostsNotification) {
+      console.log(`User ${postData.userId} has disabled friend posts notifications.`);
       return;
     }
 
     // Delay the notification by 15 minutes
+    console.log(`Waiting for 15 minutes before sending notifications for post ${postId}`);
     await new Promise((resolve) => setTimeout(resolve, 900000));
 
-    // Check if the post still exists after the delay
+    // Check if the post still exists
     const postRef = admin.firestore().collection("posts").doc(postId);
     const postDoc = await postRef.get();
 
@@ -292,7 +309,9 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       return;
     }
 
-    // send a notification to each follower
+    console.log(`Post ${postId} still exists. Preparing to send notifications.`);
+
+    // Prepare notifications for each follower
     const notifications: PostNotification[] = [];
 
     for (const follower of followerUsernames) {
@@ -310,13 +329,27 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
           },
         };
         notifications.push(message);
+      } else {
+        console.log(`Follower ${follower.username} has no FCM token.`);
       }
     }
 
-    await sendPushNotifications(notifications);
+    if (notifications.length === 0) {
+      console.log("No notifications to send, skipping.");
+      return;
+    }
+
+    console.log(`Sending ${notifications.length} notifications for post ${postId}.`);
+
+    // Send the notifications
+    try {
+      await sendPushNotifications(notifications);
+      console.log("Notifications sent successfully.");
+    } catch (error) {
+      console.error("Error sending notifications: ", error);
+    }
   }
 );
-
 
 
 export const incrementLikeCount = onDocumentCreated(
