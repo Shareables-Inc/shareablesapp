@@ -89,7 +89,7 @@ const UserProfileScreen = () => {
   const handleToggleFollow = async () => {
     try {
       await toggleFollow();
-      refetchUserCounts(); // Refresh user counts after follow/unfollow
+      refetchUserCounts(); 
     } catch (error) {
       console.error("Error toggling follow state:", error);
     }
@@ -194,7 +194,7 @@ const UserProfileScreen = () => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.tags}/>
         }
       >
         <StatusBar style="auto" />
@@ -216,11 +216,18 @@ const UserProfileScreen = () => {
             </Text>
             <Text style={styles.username}>{`@${userData!.username}`}</Text>
             <View style={styles.ovalsContainer}>
-              <View style={styles.followerOval}>
+            <View style={styles.followerOval}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() =>
+                  navigation.navigate("FollowerList", { userId: postUserId })
+                }
+              >
                 <Text style={styles.ovalText}>
-                  {userCounts?.followerCount || 0} Followers
+                  {userCounts?.followerCount} Followers
                 </Text>
-              </View>
+              </TouchableOpacity>
+            </View>
               <View style={styles.followerOval}>
                 <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
               </View>
@@ -342,7 +349,7 @@ const styles = StyleSheet.create({
   topBar: {
     position: "absolute",
     top: height * 0.08,
-    left: width * 0.07,
+    left: width * 0.05,
     flexDirection: "row",
     justifyContent: "space-between",
     flex: 1,

@@ -262,7 +262,12 @@ const ProfileScreen = () => {
       onScroll={handleScroll}
       scrollEventThrottle={16}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl 
+          refreshing={refreshing} 
+          onRefresh={onRefresh} 
+          tintColor={Colors.tags}
+          colors={[Colors.tags]}
+          />
       }
     >
       <StatusBar style="auto" />

@@ -5,6 +5,7 @@ import {
   PERMANENT_GEOCODING_URL,
 } from "../config/config";
 import { SuggestionsResponse, RetrieveResponse } from "../types/mapbox.types";
+
 interface SuggestedSearchParams {
   query: string;
   sessionToken: string;
@@ -24,9 +25,9 @@ export const suggestedSearch = async ({
   language = "en",
   country = "ca",
   poiCategory = ["food_and_drink", "restaurant", "bar"],
-  types = ["place", "poi"],
+  types = ["place", "poi"],  // Includes 'address'
   origin,
-  limit = 5,
+  limit = 10,
   proximity,
 }: SuggestedSearchParams): Promise<SuggestionsResponse> => {
   const params = new URLSearchParams({
@@ -40,13 +41,16 @@ export const suggestedSearch = async ({
     limit: limit.toString(),
   });
 
-  if (proximity !== null) {
-    params.append("proximity", proximity);
+  // Include proximity parameter only when it's available
+  if (proximity) {
+    params.append("proximity", proximity);  // This is Mapbox's proximity-based sorting feature
   }
 
+  // Send the request
   const response = await fetch(`${SEARCH_URL}?${params}`);
   const data = await response.json();
-  return data;
+
+  return data; // Let the API handle proximity sorting directly
 };
 
 export const retrieveSearchResults = async (
@@ -91,3 +95,4 @@ export const permanentGeocodingSearch = async (
   const data = await response.json();
   return data;
 };
+

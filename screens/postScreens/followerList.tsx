@@ -20,9 +20,10 @@ import { UserService } from "../../services/user.service";
 
 const { width, height } = Dimensions.get("window");
 
-const FollowerListScreen = () => {
+const FollowerListScreen = ({ route }: any) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { user } = useAuth();
+  const { userId: profileUserId } = route.params || {};
   const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
   const [loading, setLoading] = useState(true);
   const [followers, setFollowers] = useState<any[]>([]);
@@ -32,12 +33,15 @@ const FollowerListScreen = () => {
   const userService = new UserService();
   const followingService = new FollowingService();
 
+  // Use either the profileUserId (from params) or the logged-in user's ID
+  const currentUserId = profileUserId || user!.uid;
+
   useEffect(() => {
     const fetchCounts = async () => {
       try {
         const [followersCount, followingCount] = await Promise.all([
-          followingService.getFollowersCount(user!.uid),
-          followingService.getFollowingCount(user!.uid),
+          followingService.getFollowersCount(currentUserId),
+          followingService.getFollowingCount(currentUserId),
         ]);
         setFollowerCount(followersCount);
         setFollowingCount(followingCount);
@@ -47,14 +51,14 @@ const FollowerListScreen = () => {
     };
 
     fetchCounts();
-  }, []);
+  }, [currentUserId]);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
         if (activeTab === "following" && following.length === 0) {
-          const followingList = await followingService.getFollowing(user!.uid);
+          const followingList = await followingService.getFollowing(currentUserId);
           const detailedFollowing = await Promise.all(
             followingList.map(async (userId: string) => {
               const userProfile = await userService.getUserByUid(userId);
@@ -63,7 +67,7 @@ const FollowerListScreen = () => {
           );
           setFollowing(detailedFollowing);
         } else if (activeTab === "followers" && followers.length === 0) {
-          const followersList = await followingService.getFollowersList(user!.uid);
+          const followersList = await followingService.getFollowersList(currentUserId);
           const detailedFollowers = await Promise.all(
             followersList.map(async (userId: string) => {
               const userProfile = await userService.getUserByUid(userId);
@@ -80,7 +84,7 @@ const FollowerListScreen = () => {
     };
 
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, currentUserId]);
 
   const renderUserItem = (userProfile: any) => (
     <View style={styles.profileItem} key={userProfile.id}>
@@ -101,9 +105,7 @@ const FollowerListScreen = () => {
     </View>
   );
 
-  const renderUserList = (users: any[]) => {
-    return users.map((user) => renderUserItem(user));
-  };
+  const renderUserList = (users: any[]) => users.map((user) => renderUserItem(user));
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -146,6 +148,7 @@ const FollowerListScreen = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -159,7 +162,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingTop: height * 0.1,
-    paddingHorizontal: width * 0.03,
     marginBottom: width * 0.1,
   },
   tabs: {

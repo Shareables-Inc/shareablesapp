@@ -43,7 +43,7 @@ export class PostService {
   private userCollection = collection(db, "users");
 
   async getPostsPaginated(
-    pageSize = 20,
+    pageSize = 15,
     lastVisible?: QueryDocumentSnapshot<DocumentData>
   ): Promise<{
     posts: Post[];
@@ -209,7 +209,7 @@ export class PostService {
       this.postsCollection,
       where("userId", "==", userId),
       orderBy("createdAt", "desc"),
-      limit(20)
+      limit(30)
     );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(this.documentToPost);

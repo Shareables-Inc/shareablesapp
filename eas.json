@@ -45,7 +45,8 @@
     "submit": {
       "production": {
         "ios": {
-          "ascAppId": "6523414499"
+          "ascAppId": "6523414499",
+          "bundleIdentifier": "com.shareablesinc.shareables"
 
         }
   }

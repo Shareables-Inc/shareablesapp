@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Platform,
   Keyboard, // Add this import
+  Dimensions
 } from "react-native";
 import { Colors } from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
@@ -18,6 +19,8 @@ import { Search, X } from "lucide-react-native";
 import { debounce } from "lodash";
 import { Suggestion, SuggestionsResponse } from "../../types/mapbox.types";
 import { useLocationStore } from "../../store/useLocationStore";
+
+const { width, height } = Dimensions.get("window");
 
 interface FeedSearchBoxProps {
   country: string;
@@ -166,10 +169,8 @@ const PlaceSuggestionList = ({ suggestions, onPlaceSelect }) => {
     [onPlaceSelect]
   );
 
-
   const renderItem = useCallback(
     ({ item, index }: { item: Suggestion; index: number }) => (
-
       <TouchableOpacity
         style={[
           styles.suggestionItem,
@@ -177,31 +178,36 @@ const PlaceSuggestionList = ({ suggestions, onPlaceSelect }) => {
         ]}
         onPress={() => handleSuggestionPress(item)}
       >
+        {/* Ensure that suggestion text is properly rendered within a <Text> component */}
         <Text style={styles.suggestionText}>
           {item.name || item.place_formatted || "Unknown location"}
         </Text>
+        {/* Check if the item has an address and display it properly */}
         {item.address && (
-        <Text style={styles.suggestionSubtext}>
-          {item.address}
-          {item.context?.place?.name ? `, ${item.context?.place?.name}` : ""}
-          {item.context?.country?.name ? `, ${item.context?.country?.name}` : ""}
-        </Text>
-      )}
+          <Text style={styles.suggestionSubtext}>
+            {item.address}
+            {item.context?.place?.name ? `, ${item.context?.place?.name}` : ""}
+            {item.context?.country?.name ? `, ${item.context?.country?.name}` : ""}
+          </Text>
+        )}
       </TouchableOpacity>
     ),
     [handleSuggestionPress, suggestions.length]
   );
 
   return (
-    <FlatList
-      data={suggestions}
-      renderItem={renderItem}
-      keyExtractor={(item) =>
-        item.mapbox_id || item.name || Math.random().toString()
-      }
-    />
+    <View style={{ height: width * 0.6 }}> 
+      <FlatList
+        data={suggestions}
+        renderItem={renderItem}
+        keyExtractor={(item) => String(item.mapbox_id || item.name || Math.random())}
+        showsVerticalScrollIndicator={false} 
+      />
+    </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   container: {

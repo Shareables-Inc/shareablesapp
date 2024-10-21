@@ -34,7 +34,7 @@ export default {
     ],
     ios: {
       supportsTablet: false,
-      bundleIdentifier: process.env.EXPO_BUNDLE_IDENTIFIER,
+      bundleIdentifier: "com.shareablesinc.shareables",
       buildNumber: "1.0.2",
       infoPlist: {
         LSApplicationQueriesSchemes: [

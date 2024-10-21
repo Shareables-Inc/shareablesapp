@@ -125,7 +125,7 @@ export class FollowingService {
         this.postsCollection,
         where("userId", "in", followingIds),
         orderBy("createdAt", "desc"),
-        limit(20) // Set the limit to control how many posts are loaded per page
+        limit(30) // Set the limit to control how many posts are loaded per page
       );
 
       if (lastVisiblePost) {

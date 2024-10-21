@@ -141,7 +141,7 @@ export class EstablishmentService {
             where("updatedAt", ">=", thirtyDaysAgo),
             where("tags", "array-contains", selectedTag),
             orderBy("updatedAt", "desc"),
-            limit(20)
+            limit(30)
           );
         } else {
           establishmentsQuery = query(
@@ -149,7 +149,7 @@ export class EstablishmentService {
             where("city", "==", city),
             where("updatedAt", ">=", thirtyDaysAgo),
             orderBy("updatedAt", "desc"),
-            limit(20)
+            limit(30)
           );
         }
   
@@ -168,7 +168,7 @@ export class EstablishmentService {
           this.postsCollection,
           where("establishmentDetails.id", "in", establishmentIds),
           orderBy("createdAt", "desc"),
-          limit(20)
+          limit(30)
         );
   
         const postsSnapshot = await getDocs(postsQuery);
@@ -248,7 +248,7 @@ export class EstablishmentService {
       collection(db, "posts"),
       where("establishmentDetails.id", "==", establishmentId),
       orderBy("createdAt", "desc"),
-      limit(20)
+      limit(30)
     );
     const postsSnapshot = await getDocs(postsQuery);
 
