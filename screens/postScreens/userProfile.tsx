@@ -11,6 +11,8 @@ import {
   NativeSyntheticEvent,
   ActivityIndicator,
   RefreshControl,
+  Modal,
+  Alert,
 } from "react-native";
 import {
   useNavigation,
@@ -22,7 +24,7 @@ import { RootStackParamList } from "../../types/navigation.types";
 import Colors from "../../utils/colors";
 import { StatusBar } from "expo-status-bar";
 import { Fonts } from "../../utils/fonts";
-import { CircleArrowLeft, CircleCheck, NotepadText } from "lucide-react-native";
+import { CircleArrowLeft, CircleCheck, NotepadText, Ellipsis, UserX, CircleAlert, Send } from "lucide-react-native";
 import {
   useFollowingActions,
   useUserCounts,
@@ -36,31 +38,32 @@ import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
 
 const { width, height } = Dimensions.get("window");
-
 const HEADER_HEIGHT = 100;
 
 const UserProfileScreen = () => {
-  const { user } = useAuth(); // Get the authenticated user's information
+  const { user } = useAuth();
   const route = useRoute<RouteProp<RootStackParamList, "UserProfile">>();
   const { userId: postUserId } = route.params;
-
   const posts = usePostsByUser(postUserId);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  // Fetch user data with real-time updates
   const { data: userData, isLoading: userDataLoading } = useUserGetByUid(postUserId);
-  const {
-    data: userCounts,
-    isLoading: countsLoading,
-    refetch: refetchUserCounts,
-  } = useUserCounts(postUserId);
-
-  // Correct the IDs being passed to useFollowingActions
+  const { data: userCounts, isLoading: countsLoading, refetch: refetchUserCounts } = useUserCounts(postUserId);
   const { isFollowing, isToggling, toggleFollow } = useFollowingActions(postUserId, user!.uid);
 
   const [isHeaderVisible, setHeaderVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
+  const [isReportModalVisible, setReportModalVisible] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
+
+  const reportOptions = [
+    "Inappropriate content",
+    "They are pretending to be someone else",
+    "They may be under the age of 19",
+    "Something else",
+  ];
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -76,7 +79,6 @@ const UserProfileScreen = () => {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      // Refetch user data, counts, and posts
       await Promise.all([refetchUserCounts(), posts.refetch()]);
     } catch (error) {
       console.error("Error refreshing profile:", error);
@@ -85,7 +87,6 @@ const UserProfileScreen = () => {
     }
   };
 
-  // Force refresh userCounts after toggle follow/unfollow
   const handleToggleFollow = async () => {
     try {
       await toggleFollow();
@@ -121,14 +122,57 @@ const UserProfileScreen = () => {
     });
   };
 
-  // Custom Masonry Grid layout
-  const columnCount = 2;
-  const columnWidth = (width * 0.89) / columnCount;
-  const columnItems = Array.from({ length: columnCount }, () => []);
+  const handleBlockUser = () => {
+    setBottomSheetVisible(false);
+    Alert.alert(
+      "Block User",
+      "Are you sure you want to block this user?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Block", onPress: () => console.log("User blocked") },
+      ]
+    );
+  };
 
-  recentPosts.forEach((post, index) => {
-    columnItems[index % columnCount].push(post);
-  });
+  const handleReportUser = () => {
+    setBottomSheetVisible(false);
+    setReportModalVisible(true);
+  };
+
+  const sendReport = () => {
+    if (selectedReason) {
+      console.log("Report submitted:", selectedReason);
+      setReportModalVisible(false);
+      setSelectedReason(null); // Reset selection
+    } else {
+      Alert.alert("Please select a reason for reporting.");
+    }
+  };
+
+  const renderReportOptions = () => {
+    return reportOptions.map((option, index) => (
+      <TouchableOpacity
+        key={index}
+        style={styles.reportOption}
+        onPress={() => setSelectedReason(option)}
+        activeOpacity={1}
+      >
+        <View style={[styles.radioCircle, selectedReason === option && styles.selectedRadio]}>
+          {selectedReason === option && <View style={styles.radioInnerCircle} />}
+        </View>
+        <Text style={styles.reportOptionText}>{option}</Text>
+      </TouchableOpacity>
+    ));
+  };
+
+    // Custom Masonry Grid layout
+    const columnCount = 2;
+    const columnWidth = (width * 0.89) / columnCount;
+    const columnItems = Array.from({ length: columnCount }, () => []);
+  
+    recentPosts.forEach((post, index) => {
+      columnItems[index % columnCount].push(post);
+    });
 
   const renderColumn = (items, columnIndex) => {
     return (
@@ -173,7 +217,7 @@ const UserProfileScreen = () => {
     );
   };
 
-  // Loading states
+
   if (userDataLoading || countsLoading) {
     return <SkeletonUserProfile />;
   }
@@ -200,34 +244,31 @@ const UserProfileScreen = () => {
         <StatusBar style="auto" />
 
         <View style={styles.topBar}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
             <CircleArrowLeft color={Colors.text} size={28} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => setBottomSheetVisible(true)} activeOpacity={1}>
+            <Ellipsis color={Colors.text} size={28} style={{ marginLeft: width * 0.75 }} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.profileSection}>
           <View style={styles.detailsSection}>
             <Text style={styles.name}>
-              {userData
-                ? userData.lastName
-                  ? `${userData.firstName} ${userData.lastName}`
-                  : userData.firstName
-                : ""}
+              {userData ? (userData.lastName ? `${userData.firstName} ${userData.lastName}` : userData.firstName) : ""}
             </Text>
             <Text style={styles.username}>{`@${userData!.username}`}</Text>
             <View style={styles.ovalsContainer}>
-            <View style={styles.followerOval}>
-              <TouchableOpacity
-                activeOpacity={1}
-                onPress={() =>
-                  navigation.navigate("FollowerList", { userId: postUserId })
-                }
-              >
-                <Text style={styles.ovalText}>
-                  {userCounts?.followerCount} Followers
-                </Text>
-              </TouchableOpacity>
-            </View>
+              <View style={styles.followerOval}>
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={() => navigation.navigate("FollowerList", { userId: postUserId })}
+                >
+                  <Text style={styles.ovalText}>
+                    {userCounts?.followerCount} Followers
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <View style={styles.followerOval}>
                 <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
               </View>
@@ -311,7 +352,6 @@ const UserProfileScreen = () => {
                   </View>
                 ))}
               </ScrollView>
-
               <View style={styles.separator} />
             </View>
 
@@ -336,10 +376,69 @@ const UserProfileScreen = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Bottom Sheet for Block/Report options */}
+      <Modal
+        transparent
+        visible={isBottomSheetVisible}
+        animationType="slide"
+        onRequestClose={() => setBottomSheetVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setBottomSheetVisible(false)}
+        >
+          <View style={styles.bottomSheet}>
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={handleBlockUser}
+            >
+              <UserX color={Colors.text} size={20} />
+              <Text style={styles.optionText}>Block User</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.optionButton}
+              onPress={handleReportUser}
+            >
+              <CircleAlert color={Colors.text} size={20} />
+              <Text style={styles.optionText}>Report User</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Report Reasons Modal */}
+      <Modal
+        transparent
+        visible={isReportModalVisible}
+        animationType="slide"
+        onRequestClose={() => setReportModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setReportModalVisible(false)}
+        >
+          <View style={styles.reportModal}>
+            <Text style={styles.reportTitle}>Report</Text>
+            <Text style={styles.reportDescription}>
+              What do you want to report? (Select 1 below)
+            </Text>
+            <Text style={styles.reportInstruction}>
+              Your report will remain anonymous. If there’s an immediate threat, please contact your local emergency services right away.
+            </Text>
+            {renderReportOptions()}
+            <TouchableOpacity style={styles.sendReportButton} onPress={sendReport} activeOpacity={1}>
+              <Send color={Colors.text} size={20} />
+              <Text style={styles.sendReportButtonText}>Send Report</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -353,6 +452,114 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     flex: 1,
+  },
+  bottomSheetContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", 
+  },
+  bottomSheet: {
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    alignItems: "center",
+    paddingBottom: width * 0.1,
+    paddingTop: width * 0.05
+  },
+  optionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+    width: "65%",
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 30,
+    marginVertical: 10,
+  },
+  optionText: {
+    color: Colors.text,
+    fontSize: width * 0.045,
+    fontFamily: Fonts.SemiBold,
+    marginLeft: width * 0.02,
+  },
+  reportModal: {
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    paddingBottom: width * 0.15,
+    paddingTop: width * 0.1,
+    alignItems: "flex-start",
+    paddingHorizontal: "10%"
+  },
+  reportTitle: {
+    fontSize: width * 0.06,
+    fontFamily: Fonts.Bold,
+    color: Colors.text,
+    marginBottom: 15,
+  },
+  reportDescription: {
+    fontSize: width * 0.04,
+    fontFamily: Fonts.Bold,
+    color: Colors.text,
+    textAlign: "left",
+  },
+  reportInstruction: {
+    fontSize: width * 0.035,
+    fontFamily: Fonts.Regular,
+    color: Colors.text,
+    textAlign: "left",
+    marginVertical: 10,
+  },
+  reportOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  reportOptionText: {
+    fontSize: width * 0.04,
+    fontFamily: Fonts.Regular,
+    color: Colors.text,
+    marginLeft: 10,
+  },
+  radioCircle: {
+    height: 24,
+    width: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: Colors.text,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  selectedRadio: {
+    borderColor: Colors.tags,
+  },
+  radioInnerCircle: {
+    height: 14,
+    width: 14,
+    borderRadius: 90,
+    backgroundColor: Colors.tags,
+  },
+  sendReportButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 30,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginTop: 20,
+  },
+  sendReportButtonText: {
+    fontSize: width * 0.045,
+    fontFamily: Fonts.SemiBold,
+    color: Colors.text,
+    marginLeft: 5,
   },
   profileSection: {
     flexDirection: "row",
@@ -590,6 +797,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  });
+});
 
 export default UserProfileScreen;

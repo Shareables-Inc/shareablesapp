@@ -10,18 +10,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-  ChevronDown,
   MapPin,
-  UserCircle,
-  UtensilsCrossed,
+  Search
 } from "lucide-react-native";
 import Colors from "../../utils/colors";
 
 import ProfilesView from "../../components/explore/ProfilesView";
 import RestaurantsView from "../../components/explore/RestaurantsView";
-import { tagsData } from "../../config/constants";
 import { Fonts } from "../../utils/fonts";
-import TagButton from "../../components/explore/tagButton";
 import { useAuth } from "../../context/auth.context";
 
 const { width, height } = Dimensions.get("window");
@@ -82,15 +78,16 @@ const SearchScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.tabContainer}>
+        <Text style={styles.exploreText}>Explore</Text>
         <TouchableOpacity
           style={[
-            styles.tabButton,
+            styles.tabButtonSearch,
             activeTab === "Profiles" && styles.activeTab,
           ]}
           onPress={() => handleTabPress("Profiles")}
           activeOpacity={1}
         >
-          <UserCircle
+          <Search
             size={20}
             color={
               activeTab === "Profiles" ? Colors.background : Colors.placeholderText
@@ -102,7 +99,6 @@ const SearchScreen = () => {
               activeTab === "Profiles" && styles.activeTabText,
             ]}
           >
-            Profiles
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -110,11 +106,11 @@ const SearchScreen = () => {
           style={[styles.tabButton]}
           onPress={() => setShowLocationDropdown(!showLocationDropdown)}
         >
-          <MapPin color={Colors.placeholderText} size={20} />
+          <MapPin color={Colors.background} size={20} style={{marginRight: width * 0.01}} />
           <Text style={[styles.tabButtonText]}>{selectedLocation}</Text>
-          <ChevronDown color={Colors.placeholderText} size={20} />
         </TouchableOpacity>
       </View>
+      <Text style={styles.description}>Try new local favorites</Text>
 
       {showLocationDropdown && (
         <ScrollView
@@ -152,30 +148,44 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Colors.background,
+    marginTop: width * 0.01
   },
   container: {
     flex: 1,
+    marginTop: width * 0.01
+  },
+  exploreText: {
+    fontSize: width * 0.09,
+    fontFamily: Fonts.SemiBold,
+  },
+  description: {
+    fontSize: width * 0.04,
+    fontFamily: Fonts.Regular,
+    paddingLeft: width * 0.05,
+    marginTop: -(width * 0.01)
   },
   tabContainer: {
     flexDirection: "row",
-    paddingHorizontal: width * 0.03,
+    paddingHorizontal: width * 0.05,
     paddingTop: width * 0.03,
     paddingBottom: width * 0.02,
+    justifyContent: "space-between",
+    alignItems: "center"
   },
   dropdown: {
     position: "absolute",
-    top: height * 0.13,
+    top: height * 0.15,
     backgroundColor: Colors.background,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: Colors.inputBackground,
     zIndex: 1000,
     maxHeight: height * 0.2,
-    minWidth: width * 0.33,  
+    minWidth: width * 0.25,  
   },
   dropdownItem: {
     padding: width * 0.03,
-    minWidth: width * 0.33, 
+    minWidth: width * 0.25, 
     justifyContent: 'center', 
     borderBottomWidth: 1,
     borderBottomColor: Colors.inputBackground,
@@ -183,18 +193,26 @@ const styles = StyleSheet.create({
   tabButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
-    padding: width * 0.03,
+    backgroundColor: Colors.tags,
+    padding: width * 0.027,
     borderRadius: 10,
-    marginRight: width * 0.03,
+    marginBottom: -(width * 0.09)
+  },
+  tabButtonSearch: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f0f0",
+    padding: width * 0.027,
+    borderRadius: 90,
+    marginRight: -(width * 0.22),
+    marginBottom: -(width * 0.09)
   },
   activeTab: {
     backgroundColor: Colors.tags,
   },
   tabButtonText: {
     fontFamily: Fonts.Regular,
-    color: Colors.placeholderText,
-    paddingHorizontal: width * 0.02,
+    color: Colors.background,
     fontSize: width * 0.04,
   },
   activeTabText: {

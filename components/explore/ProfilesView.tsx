@@ -241,7 +241,8 @@ const ProfilesView = ({ location }: { location?: string }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    paddingHorizontal: width * 0.03,
+    marginTop: width * 0.07
   },
   searchContainer: {
     flexDirection: "row",

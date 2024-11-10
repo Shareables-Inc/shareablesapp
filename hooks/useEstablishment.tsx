@@ -89,12 +89,11 @@ export const useEstablishmentProfileData = (establishmentId: string) => {
 
 export const useGetFeaturedEstablishments = (
   location: string,
-  selectedTag: string
 ) => {
   return useQuery({
-    queryKey: ["featuredEstablishments", location, selectedTag],
+    queryKey: ["featuredEstablishments", location],
     queryFn: async () => {
-      const featuredEstablishments = await establishmentService.getFeaturedEstablishments(location, selectedTag);
+      const featuredEstablishments = await establishmentService.getFeaturedEstablishments(location);
       // Filter out establishments with postCount of 0
       return featuredEstablishments.filter(
         (establishment) => establishment.postCount > 0

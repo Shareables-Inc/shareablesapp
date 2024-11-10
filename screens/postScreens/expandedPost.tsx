@@ -13,6 +13,7 @@ import {
   StyleSheet,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  Alert
 } from "react-native";
 import Modal from "react-native-modal";
 import { StatusBar } from "expo-status-bar";
@@ -42,6 +43,9 @@ import {
   Utensils,
   X,
   HandPlatter,
+  Ellipsis,
+  SquarePen,
+  Trash2
 } from "lucide-react-native";
 
 import { useAuth } from "../../context/auth.context";
@@ -54,6 +58,7 @@ import {
   useToggleLike,
 } from "../../hooks/useLikes";
 import ExpandedPostSkeleton from "../../components/skeleton/expandedPostSkeleton";
+import {PostService} from "../../services/post.service"
 
 const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = height * 0.13;
@@ -185,6 +190,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   const [fullscreenImageVisible, setFullscreenImageVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fullScreenOpacity = useRef(new Animated.Value(0)).current;
+  const [isModalVisible, setModalVisible] = useState(false);
 
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const pan = useRef(new Animated.ValueXY()).current;
@@ -310,6 +316,48 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
     }
   };
 
+  const handleEditPost = () => {
+    setModalVisible(false);
+    navigation.navigate("Review", {
+      isEditing: true, // New: Flag to indicate edit mode
+      post: expandedPost, // New: Pass the existing post data
+      postId: expandedPost?.id,
+      establishmentId: expandedPost?.establishmentDetails.id,
+      restaurantName: expandedPost?.establishmentDetails.name,
+      city: expandedPost?.establishmentDetails.city,
+      country: expandedPost?.establishmentDetails.country,
+      review: expandedPost?.review,
+      ratings: expandedPost?.ratings
+    });
+  };
+  
+
+  const postService = new PostService();
+
+  const handleDeletePost = () => {
+    Alert.alert(
+      "Delete Post",
+      "Are you sure you want to delete this post?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              await postService.deletePost(postId);
+              console.log("Post deleted successfully");
+              // Navigate back or refresh the UI as needed
+              navigation.goBack();
+            } catch (error) {
+              console.error("Error deleting post:", error);
+              Alert.alert("Error", "Failed to delete post.");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <>
       {isHeaderVisible && (
@@ -386,6 +434,17 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
               >
                 <ArrowLeft color={Colors.text} size={25} />
               </TouchableOpacity>
+
+              {/* Conditionally render ellipsis icon for the post owner only */}
+              {expandedPost?.userId === user?.uid && (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  style={styles.iconWrapperEllipsis}
+                  onPress={() => setModalVisible(true)}
+                >
+                  <Ellipsis color={Colors.text} size={25} />
+                </TouchableOpacity>
+              )}
             </View>
             <ScrollView
               horizontal
@@ -607,6 +666,34 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
             onSubmitEditing={handleAddComment}
           />
         </View>
+        
+        {/* Edit/Delete Modal */}
+        {expandedPost?.userId === user?.uid && (
+          <Modal
+            isVisible={isModalVisible}
+            onBackdropPress={() => setModalVisible(false)}
+            onBackButtonPress={() => setModalVisible(false)}
+            backdropOpacity={0.5}
+            style={styles.modalOverlay}
+          >
+            <View style={styles.bottomSheet}>
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={handleEditPost}
+              >
+                <SquarePen color={Colors.text} size={20} />
+                <Text style={styles.optionText}>Edit Post</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.optionButton}
+                onPress={handleDeletePost}
+              >
+                <Trash2 color={Colors.text} size={20} />
+                <Text style={styles.optionText}>Delete Post</Text>
+              </TouchableOpacity>
+            </View>
+          </Modal>
+        )}
       </KeyboardAvoidingView>
     </>
   );
@@ -629,6 +716,7 @@ const styles = StyleSheet.create({
     left: width * 0.08,
     top: height * 0.08,
     zIndex: 10,
+    flexDirection: "row"
   },
   iconWrapper: {
     width: width * 0.08,
@@ -637,6 +725,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: Colors.background,
     borderRadius: 90,
+  },
+  iconWrapperEllipsis: {
+    width: width * 0.08,
+    height: width * 0.08,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: Colors.background,
+    borderRadius: 90,
+    marginLeft: width * 0.68
   },
   imagesAndDotsContainer: {
     position: "relative",
@@ -984,6 +1081,34 @@ const styles = StyleSheet.create({
   },
   inactiveButton: {
     tintColor: Colors.text,
+  },
+  modalOverlay: {
+    justifyContent: "flex-end",
+    margin: 0,
+  },
+  bottomSheet: {
+    backgroundColor: Colors.background,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    alignItems: "center",
+    paddingBottom: width * 0.1,
+    paddingTop: width * 0.05,
+  },
+  optionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 15,
+    width: "65%",
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 30,
+    marginVertical: 10,
+  },
+  optionText: {
+    color: Colors.text,
+    fontSize: width * 0.045,
+    fontFamily: Fonts.SemiBold,
+    marginLeft: width * 0.02,
   },
 });
 
