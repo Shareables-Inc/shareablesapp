@@ -29,9 +29,15 @@ export type RootStackParamList = {
     };
   };
   Review: {
+    establishmentId: string;
     restaurantName: string;
+    city: string;
+    country: string;
     tags: string[];
     postId: string;
+  };
+  RestaurantSelect: {
+    postId: string; // Added postId to match the updated post flow
   };
   Notifications: undefined;
   Mailbox: undefined;
@@ -58,4 +64,5 @@ export type RootStackParamList = {
     hours: string[];
     averageRating: number;
   };
+  FollowerList: undefined;
 };

@@ -12,6 +12,7 @@ import InviteContactsScreen from "../screens/loginScreens/inviteContacts";
 import TopCuisinesScreen from "../screens/loginScreens/topCuisines";
 import NotificationsScreen from "../screens/notificationScreens/notifications";
 import LocationSelectionScreen from "../screens/postScreens/locationSelection";
+import RestaurantSelectScreen from "../screens/postScreens/restaurantSelect";
 import ReviewScreen from "../screens/postScreens/postReview";
 import TagsSelectionScreen from "../screens/postScreens/tagsSelection";
 import UserProfileScreen from "../screens/postScreens/userProfile";
@@ -209,6 +210,8 @@ export const MainApp = () => {
               component={MainTabNavigatorWithNotifications}
             />
             <Stack.Screen name="Review" component={ReviewScreen} />
+            <Stack.Screen name="RestaurantSelect" component={RestaurantSelectScreen} />
+
             <Stack.Screen
               name="Notifications"
               component={NotificationsScreen}

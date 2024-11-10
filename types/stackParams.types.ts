@@ -29,6 +29,9 @@ export type RootStackParamList = {
     tags: string[];
     postId: string;
   };
+  RestaurantSelect: {
+    postId: string; // Added postId to match the updated post flow
+  };
   Notifications: undefined;
   Mailbox: undefined;
   MainSettings: undefined;
@@ -49,4 +52,5 @@ export type RootStackParamList = {
   HomePage: {
     postId: string;
   };
+  FollowerList: undefined;
 };
