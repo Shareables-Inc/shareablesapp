@@ -23,6 +23,13 @@ export interface FirebasePost {
   imageComponent: string;
   createdAt: FieldValue; // Timestamp when the post was created
   updatedAt: FieldValue;
+  accessibility?: Accessibility; // Optional accessibility field
+}
+
+export interface Accessibility {
+  vegetarian: boolean;
+  vegan: boolean;
+  glutenFree: boolean;
 }
 
 export interface EstablishmentDetails {

@@ -11,6 +11,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
+  Touchable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -19,7 +20,7 @@ import { Fonts } from "../../utils/fonts";
 import { TextInput } from "react-native-gesture-handler";
 import { useAuth } from "../../context/auth.context";
 import { useUpdatePost } from "../../hooks/usePost";
-import { Sparkle, Utensils, HandPlatter, Info } from "lucide-react-native";
+import { Sparkle, Utensils, HandPlatter, Info, CircleArrowLeft} from "lucide-react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,21 +33,32 @@ const ReviewScreen = ({ route }) => {
     tags,
     postId: initialPostId,
     establishmentId,
+    isEditing = false, // Flag for edit mode
+    review: initialReview = "", // Default value for review
+    ratings = {}, // Default empty object for ratings
   } = route.params;
   const navigation = useNavigation();
   const { mutate: updatePost } = useUpdatePost();
 
-  const [review, setReview] = useState<string>("");
-  const [ratingAmbiance, setRatingAmbiance] = useState<number>(0);
-  const [ratingFoodQuality, setRatingFoodQuality] = useState<number>(0);
-  const [ratingService, setRatingService] = useState<number>(0);
-  const [overallRating, setOverallRating] = useState<number>(0);
+  const [review, setReview] = useState<string>(initialReview);
+  const [ratingAmbiance, setRatingAmbiance] = useState<number>(
+    ratings.ambiance || 0
+  );
+  const [ratingFoodQuality, setRatingFoodQuality] = useState<number>(
+    ratings.foodQuality || 0
+  );
+  const [ratingService, setRatingService] = useState<number>(
+    ratings.service || 0
+  );
+  const [overallRating, setOverallRating] = useState<number>(
+    ratings.overall || 0
+  );
   const [infoModalVisible, setInfoModalVisible] = useState(false);
 
   // Accessibility ratings state
   const [isVegetarian, setIsVegetarian] = useState(false);
   const [isVegan, setIsVegan] = useState(false);
-  const [isFamilyFriendly, setIsFamilyFriendly] = useState(false);
+  const [isGlutenFree, setIsGlutenFree] = useState(false);
 
   const toggleInfoModal = () => setInfoModalVisible(!infoModalVisible);
 
@@ -74,7 +86,7 @@ const ReviewScreen = ({ route }) => {
   const handleAccessibilityToggle = (type) => {
     if (type === "vegetarian") setIsVegetarian(!isVegetarian);
     if (type === "vegan") setIsVegan(!isVegan);
-    if (type === "familyFriendly") setIsFamilyFriendly(!isFamilyFriendly);
+    if (type === "glutenFree") setIsGlutenFree(!isGlutenFree);
   };
 
   const handlePost = async () => {
@@ -84,11 +96,18 @@ const ReviewScreen = ({ route }) => {
     }
 
     if (ratingAmbiance === 0 || ratingFoodQuality === 0 || ratingService === 0) {
-      Alert.alert("Incomplete Ratings", "Please provide ratings for ambiance, food quality, and service.");
+      Alert.alert(
+        "Incomplete Ratings",
+        "Please provide ratings for ambiance, food quality, and service."
+      );
       return;
     }
 
-    const overallRating = calculateOverallRating(ratingAmbiance, ratingFoodQuality, ratingService);
+    const overallRating = calculateOverallRating(
+      ratingAmbiance,
+      ratingFoodQuality,
+      ratingService
+    );
 
     try {
       updatePost({
@@ -105,8 +124,8 @@ const ReviewScreen = ({ route }) => {
           accessibility: {
             vegetarian: isVegetarian,
             vegan: isVegan,
-            familyFriendly: isFamilyFriendly,
-          }
+            glutenFree: isGlutenFree,
+          },
         },
         establishmentId,
       });
@@ -126,8 +145,13 @@ const ReviewScreen = ({ route }) => {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
           <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
+              <CircleArrowLeft color={Colors.text} size={28} />
+            </TouchableOpacity>
             <TouchableOpacity onPress={handlePost} style={styles.postButton}>
-              <Text style={styles.postButtonText}>Post</Text>
+              <Text style={styles.postButtonText}>
+                {isEditing ? "Update" : "Post"}
+              </Text>
             </TouchableOpacity>
           </View>
 
@@ -137,7 +161,9 @@ const ReviewScreen = ({ route }) => {
               style={styles.reviewInputContainer}
               keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
             >
-              <Text style={styles.restaurantInfo}>{restaurantName} | {city}, {country}</Text>
+              <Text style={styles.restaurantInfo}>
+                {restaurantName} | {city}, {country}
+              </Text>
 
               <TextInput
                 placeholder="Write your review here..."
@@ -169,7 +195,9 @@ const ReviewScreen = ({ route }) => {
             >
               <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
-                  <Text style={styles.modalTitle}>What Do These Icons Mean?</Text>
+                  <Text style={styles.modalTitle}>
+                    What Do These Icons Mean?
+                  </Text>
                   <View style={styles.modalContent}>
                     <View style={styles.iconRow}>
                       <Sparkle color={Colors.charcoal} size={25} />
@@ -184,7 +212,10 @@ const ReviewScreen = ({ route }) => {
                       <Text style={styles.iconDescription}>Service Quality</Text>
                     </View>
                   </View>
-                  <TouchableOpacity onPress={toggleInfoModal} style={styles.closeButton}>
+                  <TouchableOpacity
+                    onPress={toggleInfoModal}
+                    style={styles.closeButton}
+                  >
                     <Text style={styles.closeButtonText}>Got It!</Text>
                   </TouchableOpacity>
                 </View>
@@ -197,26 +228,48 @@ const ReviewScreen = ({ route }) => {
                   activeOpacity={0.7}
                   style={[
                     styles.ratingCircle,
-                    ratingAmbiance >= 8 ? styles.highlightedRatingCircle : styles.defaultRatingCircle,
+                    ratingAmbiance >= 8
+                      ? styles.highlightedRatingCircle
+                      : styles.defaultRatingCircle,
                   ]}
-                  onPress={() => handleRatingChange("ambiance", ratingAmbiance === 10 ? 0 : ratingAmbiance + 1)}
+                  onPress={() =>
+                    handleRatingChange(
+                      "ambiance",
+                      ratingAmbiance === 10 ? 0 : ratingAmbiance + 1
+                    )
+                  }
                 >
                   <Text style={styles.ratingScore}>{ratingAmbiance}</Text>
                 </TouchableOpacity>
-                <Sparkle color={Colors.charcoal} size={20} style={styles.ratingIcon}/>
+                <Sparkle
+                  color={Colors.charcoal}
+                  size={20}
+                  style={styles.ratingIcon}
+                />
               </View>
               <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.8}
                   style={[
                     styles.ratingCircle,
-                    ratingFoodQuality >= 8 ? styles.highlightedRatingCircle : styles.defaultRatingCircle,
+                    ratingFoodQuality >= 8
+                      ? styles.highlightedRatingCircle
+                      : styles.defaultRatingCircle,
                   ]}
-                  onPress={() => handleRatingChange("foodQuality", ratingFoodQuality === 10 ? 0 : ratingFoodQuality + 1)}
+                  onPress={() =>
+                    handleRatingChange(
+                      "foodQuality",
+                      ratingFoodQuality === 10 ? 0 : ratingFoodQuality + 1
+                    )
+                  }
                 >
                   <Text style={styles.ratingScore}>{ratingFoodQuality}</Text>
                 </TouchableOpacity>
-                <Utensils color={Colors.charcoal} size={20} style={styles.ratingIcon}/>
+                <Utensils
+                  color={Colors.charcoal}
+                  size={20}
+                  style={styles.ratingIcon}
+                />
               </View>
 
               <View style={styles.ratingSection}>
@@ -224,13 +277,24 @@ const ReviewScreen = ({ route }) => {
                   activeOpacity={0.8}
                   style={[
                     styles.ratingCircle,
-                    ratingService >= 8 ? styles.highlightedRatingCircle : styles.defaultRatingCircle,
+                    ratingService >= 8
+                      ? styles.highlightedRatingCircle
+                      : styles.defaultRatingCircle,
                   ]}
-                  onPress={() => handleRatingChange("service", ratingService === 10 ? 0 : ratingService + 1)}
+                  onPress={() =>
+                    handleRatingChange(
+                      "service",
+                      ratingService === 10 ? 0 : ratingService + 1
+                    )
+                  }
                 >
                   <Text style={styles.ratingScore}>{ratingService}</Text>
                 </TouchableOpacity>
-                <HandPlatter color={Colors.charcoal} size={20} style={styles.ratingIcon} />
+                <HandPlatter
+                  color={Colors.charcoal}
+                  size={20}
+                  style={styles.ratingIcon}
+                />
               </View>
 
               <View style={styles.ratingSection}>
@@ -238,7 +302,9 @@ const ReviewScreen = ({ route }) => {
                   activeOpacity={0.8}
                   style={[
                     styles.ratingSquare,
-                    overallRating >= 8 ? styles.highlightedRatingCircle : styles.defaultRatingCircle,
+                    overallRating >= 8
+                      ? styles.highlightedRatingCircle
+                      : styles.defaultRatingCircle,
                   ]}
                 >
                   <Text style={styles.ratingScore}>{overallRating}</Text>
@@ -272,11 +338,11 @@ const ReviewScreen = ({ route }) => {
                 <TouchableOpacity
                   style={[
                     styles.accessibilityRatingSquare,
-                    isFamilyFriendly && styles.selectedAccessibilitySquare,
+                    isGlutenFree && styles.selectedAccessibilitySquare,
                   ]}
-                  onPress={() => handleAccessibilityToggle("familyFriendly")}
+                  onPress={() => handleAccessibilityToggle("glutenFree")}
                 >
-                  <Text style={styles.ratingText}>Family-Friendly</Text>
+                  <Text style={styles.ratingText}>Gluten Free</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -293,24 +359,25 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    marginTop: height * 0.03,
+    marginTop: height * 0.02,
     alignItems: "center",
   },
   headerContainer: {
-    alignItems: "flex-end",
+    alignItems: "center",
     padding: width * 0.05,
+    flexDirection: "row",
+    justifyContent: "space-between"
   },
   restaurantInfo: {
     fontFamily: Fonts.SemiBold,
-    fontSize: width * 0.045,
+    fontSize: width * 0.05,
     color: Colors.text,
-    marginTop: height * 0.01,
   },
   reviewInputContainer: {
     width: width * 0.9,
     alignSelf: "center",
     justifyContent: "center",
-    height: height * 0.17,
+    height: height * 0.2,
     borderRadius: 10,
     marginBottom: height * 0.035,
   },
@@ -390,7 +457,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: Colors.background,
     paddingVertical: width * 0.02,
-    paddingHorizontal: width * 0.04,
   },
   postButtonText: {
     color: Colors.tags,

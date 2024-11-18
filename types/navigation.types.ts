@@ -1,4 +1,9 @@
-import { Post } from "../models/post";
+export type Ratings = {
+  ambiance?: number;
+  foodQuality?: number;
+  service?: number;
+  overall?: number;
+};
 
 export type RootStackParamList = {
   Login: undefined;
@@ -20,11 +25,11 @@ export type RootStackParamList = {
             establishmentName: string;
             city: string;
             country: string;
-            priceRange: number;
-            status: string;
-            website: string;
-            hours: string[];
-            averageRating: number;
+            priceRange?: number;
+            status?: string;
+            website?: string;
+            hours?: string[];
+            averageRating?: number;
           };
     };
   };
@@ -33,11 +38,14 @@ export type RootStackParamList = {
     restaurantName: string;
     city: string;
     country: string;
-    tags: string[];
+    tags?: string[];
     postId: string;
+    isEditing?: boolean;
+    review?: string;
+    ratings?: Ratings;
   };
   RestaurantSelect: {
-    postId: string; // Added postId to match the updated post flow
+    postId: string;
   };
   Notifications: undefined;
   Mailbox: undefined;
@@ -51,18 +59,18 @@ export type RootStackParamList = {
   PrivacySettings: undefined;
   LocationSelection: undefined;
   TagsSelection: undefined;
-  ExpandedPost: { postId: string };
+  ExpandedPost: { postId: string; isEditing?: boolean };
   UserProfile: { userId: string };
   RestaurantProfile: {
     establishmentId: string;
-    establishmentName: string;
-    city: string;
-    country: string;
-    priceRange: number;
-    status: string;
-    website: string;
-    hours: string[];
-    averageRating: number;
+    establishmentName?: string;
+    city?: string;
+    country?: string;
+    priceRange?: number;
+    status?: string;
+    website?: string;
+    hours?: string[];
+    averageRating?: number;
   };
   FollowerList: undefined;
 };

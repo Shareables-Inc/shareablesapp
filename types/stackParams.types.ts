@@ -1,4 +1,9 @@
-import { Post } from "../models/post";
+export type Ratings = {
+  ambiance?: number;
+  foodQuality?: number;
+  service?: number;
+  overall?: number;
+};
 
 export type RootStackParamList = {
   Login: undefined;
@@ -10,27 +15,37 @@ export type RootStackParamList = {
   InviteContacts: undefined;
   FollowFriends: { userContacts: string[] };
   MainTabNavigator: {
-    screen: "Post" | "Profile" | "RestaurantProfile" | "UserProfile";
-    params?:
-      | { userId: string }
-      | {
-          establishmentId: string;
-        };
-    establishmentId: string;
-    restaurantName: string;
-    tags: string[];
-    postId: string;
+    screen: "Home" | "Post" | "Profile" | "RestaurantProfile" | "UserProfile";
+    params?: {
+      screen: "RestaurantProfile" | "UserProfile";
+      params?:
+        | { userId: string }
+        | {
+            establishmentId: string;
+            establishmentName: string;
+            city: string;
+            country: string;
+            priceRange?: number;
+            status?: string;
+            website?: string;
+            hours?: string[];
+            averageRating?: number;
+          };
+    };
   };
   Review: {
     establishmentId: string;
     restaurantName: string;
     city: string;
     country: string;
-    tags: string[];
+    tags?: string[];
     postId: string;
+    isEditing?: boolean;
+    review?: string;
+    ratings?: Ratings;
   };
   RestaurantSelect: {
-    postId: string; // Added postId to match the updated post flow
+    postId: string;
   };
   Notifications: undefined;
   Mailbox: undefined;
@@ -44,13 +59,18 @@ export type RootStackParamList = {
   PrivacySettings: undefined;
   LocationSelection: undefined;
   TagsSelection: undefined;
-  ExpandedPost: { postId: string };
+  ExpandedPost: { postId: string; isEditing?: boolean };
   UserProfile: { userId: string };
   RestaurantProfile: {
     establishmentId: string;
-  };
-  HomePage: {
-    postId: string;
+    establishmentName?: string;
+    city?: string;
+    country?: string;
+    priceRange?: number;
+    status?: string;
+    website?: string;
+    hours?: string[];
+    averageRating?: number;
   };
   FollowerList: undefined;
 };

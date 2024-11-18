@@ -13,6 +13,7 @@ import {
   RefreshControl,
   Modal,
   Alert,
+  TouchableWithoutFeedback,
 } from "react-native";
 import {
   useNavigation,
@@ -36,6 +37,10 @@ import { Timestamp } from "firebase/firestore";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
+import { sendReportToJira } from '../../helpers/userReport';
+import { useIsUserBlocked, useBlockActions } from "../../hooks/useUserBlocks";
+
+
 
 const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = 100;
@@ -57,13 +62,24 @@ const UserProfileScreen = () => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [isReportModalVisible, setReportModalVisible] = useState(false);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const { data: isBlocked, isLoading: isBlockedLoading } = useIsUserBlocked(user!.uid, postUserId);
+  const { toggleBlock, isBlocking } = useBlockActions(user!.uid, postUserId);
+
+
 
   const reportOptions = [
     "Inappropriate content",
     "They are pretending to be someone else",
     "They may be under the age of 19",
-    "Something else",
+    "Spam or advertising",
+    "Hate speech or discrimination",
+    "Harassment or bullying",
+    "Sharing false information",
+    "Violence or threats",
+    "Privacy violation",
+    "Scam or fraud",
   ];
+  
 
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
@@ -122,35 +138,65 @@ const UserProfileScreen = () => {
     });
   };
 
-  const handleBlockUser = () => {
+  const handleBlockUser = async () => {
     setBottomSheetVisible(false);
     Alert.alert(
       "Block User",
-      "Are you sure you want to block this user?",
+      isBlocked
+        ? "Are you sure you want to unblock this user?"
+        : "Are you sure you want to block this user?",
       [
         { text: "Cancel", style: "cancel" },
-        { text: "Block", onPress: () => console.log("User blocked") },
+        {
+          text: isBlocked ? "Unblock" : "Block",
+          onPress: async () => {
+            try {
+              await toggleBlock();
+              Alert.alert(
+                isBlocked ? "User Unblocked" : "User Blocked",
+                `You have successfully ${
+                  isBlocked ? "unblocked" : "blocked"
+                } this user.`
+              );
+            } catch (error) {
+              console.error("Error toggling block state:", error);
+              Alert.alert("Error", "Failed to update block state. Please try again.");
+            }
+          },
+        },
       ]
     );
   };
+  
 
   const handleReportUser = () => {
     setBottomSheetVisible(false);
     setReportModalVisible(true);
   };
 
-  const sendReport = () => {
+  const sendReport = async () => {
     if (selectedReason) {
-      console.log("Report submitted:", selectedReason);
-      setReportModalVisible(false);
-      setSelectedReason(null); // Reset selection
+      const reportTitle = `User Report: ${userData?.username || "Unknown User"}`;
+      const reportDescription = `Report Reason: ${selectedReason}\nReported User: @${userData?.username}`;
+  
+      try {
+        await sendReportToJira(reportTitle, reportDescription);
+        Alert.alert("Report Sent", "Thank you for your report. We will review it shortly.");
+        setReportModalVisible(false);
+        setSelectedReason(null); // Reset selection
+      } catch (error) {
+        console.error("Error sending report:", error);
+        Alert.alert("Error", "Failed to send report. Please try again later.");
+      }
     } else {
-      Alert.alert("Please select a reason for reporting.");
+      Alert.alert("Error", "Please select a reason for reporting.");
     }
   };
+  
+  
 
-  const renderReportOptions = () => {
-    return reportOptions.map((option, index) => (
+  const renderReportOptions = () => (
+    reportOptions.map((option, index) => (
       <TouchableOpacity
         key={index}
         style={styles.reportOption}
@@ -162,9 +208,9 @@ const UserProfileScreen = () => {
         </View>
         <Text style={styles.reportOptionText}>{option}</Text>
       </TouchableOpacity>
-    ));
-  };
-
+    ))
+  );
+  
     // Custom Masonry Grid layout
     const columnCount = 2;
     const columnWidth = (width * 0.89) / columnCount;
@@ -216,12 +262,12 @@ const UserProfileScreen = () => {
       </View>
     );
   };
-
+  
 
   if (userDataLoading || countsLoading) {
     return <SkeletonUserProfile />;
   }
-
+  
   return (
     <>
       {isHeaderVisible && (
@@ -238,31 +284,46 @@ const UserProfileScreen = () => {
         onScroll={handleScroll}
         scrollEventThrottle={16}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.tags}/>
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.tags}
+          />
         }
       >
         <StatusBar style="auto" />
-
+  
+        {/* Top Bar */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
             <CircleArrowLeft color={Colors.text} size={28} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setBottomSheetVisible(true)} activeOpacity={1}>
+          <TouchableOpacity
+            onPress={() => setBottomSheetVisible(true)}
+            activeOpacity={1}
+          >
             <Ellipsis color={Colors.text} size={28} style={{ marginLeft: width * 0.75 }} />
           </TouchableOpacity>
         </View>
-
+  
+        {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.detailsSection}>
             <Text style={styles.name}>
-              {userData ? (userData.lastName ? `${userData.firstName} ${userData.lastName}` : userData.firstName) : ""}
+              {userData
+                ? userData.lastName
+                  ? `${userData.firstName} ${userData.lastName}`
+                  : userData.firstName
+                : ""}
             </Text>
             <Text style={styles.username}>{`@${userData!.username}`}</Text>
             <View style={styles.ovalsContainer}>
               <View style={styles.followerOval}>
                 <TouchableOpacity
                   activeOpacity={1}
-                  onPress={() => navigation.navigate("FollowerList", { userId: postUserId })}
+                  onPress={() =>
+                    navigation.navigate("FollowerList", { userId: postUserId })
+                  }
                 >
                   <Text style={styles.ovalText}>
                     {userCounts?.followerCount} Followers
@@ -303,77 +364,96 @@ const UserProfileScreen = () => {
             )}
           </View>
         </View>
-
+  
+        {/* Bio Section */}
         <View style={styles.bioContainer}>
           <Text style={styles.bioText}>
             {userData?.bio ? userData.bio : ""}
           </Text>
         </View>
-
-        {reviewCount > 0 ? (
-          <>
-            <View style={styles.featuredGalleryContainer}>
-              <Text style={styles.featuredGalleryText}>Top Picks</Text>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.galleryScrollView}
-                bounces={true}
-              >
-                {topPosts?.map((post, index) => (
-                  <View style={styles.imageGalleryContainer} key={index}>
-                    <TouchableOpacity
-                      activeOpacity={1}
-                      onPress={() => navigateToExpandedPost(post)}
-                    >
-                      <FastImage
-                        source={{
-                          uri: post.imageUrls[0],
-                          priority: FastImage.priority.normal,
-                          cache: FastImage.cacheControl.immutable,
-                        }}
-                        style={styles.galleryImage}
-                      />
-                      <View style={styles.scoreContainer}>
-                        <Text style={styles.scoreText}>
-                          {post.ratings.overall}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                    <View style={styles.profileDetails}>
-                      <Text
-                        style={styles.restaurantTopPicks}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
-                        {post.establishmentDetails.name}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </ScrollView>
-              <View style={styles.separator} />
-            </View>
-
-            <View style={styles.remainingReviewsContainer}>
-              <Text style={styles.remainingReviewsText}>All Reviews</Text>
-            </View>
-
-            <View style={styles.gridGallery}>
-              {columnItems.map((items, index) => (
-                <View key={index} style={styles.gridColumn}>
-                  {renderColumn(items, index)}
-                </View>
-              ))}
-            </View>
-          </>
-        ) : (
+  
+        {/* Conditional Rendering for Blocked or Unblocked State */}
+        {isBlocked ? (
+          // Blocked State
           <View style={styles.noReviewContainer}>
             <View style={styles.iconContainer}>
-              <NotepadText color={Colors.noReviews} size={width * 0.08} />
+              <UserX color={Colors.background} size={width * 0.08} />
             </View>
-            <Text style={styles.noReviewText}>No reviews yet</Text>
+            <Text style={styles.noReviewText}>This account is blocked</Text>
           </View>
+        ) : (
+          // Unblocked State
+          <>
+            {reviewCount > 0 ? (
+              <>
+                {/* Top Picks */}
+                <View style={styles.featuredGalleryContainer}>
+                  <Text style={styles.featuredGalleryText}>Top Picks</Text>
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.galleryScrollView}
+                    bounces={true}
+                  >
+                    {topPosts?.map((post, index) => (
+                      <View style={styles.imageGalleryContainer} key={index}>
+                        <TouchableOpacity
+                          activeOpacity={1}
+                          onPress={() => navigateToExpandedPost(post)}
+                        >
+                          <FastImage
+                            source={{
+                              uri: post.imageUrls[0],
+                              priority: FastImage.priority.normal,
+                              cache: FastImage.cacheControl.immutable,
+                            }}
+                            style={styles.galleryImage}
+                          />
+                          <View style={styles.scoreContainer}>
+                            <Text style={styles.scoreText}>
+                              {post.ratings.overall}
+                            </Text>
+                          </View>
+                        </TouchableOpacity>
+                        <View style={styles.profileDetails}>
+                          <Text
+                            style={styles.restaurantTopPicks}
+                            numberOfLines={1}
+                            ellipsizeMode="tail"
+                          >
+                            {post.establishmentDetails.name}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </ScrollView>
+                  <View style={styles.separator} />
+                </View>
+  
+                {/* All Reviews */}
+                <View style={styles.remainingReviewsContainer}>
+                  <Text style={styles.remainingReviewsText}>All Reviews</Text>
+                </View>
+  
+                {/* Posts Grid */}
+                <View style={styles.gridGallery}>
+                  {columnItems.map((items, index) => (
+                    <View key={index} style={styles.gridColumn}>
+                      {renderColumn(items, index)}
+                    </View>
+                  ))}
+                </View>
+              </>
+            ) : (
+              // No Reviews State
+              <View style={styles.noReviewContainer}>
+                <View style={styles.iconContainer}>
+                  <NotepadText color={Colors.noReviews} size={width * 0.08} />
+                </View>
+                <Text style={styles.noReviewText}>No reviews yet</Text>
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 
@@ -395,7 +475,9 @@ const UserProfileScreen = () => {
               onPress={handleBlockUser}
             >
               <UserX color={Colors.text} size={20} />
-              <Text style={styles.optionText}>Block User</Text>
+              <Text style={styles.optionText}>
+                {isBlocked ? "Unblock User" : "Block User"}
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.optionButton}
@@ -408,34 +490,44 @@ const UserProfileScreen = () => {
         </TouchableOpacity>
       </Modal>
 
+
       {/* Report Reasons Modal */}
       <Modal
         transparent
         visible={isReportModalVisible}
         animationType="slide"
-        onRequestClose={() => setReportModalVisible(false)}
+        onRequestClose={() => setReportModalVisible(false)} // Handles back button behavior on Android
       >
+        {/* Overlay for clicking outside to dismiss */}
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setReportModalVisible(false)}
+          onPress={() => setReportModalVisible(false)} // Closes modal on outside click
         >
-          <View style={styles.reportModal}>
-            <Text style={styles.reportTitle}>Report</Text>
-            <Text style={styles.reportDescription}>
-              What do you want to report? (Select 1 below)
-            </Text>
-            <Text style={styles.reportInstruction}>
-              Your report will remain anonymous. If there’s an immediate threat, please contact your local emergency services right away.
-            </Text>
-            {renderReportOptions()}
-            <TouchableOpacity style={styles.sendReportButton} onPress={sendReport} activeOpacity={1}>
-              <Send color={Colors.text} size={20} />
-              <Text style={styles.sendReportButtonText}>Send Report</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Prevent closing when interacting with modal content */}
+          <TouchableWithoutFeedback>
+            <View style={styles.reportModal}>
+              <Text style={styles.reportTitle}>Report</Text>
+              <Text style={styles.reportDescription}>
+                What do you want to report? (Select 1 below)
+              </Text>
+              <Text style={styles.reportInstruction}>
+                Your report will remain anonymous. If there’s an immediate threat, please contact your local emergency services right away.
+              </Text>
+              {renderReportOptions()}
+              <TouchableOpacity
+                style={styles.sendReportButton}
+                onPress={sendReport}
+                activeOpacity={1}
+              >
+                <Send color={Colors.text} size={20} />
+                <Text style={styles.sendReportButtonText}>Send Report</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
         </TouchableOpacity>
       </Modal>
+
     </>
   );
 };
@@ -796,6 +888,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.text,
     justifyContent: "center",
     alignItems: "center",
+  },
+  blockedContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  blockedText: {
+    fontSize: width * 0.045,
+    fontFamily: Fonts.SemiBold,
+    color: Colors.text,
+    marginTop: 20,
+    textAlign: "center",
   },
 });
 

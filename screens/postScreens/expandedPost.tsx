@@ -13,7 +13,8 @@ import {
   StyleSheet,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  Alert
+  Alert,
+  RefreshControl
 } from "react-native";
 import Modal from "react-native-modal";
 import { StatusBar } from "expo-status-bar";
@@ -59,6 +60,7 @@ import {
 } from "../../hooks/useLikes";
 import ExpandedPostSkeleton from "../../components/skeleton/expandedPostSkeleton";
 import {PostService} from "../../services/post.service"
+import { useFocusEffect } from "@react-navigation/native";
 
 const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = height * 0.13;
@@ -94,6 +96,25 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   const [optimisticLikeCount, setOptimisticLikeCount] = useState(0);
   const [optimisticIsLiked, setOptimisticIsLiked] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch(); // Refetch post data
+    } catch (error) {
+      console.error("Error refreshing post:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      // Refetch the post data when the screen comes into focus
+      refetch();
+    }, [refetch])
+  );
 
   useEffect(() => {
     if (postData) {
@@ -319,17 +340,17 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   const handleEditPost = () => {
     setModalVisible(false);
     navigation.navigate("Review", {
-      isEditing: true, // New: Flag to indicate edit mode
-      post: expandedPost, // New: Pass the existing post data
+      isEditing: true,
       postId: expandedPost?.id,
       establishmentId: expandedPost?.establishmentDetails.id,
       restaurantName: expandedPost?.establishmentDetails.name,
       city: expandedPost?.establishmentDetails.city,
       country: expandedPost?.establishmentDetails.country,
       review: expandedPost?.review,
-      ratings: expandedPost?.ratings
+      ratings: expandedPost?.ratings,
     });
   };
+  
   
 
   const postService = new PostService();
@@ -421,9 +442,12 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
         <ScrollView
           style={styles.container}
           showsVerticalScrollIndicator={false}
-          bounces={false}
+          bounces={true}
           onScroll={handleScrollHeader}
           scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.tags} />
+          }
         >
           <View style={styles.imagesAndDotsContainer}>
             <View style={styles.topIconContainer}>

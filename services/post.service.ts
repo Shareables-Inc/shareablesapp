@@ -116,28 +116,40 @@ export class PostService {
           this.establishmentsCollection,
           establishmentId
         );
-
+  
         const postDoc = await transaction.get(postRef);
         const establishmentDoc = await transaction.get(establishmentRef);
-
+  
         if (!postDoc.exists()) {
           throw new Error("Post does not exist!");
         }
-
+  
         if (!establishmentDoc.exists()) {
           throw new Error("Establishment does not exist!");
         }
-
+  
+        // Sanitize tags
+        const sanitizedTags = (updateData.tags || []).filter((tag) => tag !== undefined && tag !== null);
+  
+        // Sanitize accessibility flags
+        const sanitizedAccessibility = {
+          vegetarian: updateData.accessibility?.vegetarian ?? false,
+          vegan: updateData.accessibility?.vegan ?? false,
+          familyFriendly: updateData.accessibility?.familyFriendly ?? false,
+        };
+  
         // Update post
         transaction.set(
           postRef,
           {
             ...updateData,
+            tags: sanitizedTags, // Use sanitized tags
+            accessibility: sanitizedAccessibility, // Add sanitized accessibility
             updatedAt: serverTimestamp(),
           },
           { merge: true }
         );
-
+  
         // Update establishment
         const establishmentData = establishmentDoc.data();
         const currentPostCount = establishmentData.postCount || 0;
@@ -145,39 +157,50 @@ export class PostService {
         const currentOverallRating = parseFloat(
           updateData.ratings?.overall || "0"
         );
-
+  
         const newPostCount = currentPostCount + 1;
         const newTotalRating =
           currentAverageRating * currentPostCount + currentOverallRating;
         const newAverageRating = newTotalRating / newPostCount;
-
+  
         const clampedAverageRating = Math.max(
           1,
           Math.min(10, newAverageRating)
         ).toFixed(1);
-
-        // add the new tags made from the post to the establishment but make sure there are no duplicates
+  
+        // Add the sanitized tags to the establishment without duplicates
         const currentTags = establishmentData.tags || [];
-        const newTags = updateData.tags || [];
-        const updatedTags = [...currentTags, ...newTags];
-
-        // remove duplicates
-        const uniqueTags = Array.from(new Set(updatedTags));
-
+        const updatedTags = Array.from(new Set([...currentTags, ...sanitizedTags]));
+  
+        // Update accessibility statistics in the establishment
+        const updatedAccessibility = {
+          vegetarianCount: sanitizedAccessibility.vegetarian
+            ? (establishmentData.vegetarianCount || 0) + 1
+            : establishmentData.vegetarianCount || 0,
+          veganCount: sanitizedAccessibility.vegan
+            ? (establishmentData.veganCount || 0) + 1
+            : establishmentData.veganCount || 0,
+          familyFriendlyCount: sanitizedAccessibility.familyFriendly
+            ? (establishmentData.familyFriendlyCount || 0) + 1
+            : establishmentData.familyFriendlyCount || 0,
+        };
+  
         transaction.update(establishmentRef, {
           averageRating: clampedAverageRating,
           postCount: increment(1),
-          tags: uniqueTags,
+          tags: updatedTags, // Use sanitized tags
+          ...updatedAccessibility, // Update accessibility counts
           updatedAt: serverTimestamp(),
         });
       });
-
+  
       console.log("Post and establishment updated successfully");
     } catch (error) {
       console.error("Error updating post and establishment:", error);
       throw error;
     }
   }
+  
 
   async deletePost(postId: string): Promise<void> {
     const docRef = doc(this.postsCollection, postId);
