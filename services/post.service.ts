@@ -8,11 +8,13 @@ import {
   deleteDoc,
   doc,
   DocumentData,
+  DocumentSnapshot,
   getDoc,
   getDocs,
   increment,
   limit,
   orderBy,
+  Query,
   query,
   QueryDocumentSnapshot,
   runTransaction,
@@ -133,9 +135,9 @@ export class PostService {
   
         // Sanitize accessibility flags
         const sanitizedAccessibility = {
-          vegetarian: updateData.accessibility?.vegetarian ?? false,
-          vegan: updateData.accessibility?.vegan ?? false,
-          familyFriendly: updateData.accessibility?.familyFriendly ?? false,
+          vegetarian: updateData.accessibility?.halal ?? false,
+          vegan: updateData.accessibility?.glutenFree ?? false,
+          familyFriendly: updateData.accessibility?.veg ?? false,
         };
   
         // Update post
@@ -227,16 +229,42 @@ export class PostService {
     return posts;
   }
 
-  async getMostRecentPosts(userId: string): Promise<Post[]> {
-    const q = query(
-      this.postsCollection,
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc"),
-      limit(30)
-    );
+  async getMostRecentPosts(
+    userId: string,
+    lastVisibleDoc?: DocumentSnapshot
+  ): Promise<{ posts: Post[]; lastVisible: DocumentSnapshot | null }> {
+    // Construct the query
+    let q: Query;
+    if (lastVisibleDoc) {
+      q = query(
+        this.postsCollection,
+        where("userId", "==", userId),
+        orderBy("createdAt", "desc"),
+        startAfter(lastVisibleDoc), // Start after the last document from the previous query
+        limit(30) // Limit to 30 posts
+      );
+    } else {
+      q = query(
+        this.postsCollection,
+        where("userId", "==", userId),
+        orderBy("createdAt", "desc"),
+        limit(30) // Fetch the first 30 posts
+      );
+    }
+  
+    // Fetch the data
     const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(this.documentToPost);
+  
+    // Map the results to posts
+    const posts = querySnapshot.docs.map(this.documentToPost);
+  
+    // Return the posts and the last visible document for pagination
+    return {
+      posts,
+      lastVisible: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
+    };
   }
+  
 
   async getTopPosters(limit: number = 4): Promise<TopPoster[]> {
     try {

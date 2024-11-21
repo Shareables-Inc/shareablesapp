@@ -263,8 +263,6 @@ export const CraftBrasserieMarker = ({
               fill="none"
             >
             <Path 
-              fill-rule="evenodd" 
-              clip-rule="evenodd" 
               d="M2.04157 3.30155C1.74049 3.35924 1.54355 3.64986 1.60116 3.95029L4.42934 18.7006C4.48695 19.0011 4.77742 19.1983 5.07851 19.1406L13.9584 17.4393C14.2595 17.3816 14.4564 17.091 14.3988 16.7905L11.5707 2.04021C11.5131 1.73977 11.2226 1.54254 10.9215 1.60022L2.04157 3.30155ZM0.345185 4.19093C0.154505 3.19644 0.806435 2.23612 1.80076 2.04561L10.6807 0.344285C11.675 0.15378 12.6359 0.805089 12.8266 1.79958L15.6548 16.5499C15.8455 17.5444 15.1936 18.5047 14.1992 18.6952L5.31932 20.3966C4.32499 20.5871 3.36405 19.9357 3.17337 18.9413L0.345185 4.19093Z" fill="white"/>
 
             <Path 
@@ -296,7 +294,6 @@ const styles = StyleSheet.create({
     width: 31,
     height: 31,
     borderRadius: 90,
-    backgroundColor: Colors.saveBookmarkMarker,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -304,7 +301,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 90,
-    backgroundColor: Colors.saveBookmarkMarker,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -312,7 +308,6 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 90,
-    backgroundColor: Colors.saveBookmarkMarker,
     justifyContent: "center",
     alignItems: "center",
   },

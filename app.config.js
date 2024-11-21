@@ -35,7 +35,7 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: "com.shareablesinc.shareables",
-      buildNumber: "1.0.4",
+      buildNumber: "1.0.6",
       infoPlist: {
         LSApplicationQueriesSchemes: [
           "maps",

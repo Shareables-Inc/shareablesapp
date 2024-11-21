@@ -37,7 +37,9 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     data: featuredEstablishments,
     isLoading: isFeaturedEstablishmentsLoading,
     refetch: refetchFeaturedEstablishments,
-  } = useGetFeaturedEstablishments(location);
+    } = useGetFeaturedEstablishments(location, {
+    staleTime: 0, // Always fetch fresh data
+  });
 
   const [topFollowedUsers, setTopFollowedUsers] = useState([]);
   const [isTopFollowedLoading, setIsTopFollowedLoading] = useState(false);
@@ -81,22 +83,23 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   };
 
   const getTopTenEstablishments = (): FeaturedEstablishment[] => {
-    if (!featuredEstablishments) return [];
+    if (!featuredEstablishments || featuredEstablishments.length === 0) return [];
+  
+    // Log the raw data for debugging
+    console.log("Featured Establishments:", featuredEstablishments);
+  
+    // Sort by averageRating (descending)
     const sortedEstablishments = [...featuredEstablishments].sort(
       (a, b) => parseFloat(b.averageRating) - parseFloat(a.averageRating)
     );
-    const uniqueEstablishments = new Set();
-    const topThree: FeaturedEstablishment[] = [];
-
-    for (const establishment of sortedEstablishments) {
-      if (!uniqueEstablishments.has(establishment.id)) {
-        uniqueEstablishments.add(establishment.id);
-        topThree.push(establishment);
-        if (topThree.length === 10) break;
-      }
-    }
-
-    return topThree;
+  
+    // Deduplicate establishments by ID
+    const uniqueEstablishments = Array.from(
+      new Map(sortedEstablishments.map((est) => [est.id, est])).values()
+    );
+  
+    // Limit to top 10
+    return uniqueEstablishments.slice(0, 10);
   };
 
   const renderTopFollowedUser = ({ item }: { item: UserProfile & { followerCount: number } }) => (
@@ -128,41 +131,39 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   }: {
     item: FeaturedEstablishment;
   }) => {
-    if (!item) return null;
+    if (!item || !item.images || item.images.length === 0) return null;
   
     return (
-    <View style={styles.featuredRestaurantCardContainer}>
-      <TouchableOpacity
-        onPress={() => handleNavigateToRestaurantProfile(item)}
-        activeOpacity={1}
-      >
-        <View style={styles.featuredRestaurantCard}>
-          {/* Image */}
-          <FastImage
-            source={{
-              uri: item.images?.[0] || "placeholder_image_url",
-              cache: FastImage.cacheControl.immutable,
-            }}
-            style={styles.featuredRestaurantImage}
-          />
-          {/* Overlay */}
-          <View style={styles.featuredRestaurantOverlay}>
-            <BlurView style={styles.locationBadge} intensity={100} tint="default">
-              <Bookmark size={20} color={Colors.background} />
-            </BlurView>
+      <View style={styles.featuredRestaurantCardContainer}>
+        <TouchableOpacity
+          onPress={() => handleNavigateToRestaurantProfile(item)}
+          activeOpacity={1}
+        >
+          <View style={styles.featuredRestaurantCard}>
+            <FastImage
+              source={{
+                uri: item.images[0] || "placeholder_image_url",
+                cache: FastImage.cacheControl.immutable,
+              }}
+              style={styles.featuredRestaurantImage}
+            />
+            <View style={styles.featuredRestaurantOverlay}>
+              <BlurView style={styles.locationBadge} intensity={100} tint="default">
+                <Bookmark size={20} color={Colors.background} />
+              </BlurView>
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
-      {/* Restaurant Name */}
-      <Text style={styles.restaurantNameText} numberOfLines={1} ellipsizeMode="tail">
-        {item.name || "Unknown Restaurant"}
-      </Text>
-      <Text style={styles.averageRatingText} numberOfLines={1} ellipsizeMode="tail">
-        {item.averageRating || "Unknown Restaurant"}
-      </Text>
-    </View>
+        </TouchableOpacity>
+        <Text style={styles.restaurantNameText} numberOfLines={1} ellipsizeMode="tail">
+          {item.name || "Unknown Restaurant"}
+        </Text>
+        <Text style={styles.averageRatingText} numberOfLines={1} ellipsizeMode="tail">
+          {item.averageRating || "N/A"}
+        </Text>
+      </View>
     );
   };
+  
   
   
   return (

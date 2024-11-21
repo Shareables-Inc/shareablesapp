@@ -71,7 +71,7 @@ const ProfileScreen = () => {
     });
     return {
       topPosts: sortedByRating.slice(0, 5),
-      recentPosts: sortedByDate.slice(0, 9),
+      recentPosts: sortedByDate,
       reviewCount: posts.data.length,
     };
   }, [posts]);

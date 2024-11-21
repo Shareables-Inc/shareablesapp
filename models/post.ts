@@ -27,9 +27,9 @@ export interface FirebasePost {
 }
 
 export interface Accessibility {
-  vegetarian: boolean;
-  vegan: boolean;
+  halal: boolean;
   glutenFree: boolean;
+  veg: boolean;
 }
 
 export interface EstablishmentDetails {

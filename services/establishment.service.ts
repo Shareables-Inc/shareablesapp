@@ -103,119 +103,85 @@ export class EstablishmentService {
     );
   }
 
-  async getEstablishments(
-    establishmentIds: string[]
-  ): Promise<Establishment[]> {
-    const establishmentsQuery = query(
-      this.establishmentsCollection,
-      where("id", "in", establishmentIds)
-    );
-    const establishmentsSnapshot = await getDocs(establishmentsQuery);
-
-    if (establishmentsSnapshot.empty) {
-      return [];
-    }
-
-    return establishmentsSnapshot.docs.map(
-      (doc) => doc.data() as Establishment
-    );
-  }
   async getFeaturedEstablishments(
     city: string,
     selectedTag?: string
   ): Promise<FeaturedEstablishment[]> {
     try {
-      return await runTransaction(db, async () => {
-        const now = Timestamp.now();
-        const thirtyDaysInSeconds = 30 * 24 * 60 * 60;
-        const thirtyDaysAgo = new Timestamp(
-          now.seconds - thirtyDaysInSeconds,
-          now.nanoseconds
+      let establishmentsQuery: Query;
+      if (selectedTag) {
+        establishmentsQuery = query(
+          this.establishmentsCollection,
+          where("city", "==", city),
+          where("tags", "array-contains", selectedTag),
+          orderBy("updatedAt", "desc"),
+          limit(10) // Limit to 10 establishments
         );
-  
-        let establishmentsQuery: Query;
-        if (selectedTag) {
-          establishmentsQuery = query(
-            this.establishmentsCollection,
-            where("city", "==", city),
-            where("updatedAt", ">=", thirtyDaysAgo),
-            where("tags", "array-contains", selectedTag),
-            orderBy("updatedAt", "desc"),
-            limit(30)
-          );
-        } else {
-          establishmentsQuery = query(
-            this.establishmentsCollection,
-            where("city", "==", city),
-            where("updatedAt", ">=", thirtyDaysAgo),
-            orderBy("updatedAt", "desc"),
-            limit(30)
-          );
-        }
-  
-        const establishmentsSnapshot = await getDocs(establishmentsQuery);
-  
-        const establishmentIds = establishmentsSnapshot.docs.map(
-          (doc) => doc.id
+      } else {
+        establishmentsQuery = query(
+          this.establishmentsCollection,
+          where("city", "==", city),
+          orderBy("updatedAt", "desc"),
+          limit(10) // Limit to 10 establishments
         );
+      }
   
-        if (establishmentIds.length === 0) {
-          return []; // No establishments found
-        }
+      const establishmentsSnapshot = await getDocs(establishmentsQuery);
+      const establishmentIds = establishmentsSnapshot.docs.map((doc) => doc.id);
   
-        // Query posts based on the establishment IDs fetched above
-        const postsQuery = query(
-          this.postsCollection,
-          where("establishmentDetails.id", "in", establishmentIds),
-          orderBy("createdAt", "desc"),
-          limit(30)
-        );
+      if (establishmentIds.length === 0) {
+        return [];
+      }
   
-        const postsSnapshot = await getDocs(postsQuery);
+      // Query posts based on the establishment IDs
+      const postsQuery = query(
+        this.postsCollection,
+        where("establishmentDetails.id", "in", establishmentIds),
+        orderBy("createdAt", "desc"),
+        limit(10) // Limit posts to 10
+      );
   
-        // Filter the posts to only include those with images
-        const filteredPosts = postsSnapshot.docs.filter((doc) => {
-          const postData = doc.data() as Post;
-          return postData.imageUrls && postData.imageUrls.length > 0; // Ensure the post has images
-        });
+      const postsSnapshot = await getDocs(postsQuery);
   
-        // Process posts and associate them with establishments
-        const uniqueEstablishments = new Map();
-        filteredPosts.forEach((doc) => {
-          const post = doc.data() as Post;
-          const establishmentId = post.establishmentDetails.id;
-          if (!uniqueEstablishments.has(establishmentId)) {
-            uniqueEstablishments.set(establishmentId, {
-              id: establishmentId,
-              images: post.imageUrls,
-            });
-          }
-        });
-  
-        // Combine establishment data with post data
-        const result = establishmentsSnapshot.docs.map((doc) => {
-          const establishment = doc.data() as Establishment;
-  
-          // Extract the tags from the establishment and sort alphabetically
-          const sortedTags = establishment.tags?.sort((a, b) =>
-            a.localeCompare(b)
-          );
-  
-          const postData = uniqueEstablishments.get(establishment.id) || {};
-  
-          return {
-            ...establishment,
-            ...postData,
-            tags: sortedTags,
-          } as FeaturedEstablishment;
-        });
-  
-        return result;
+      // Filter the posts to only include those with images
+      const filteredPosts = postsSnapshot.docs.filter((doc) => {
+        const postData = doc.data() as Post;
+        return postData.imageUrls && postData.imageUrls.length > 0;
       });
+  
+      const uniqueEstablishments = new Map();
+      filteredPosts.forEach((doc) => {
+        const post = doc.data() as Post;
+        const establishmentId = post.establishmentDetails.id;
+        const existing = uniqueEstablishments.get(establishmentId);
+        if (existing) {
+          existing.images.push(...post.imageUrls);
+        } else {
+          uniqueEstablishments.set(establishmentId, {
+            id: establishmentId,
+            images: [...post.imageUrls],
+          });
+        }
+      });
+  
+      const result = establishmentsSnapshot.docs.map((doc) => {
+        const establishment = doc.data() as Establishment;
+        const postData = uniqueEstablishments.get(establishment.id) || {};
+        return {
+          ...establishment,
+          ...postData,
+          tags: establishment.tags || [],
+        } as FeaturedEstablishment;
+      });
+  
+      return result;
     } catch (error) {
+      console.error("Error fetching featured establishments:", error);
       return [];
     }
   }
+  
+  
   
 
   async getEstablishmentById(establishmentId: string) {

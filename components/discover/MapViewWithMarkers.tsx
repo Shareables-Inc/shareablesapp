@@ -1,5 +1,5 @@
-import React, { useCallback, useMemo, useState } from "react";
-import { Camera, MapView, Viewport } from "@rnmapbox/maps";
+import React, { useCallback, useMemo } from "react";
+import { Camera, MapView } from "@rnmapbox/maps";
 import MapViewComponent from "../map/mapView";
 import {
   BookmarkMarker,
@@ -10,18 +10,13 @@ import {
 } from "../map/mapMarkers";
 import { useLocationStore } from "../../store/useLocationStore";
 import { useFocusEffect } from "@react-navigation/native";
-import {
-  ActivityIndicator,
-  TouchableOpacity,
-  View,
-  StyleSheet,
-} from "react-native";
-import { Navigation } from "lucide-react-native";
-import { Colors } from "../../utils/colors";
+import { StyleSheet } from "react-native";
+
+const CRAFT_BRASSERIE_ID = "wPMUrAhXuc7vy6uA2ljG";
+
 interface MapViewWithMarkersProps {
   mapRef: React.RefObject<MapView>;
   cameraRef: React.RefObject<Camera>;
-
   markers: MarkerTypeWithImage[];
   markerFilter: "save" | "following" | "post" | null;
   onMarkerPress: (marker: any) => void;
@@ -55,7 +50,7 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
   markerFilter,
   onMapLoaded,
 }) => {
-  const { location, fetchLocation, isLoading } = useLocationStore();
+  const { location, fetchLocation } = useLocationStore();
 
   const filteredMarkers = useMemo(
     () =>
@@ -74,58 +69,33 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
   );
 
   const renderMarker = (marker: MarkerTypeWithImage) => {
-
-    console.log(
-      "Rendering marker:",
-      marker.establishmentId,
-      marker.type,
-      marker.establishmentName
-    );
-    
     const props = {
       key: marker.establishmentId,
       id: marker.establishmentId,
       coordinate: { longitude: marker.longitude, latitude: marker.latitude },
       onPress: () => onMarkerPress(marker),
+      title: marker.establishmentName ?? "",
     };
-  
-    // Explicitly prioritize the partner restaurant by ID
-    if (
-      marker.establishmentId ===
-      "wPMUrAhXuc7vy6uA2ljG"
-    ) {
-      return (
-        <CraftBrasserieMarker
-          {...props}
-          title={marker.establishmentName ?? "The Craft Brasserie & Grill"}
-        />
-      );
+
+    // Prioritize The Craft Brasserie & Grille by its `establishmentId`
+    if (marker.establishmentId === CRAFT_BRASSERIE_ID) {
+      return <CraftBrasserieMarker {...props} />;
     }
-  
-    // Handle other marker types based on `marker.type`
+
+    // Handle other marker types
     switch (marker.type) {
       case "save":
-        return <BookmarkMarker title={marker.establishmentName} {...props} />;
+        return <BookmarkMarker {...props} />;
       case "following":
         return (
-          <UserMarker
-            {...props}
-            image={marker.userProfilePicture}
-            title={marker.establishmentName}
-          />
+          <UserMarker {...props} image={marker.userProfilePicture} />
         );
       case "post":
-        return (
-          <PlacesReviewedMarker
-            {...props}
-            title={marker.establishmentName ?? ""}
-          />
-        );
+        return <PlacesReviewedMarker {...props} />;
       default:
-        return null;
+        return <RestaurantMarker {...props} />;
     }
   };
-  
 
   return (
     <MapViewComponent ref={mapRef} onMapLoaded={onMapLoaded}>
@@ -140,7 +110,10 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
         />
       )}
 
-      {filteredMarkers.map(renderMarker)}
+      {filteredMarkers.map((marker) => {
+        console.log("Rendering marker:", marker.establishmentId, marker.type);
+        return renderMarker(marker);
+      })}
     </MapViewComponent>
   );
 };
@@ -154,10 +127,6 @@ const styles = StyleSheet.create({
     zIndex: 10,
     opacity: 0.8,
     backgroundColor: "#484545B2",
-  },
-  iconButton: {
-    borderRadius: 20,
-    padding: 8,
   },
 });
 

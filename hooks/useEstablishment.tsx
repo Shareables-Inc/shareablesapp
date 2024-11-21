@@ -87,18 +87,32 @@ export const useEstablishmentProfileData = (establishmentId: string) => {
 };
 
 
-export const useGetFeaturedEstablishments = (
-  location: string,
-) => {
+export const useGetFeaturedEstablishments = (location: string, p0: { staleTime: number; }) => {
   return useQuery({
     queryKey: ["featuredEstablishments", location],
     queryFn: async () => {
+      // Fetch data from the backend
       const featuredEstablishments = await establishmentService.getFeaturedEstablishments(location);
-      // Filter out establishments with postCount of 0
-      return featuredEstablishments.filter(
-        (establishment) => establishment.postCount > 1
+
+      // Log raw results for debugging
+      console.log("Raw Featured Establishments:", featuredEstablishments);
+
+      // Deduplicate establishments by ID
+      const uniqueEstablishments = Array.from(
+        new Map(featuredEstablishments.map((est) => [est.id, est])).values()
       );
+
+      // Filter establishments with postCount > 0
+      const filteredEstablishments = uniqueEstablishments.filter(
+        (establishment) => establishment.postCount >= 1
+      );
+
+      console.log("Filtered Establishments:", filteredEstablishments);
+      return filteredEstablishments;
     },
-    enabled: !!location,
+    enabled: !!location, // Ensure query runs only if location exists
+    staleTime: 0, // Always fetch fresh data
   });
 };
+
+
