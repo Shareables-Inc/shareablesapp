@@ -3,6 +3,7 @@ import { Camera, MapView, Viewport } from "@rnmapbox/maps";
 import MapViewComponent from "../map/mapView";
 import {
   BookmarkMarker,
+  CraftBrasserieMarker,
   PlacesReviewedMarker,
   RestaurantMarker,
   UserMarker,
@@ -73,13 +74,35 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
   );
 
   const renderMarker = (marker: MarkerTypeWithImage) => {
+
+    console.log(
+      "Rendering marker:",
+      marker.establishmentId,
+      marker.type,
+      marker.establishmentName
+    );
+    
     const props = {
       key: marker.establishmentId,
       id: marker.establishmentId,
       coordinate: { longitude: marker.longitude, latitude: marker.latitude },
       onPress: () => onMarkerPress(marker),
     };
-
+  
+    // Explicitly prioritize the partner restaurant by ID
+    if (
+      marker.establishmentId ===
+      "wPMUrAhXuc7vy6uA2ljG"
+    ) {
+      return (
+        <CraftBrasserieMarker
+          {...props}
+          title={marker.establishmentName ?? "The Craft Brasserie & Grill"}
+        />
+      );
+    }
+  
+    // Handle other marker types based on `marker.type`
     switch (marker.type) {
       case "save":
         return <BookmarkMarker title={marker.establishmentName} {...props} />;
@@ -102,6 +125,7 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
         return null;
     }
   };
+  
 
   return (
     <MapViewComponent ref={mapRef} onMapLoaded={onMapLoaded}>
@@ -112,7 +136,7 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
             location.coords.longitude,
             location.coords.latitude,
           ]}
-          zoomLevel={10}
+          zoomLevel={12}
         />
       )}
 

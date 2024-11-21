@@ -216,7 +216,7 @@ const PostScreen = () => {
           resizeMode="cover"
         />
         <BlurView style={styles.blurView} intensity={40} tint="light">
-          <TouchableOpacity onPress={pickImages} style={styles.imagePicker}>
+          <TouchableOpacity onPress={pickImages} style={styles.imagePicker} activeOpacity={1}>
             <ImagePlus color={Colors.background} size={45} />
             <Text style={styles.addImageText}>select images</Text>
           </TouchableOpacity>
@@ -254,9 +254,12 @@ const PostScreen = () => {
               </View>
             )}
 
+          {uploadedImageUrls.length > 0 && (
             <TouchableOpacity onPress={handleNextPress} style={styles.nextButton} activeOpacity={1}>
               <Text style={styles.nextButtonText}>Next Step</Text>
             </TouchableOpacity>
+            )}
+
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -269,7 +272,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingHorizontal: width * 0.05,
+    paddingHorizontal: width * 0.07,
   },
   title: {
     fontSize: width * 0.08,

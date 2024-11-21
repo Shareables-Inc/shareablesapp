@@ -29,7 +29,7 @@ const MapViewComponent = forwardRef<MapView, MapViewComponentProps>(
           attributionEnabled={true}
           attributionPosition={{ bottom: width * 0.21, right: 0 }}
           compassEnabled={false}
-          rotateEnabled={false}
+          rotateEnabled={true}
           scaleBarEnabled={false}
           onDidFinishLoadingMap={handleMapLoaded}
         >

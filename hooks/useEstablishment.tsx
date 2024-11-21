@@ -96,7 +96,7 @@ export const useGetFeaturedEstablishments = (
       const featuredEstablishments = await establishmentService.getFeaturedEstablishments(location);
       // Filter out establishments with postCount of 0
       return featuredEstablishments.filter(
-        (establishment) => establishment.postCount > 0
+        (establishment) => establishment.postCount > 1
       );
     },
     enabled: !!location,

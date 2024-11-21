@@ -7,7 +7,7 @@ import {
   StyleSheet,
   Dimensions,
 } from "react-native";
-import { MapPin, Bookmark, User } from "lucide-react-native"; // Use the Flame icon instead of User for trending
+import { MapPin, Bookmark, User, MapPinCheckInside, CircleUserRound } from "lucide-react-native"; // Use the Flame icon instead of User for trending
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { MarkerType } from "../discover/MapViewWithMarkers";
@@ -144,7 +144,7 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("save")}
           >
-            <Bookmark fill={"white"} size={20} color="white" />
+            <Bookmark size={25} color="white" strokeWidth={2.5}/>
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={1}
@@ -155,30 +155,18 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("post")}
           >
-            <Svg
-              width="23"
-              height="23"
-              viewBox="0 0 24 24"
-              fill="white"
-              stroke="white"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <Path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0" />
-              <Circle cx="12" cy="10" r="4" fill="#161ECE" />
-            </Svg>
+            <MapPinCheckInside size={25} color="white" strokeWidth={2.5}/>
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={1}
             style={[
               styles.filterIcon,
               selectedFilter === "following" && styles.activeFilter,
-              { backgroundColor: Colors.tags }, // Fire icon background color
+              { backgroundColor: Colors.followingMarker }, // Fire icon background color
             ]}
             onPress={() => handleFilterPress("following")}
           >
-            <User fill={"white"} size={20} color="white" />
+            <CircleUserRound size={25} color="white" strokeWidth={2.5}/>
           </TouchableOpacity>
         </View>
       </View>

@@ -44,7 +44,7 @@ const TabSelector = ({ activeTab, onTabChange, animation }) => {
             activeTab === "Discover" && styles.activeTabText,
           ]}
         >
-          Discover
+          Map
         </Text>
       </TouchableOpacity>
     </View>
