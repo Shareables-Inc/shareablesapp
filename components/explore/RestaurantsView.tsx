@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,18 +7,20 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Dimensions,
-  FlatList
+  FlatList,
+  RefreshControl,
 } from "react-native";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { UserService } from "../../services/user.service";
-import type { EstablishmentDetails, FeaturedEstablishment } from "../../models/establishment";
+import type { FeaturedEstablishment } from "../../models/establishment";
 import FastImage from "react-native-fast-image";
 import { BlurView } from "expo-blur";
-import { tagsData } from "../../config/constants";
 import { useNavigation } from "@react-navigation/native";
 import { useGetFeaturedEstablishments } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
+import { UserProfile } from "../../models/userProfile";
+import {Bookmark} from "lucide-react-native";
 
 const { width } = Dimensions.get("window");
 
@@ -30,29 +32,43 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   const navigation = useNavigation<any>();
   const userService = new UserService();
   const { userProfile } = useAuth();
-  
+
   const {
     data: featuredEstablishments,
     isLoading: isFeaturedEstablishmentsLoading,
+    refetch: refetchFeaturedEstablishments,
   } = useGetFeaturedEstablishments(location);
 
   const [topFollowedUsers, setTopFollowedUsers] = useState([]);
   const [isTopFollowedLoading, setIsTopFollowedLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchTopFollowedUsers = useCallback(async () => {
+    setIsTopFollowedLoading(true);
+    try {
+      const users = await userService.getTopFollowedUsers(location);
+      setTopFollowedUsers(users);
+    } catch (error) {
+      console.error("Error fetching top followed users:", error);
+    } finally {
+      setIsTopFollowedLoading(false);
+    }
+  }, [location]);
 
   useEffect(() => {
-    const fetchTopFollowedUsers = async () => {
-      setIsTopFollowedLoading(true);
-      try {
-        const users = await userService.getTopFollowedUsers(location);
-        setTopFollowedUsers(users);
-      } catch (error) {
-        console.error("Error fetching top followed users:", error);
-      } finally {
-        setIsTopFollowedLoading(false);
-      }
-    };
     fetchTopFollowedUsers();
-  }, [location]);
+  }, [fetchTopFollowedUsers]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([refetchFeaturedEstablishments(), fetchTopFollowedUsers()]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleNavigateToRestaurantProfile = (establishmentData: FeaturedEstablishment) => {
     navigation.navigate("RestaurantProfile", {
@@ -64,7 +80,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     navigation.navigate("UserProfile", { userId });
   };
 
-  const getTopThreePosts = (): FeaturedEstablishment[] => {
+  const getTopTenEstablishments = (): FeaturedEstablishment[] => {
     if (!featuredEstablishments) return [];
     const sortedEstablishments = [...featuredEstablishments].sort(
       (a, b) => parseFloat(b.averageRating) - parseFloat(a.averageRating)
@@ -76,7 +92,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
       if (!uniqueEstablishments.has(establishment.id)) {
         uniqueEstablishments.add(establishment.id);
         topThree.push(establishment);
-        if (topThree.length === 3) break;
+        if (topThree.length === 10) break;
       }
     }
 
@@ -111,47 +127,70 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     item,
   }: {
     item: FeaturedEstablishment;
-  }) => (
-    <View key={item.id} style={styles.featuredRestaurantCard}>
+  }) => {
+    if (!item) return null;
+  
+    return (
+    <View style={styles.featuredRestaurantCardContainer}>
       <TouchableOpacity
         onPress={() => handleNavigateToRestaurantProfile(item)}
         activeOpacity={1}
       >
-        <View style={styles.featuredRestaurantImageContainer}>
+        <View style={styles.featuredRestaurantCard}>
+          {/* Image */}
           <FastImage
             source={{
-              uri: item.images && item.images.length > 0 ? item.images[0] : "",
+              uri: item.images?.[0] || "placeholder_image_url",
               cache: FastImage.cacheControl.immutable,
             }}
             style={styles.featuredRestaurantImage}
           />
+          {/* Overlay */}
           <View style={styles.featuredRestaurantOverlay}>
-            <BlurView
-              style={styles.locationBadge}
-              intensity={100}
-              tint="default"
-            >
-              <Text style={styles.featuredRestaurantName}>{item.name}</Text>
+            <BlurView style={styles.locationBadge} intensity={100} tint="default">
+              <Bookmark size={20} color={Colors.background} />
             </BlurView>
           </View>
         </View>
       </TouchableOpacity>
+      {/* Restaurant Name */}
+      <Text style={styles.restaurantNameText} numberOfLines={1} ellipsizeMode="tail">
+        {item.name || "Unknown Restaurant"}
+      </Text>
+      <Text style={styles.averageRatingText} numberOfLines={1} ellipsizeMode="tail">
+        {item.averageRating || "Unknown Restaurant"}
+      </Text>
     </View>
-  );
-
+    );
+  };
+  
+  
   return (
-    <View style={styles.scrollViewContent}>
+    <ScrollView
+      style={styles.scrollViewContent}
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.tags} />
+      }
+    >
       <Text style={styles.sectionTitleFeatured}>Top Restaurants</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ paddingRight: width * 0.03, flexDirection: "row" }}>
-          {getTopThreePosts().map((item) => renderFeaturedRestaurants({ item }))}
+          {getTopTenEstablishments().slice(0,5).map((item) => (
+            <View key={item.id}>
+              {renderFeaturedRestaurants({ item })}
+            </View>
+          ))}
         </View>
       </ScrollView>
 
-      {/* Second row of restaurants */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ paddingRight: width * 0.03, flexDirection: "row" }}>
-          {getTopThreePosts().map((item) => renderFeaturedRestaurants({ item }))}
+          {getTopTenEstablishments().slice(5,10).map((item) => (
+            <View key={item.id}>
+              {renderFeaturedRestaurants({ item })}
+            </View>
+          ))}
         </View>
       </ScrollView>
 
@@ -170,7 +209,8 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
           contentContainerStyle={styles.justifyContentSpaceBetween}
         />
       )}
-    </View>
+      
+    </ScrollView>
   );
 };
 
@@ -179,13 +219,14 @@ const styles = StyleSheet.create({
   sectionTitleFoodies: {
     fontSize: width * 0.055,
     fontFamily: Fonts.Medium,
-    paddingVertical: width * 0.03,
+    paddingTop: width * 0.01,
+    paddingBottom: width * 0.03,
     marginLeft: width * 0.05,
   },
   sectionTitleFeatured: {
     fontSize: width * 0.06,
     fontFamily: Fonts.Medium,
-    paddingBottom: width * 0.05,
+    paddingBottom: width * 0.03,
     marginTop: width * 0.07,
     marginLeft: width * 0.05,
   },
@@ -194,7 +235,7 @@ const styles = StyleSheet.create({
   },
   topPostersContainer: {
     marginBottom: width * 0.05,
-    width: width,
+    marginTop: width * 0.01
   },
   topPosterItem: {
     flexDirection: "row",
@@ -203,7 +244,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     borderRadius: 15,
     paddingHorizontal: width * 0.02,
-    paddingVertical: width * 0.022,
+    paddingVertical: width * 0.015,
     minWidth: width * 0.2,
     borderColor: Colors.inputBackground,
     borderWidth: 2,
@@ -217,8 +258,6 @@ const styles = StyleSheet.create({
     height: width * 0.12,
     borderRadius: 90,
     marginRight: width * 0.02,
-    borderColor: Colors.inputBackground,
-    borderWidth: 2,
   },
   posterTextContainer: {
     flex: 1,
@@ -237,42 +276,54 @@ const styles = StyleSheet.create({
   itemSeparator: {
     width: width / 6 / 5,
   },
-  featuredRestaurantImageContainer: {
-    borderRadius: 10,
-    width: "100%",
-    height: "100%",
+  featuredRestaurantCardContainer: {
+    width: "100%", 
+    marginBottom: width * 0.03, 
+    paddingLeft: width * 0.05,
+    marginRight: -(width * 0.02),
+    marginTop: width * 0.01
   },
   featuredRestaurantCard: {
     width: width * 0.4,
-    height: width * 0.4 * 1.15,
+    height: width * 0.5,
     borderRadius: 12,
     overflow: "hidden",
-    marginLeft: width * 0.04,
-    marginBottom: width * 0.07,
   },
   featuredRestaurantImage: {
     width: "100%",
-    height: "100%",
+    height: "100%", 
+    resizeMode: "cover", 
+  },
+  restaurantNameText: {
+    marginTop: width * 0.02,
+    fontSize: width * 0.035, 
+    fontFamily: Fonts.SemiBold,
+    color: Colors.charcoal,
+    textAlign: "left", 
+    width: width * 0.35,
+    marginBottom: width * 0.01
+  },
+  averageRatingText: {
+    fontSize: width * 0.035, 
+    fontFamily: Fonts.Regular,
+    color: Colors.charcoal,
+    textAlign: "left", 
+    width: width * 0.35,
+    marginBottom: width * 0.01
   },
   featuredRestaurantOverlay: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    padding: "7%",
+    bottom: 0,
+    right: 0,
+    padding: "7%", 
   },
   locationBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 15,
+    paddingVertical: 7,
+    paddingHorizontal: 7,
+    borderRadius: 90, 
     overflow: "hidden",
-  },
-  featuredRestaurantName: {
-    color: Colors.background,
-    marginLeft: 2,
-    fontSize: width * 0.04,
-    fontFamily: Fonts.Regular,
   },
 });
 

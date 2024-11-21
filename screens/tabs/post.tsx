@@ -27,6 +27,8 @@ import { useNavigation } from "@react-navigation/native";
 import { useCreatePost } from "../../hooks/usePost";
 import { useAuth } from "../../context/auth.context";
 import { serverTimestamp } from "firebase/firestore";
+import { BlurView } from "expo-blur";
+import FastImage from "react-native-fast-image";
 
 const { width, height } = Dimensions.get("window");
 
@@ -189,7 +191,7 @@ const PostScreen = () => {
         </View>
       );
     }
-
+  
     if (uploadedImageUrls.length === 1) {
       return <SinglePhotoPost post={{ photo: uploadedImageUrls[0] }} onRePick={pickImages} />;
     } else if (uploadedImageUrls.length === 2) {
@@ -205,14 +207,24 @@ const PostScreen = () => {
         <ThreePhotoScrollPost post={{ photos: uploadedImageUrls }} onRePick={pickImages} />
       );
     }
-
+  
     return (
-      <TouchableOpacity onPress={pickImages} style={styles.imagePicker}>
-        <ImagePlus color={Colors.tags} size={40} />
-        <Text style={styles.addImageText}>Add photos</Text>
-      </TouchableOpacity>
+      <View style={styles.blurContainer}>
+        <FastImage
+          source={require("../../assets/images/addPhotos.png")}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+        />
+        <BlurView style={styles.blurView} intensity={40} tint="light">
+          <TouchableOpacity onPress={pickImages} style={styles.imagePicker}>
+            <ImagePlus color={Colors.background} size={45} />
+            <Text style={styles.addImageText}>select images</Text>
+          </TouchableOpacity>
+        </BlurView>
+      </View>
     );
   };
+  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
@@ -305,10 +317,32 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   addImageText: {
-    fontFamily: Fonts.Medium,
-    fontSize: width * 0.045,
-    color: Colors.tags,
+    fontFamily: Fonts.Bold,
+    fontSize: width * 0.055,
+    color: Colors.background,
     marginTop: height * 0.01,
+  },
+  blurContainer: {
+    width: width * 0.95,
+    height: height * 0.45,
+    borderRadius: 10,
+    overflow: "hidden",
+    position: "relative",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  backgroundImage: {
+    position: "absolute",
+    width: "95%",
+    height: "70%",
+  },
+  blurView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    width: "100%",
+    height: "100%",
   },
   customSwitchContainer: {
     alignItems: "center",
@@ -329,7 +363,7 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.015,
     paddingHorizontal: width * 0.08,
     borderRadius: 30,
-    marginTop: width * 0.13,
+    marginTop: width * 0.07,
   },
   nextButtonText: {
     color: Colors.background,

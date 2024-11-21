@@ -24,7 +24,10 @@ export const Colors = {
   tags: "#FF0040",
   filterBox: "#3F3333",
   profileBorder: "#DFDFDF",
-  noReviews: "#F5F5F5"
+  noReviews: "#F5F5F5",
+  halal: "#FF2C14",
+  gluten: "#FF9701",
+  veg: "#25D5B5"
 };
 
 export default Colors;

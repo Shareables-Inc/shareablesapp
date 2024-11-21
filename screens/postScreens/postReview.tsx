@@ -20,12 +20,14 @@ import { Fonts } from "../../utils/fonts";
 import { TextInput } from "react-native-gesture-handler";
 import { useAuth } from "../../context/auth.context";
 import { useUpdatePost } from "../../hooks/usePost";
-import { Sparkle, Utensils, HandPlatter, Info, CircleArrowLeft} from "lucide-react-native";
+import { Sparkle, Utensils, HandPlatter, Info, CircleArrowLeft, Salad, WheatOff, LeafyGreen, AccessibilityIcon } from "lucide-react-native";
+import {PostService} from "../../services/post.service"
 
 const { width, height } = Dimensions.get("window");
 
 const ReviewScreen = ({ route }) => {
   const { user } = useAuth();
+  const postService = new PostService();
   const {
     restaurantName,
     city,
@@ -140,12 +142,38 @@ const ReviewScreen = ({ route }) => {
     }
   };
 
+  const handleBackPress = useCallback(() => {
+    Alert.alert(
+      "Discard Post",
+      "Are you sure you want to discard this post?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              await postService.deletePost(initialPostId); // Use initialPostId instead of postId
+              console.log("Post deleted successfully");
+              navigation.navigate("MainTabNavigator", {
+                screen: "Post", 
+              });
+            } catch (error) {
+              console.error("Error deleting post:", error);
+              Alert.alert("Error", "Failed to delete post.");
+            }
+          },
+        },
+      ]
+    );
+  }, [initialPostId, postService, navigation]);
+  
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
           <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
+            <TouchableOpacity onPress={handleBackPress} activeOpacity={1}>
               <CircleArrowLeft color={Colors.text} size={28} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handlePost} style={styles.postButton}>
@@ -315,35 +343,44 @@ const ReviewScreen = ({ route }) => {
             <View style={styles.accessibilitySection}>
               <Text style={styles.accessibilityHeader}>Accessibility</Text>
               <View style={styles.accessibilityRatingsContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.accessibilityRatingSquare,
-                    isVegetarian && styles.selectedAccessibilitySquare,
-                  ]}
-                  onPress={() => handleAccessibilityToggle("vegetarian")}
-                >
-                  <Text style={styles.ratingText}>Vegetarian</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.accessibilityRatingSquareHalal,
+                  isVegetarian && styles.selectedAccessibilitySquare,
+                ]}
+                onPress={() => handleAccessibilityToggle("vegetarian")}
+              >
+                <View style={styles.circleIconContainer}>
+                  <Salad size={19} color={Colors.text} style={styles.accessibilityIcon} />
+                </View>
+                <Text style={styles.ratingText}>100% Halal</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[
-                    styles.accessibilityRatingSquare,
-                    isVegan && styles.selectedAccessibilitySquare,
-                  ]}
-                  onPress={() => handleAccessibilityToggle("vegan")}
-                >
-                  <Text style={styles.ratingText}>Vegan</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.accessibilityRatingSquareGluten,
+                  isVegan && styles.selectedAccessibilitySquare,
+                ]}
+                onPress={() => handleAccessibilityToggle("vegan")}
+              >
+                <View style={styles.circleIconContainer}>
+                  <WheatOff size={19} color={Colors.text} style={styles.accessibilityIcon} />
+                </View>
+                <Text style={styles.ratingText}>Gluten-free</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity
-                  style={[
-                    styles.accessibilityRatingSquare,
-                    isGlutenFree && styles.selectedAccessibilitySquare,
-                  ]}
-                  onPress={() => handleAccessibilityToggle("glutenFree")}
-                >
-                  <Text style={styles.ratingText}>Gluten Free</Text>
-                </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.accessibilityRatingSquareVeg,
+                  isGlutenFree && styles.selectedAccessibilitySquare,
+                ]}
+                onPress={() => handleAccessibilityToggle("glutenFree")}
+              >
+                <View style={styles.circleIconContainer}>
+                  <LeafyGreen size={19} color={Colors.text} style={styles.accessibilityIcon} />
+                </View>
+                <Text style={styles.ratingText}>Veg & Vegan</Text>
+              </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -511,7 +548,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.04,
   },
   accessibilitySection: {
-    marginTop: height * 0.07,
+    marginTop: height * 0.05,
     paddingHorizontal: width * 0.05,
     alignSelf: "flex-start",
   },
@@ -526,22 +563,57 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
   },
-  accessibilityRatingSquare: {
-    width: width * 0.25,
-    height: width * 0.12,
+  accessibilityRatingSquareHalal: {
+    width: width * 0.284,
+    height: width * 0.14,
     borderRadius: 10,
-    backgroundColor: Colors.charcoal,
+    backgroundColor: Colors.halal,
     justifyContent: "center",
     alignItems: "center",
+    flexDirection: "row",
     marginRight: width * 0.02,
+    paddingHorizontal: 8,
+  },
+  accessibilityRatingSquareGluten: {
+    width: width * 0.284,
+    height: width * 0.14,
+    borderRadius: 10,
+    backgroundColor: Colors.gluten,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    marginRight: width * 0.02,
+    paddingHorizontal: 8,
+  },
+  accessibilityRatingSquareVeg: {
+    width: width * 0.284,
+    height: width * 0.14,
+    borderRadius: 10,
+    backgroundColor: Colors.veg,
+    justifyContent: "center",
+    alignItems: "center",
+    flexDirection: "row",
+    marginRight: width * 0.02,
+    paddingHorizontal: 8,
   },
   selectedAccessibilitySquare: {
     backgroundColor: Colors.tags,
   },
   ratingText: {
-    fontSize: width * 0.04,
+    fontSize: width * 0.036,
     color: Colors.background,
     fontFamily: Fonts.Medium,
+    marginLeft: 5,
+  },
+  circleIconContainer: {
+    width: 35, 
+    height: 35,
+    borderRadius: 90, 
+    backgroundColor: Colors.background, 
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  accessibilityIcon: {
   },
 });
 

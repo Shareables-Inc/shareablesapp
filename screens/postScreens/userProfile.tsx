@@ -151,7 +151,13 @@ const UserProfileScreen = () => {
           text: isBlocked ? "Unblock" : "Block",
           onPress: async () => {
             try {
-              await toggleBlock();
+              if (!isBlocked) {
+                // If blocking, also unfollow the user
+                if (isFollowing) {
+                  await toggleFollow(); // Unfollow the user
+                }
+              }
+              await toggleBlock(); // Block or unblock the user
               Alert.alert(
                 isBlocked ? "User Unblocked" : "User Blocked",
                 `You have successfully ${
@@ -167,6 +173,7 @@ const UserProfileScreen = () => {
       ]
     );
   };
+  
   
 
   const handleReportUser = () => {
@@ -344,7 +351,7 @@ const UserProfileScreen = () => {
               }}
               style={styles.profilePic}
             />
-            {postUserId !== user!.uid && (
+            {postUserId !== user!.uid && !isBlocked && (
               <TouchableOpacity
                 style={[
                   styles.followButton,

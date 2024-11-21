@@ -26,6 +26,8 @@ import { retrieveSearchResult } from "../../services/search.service";
 import { EstablishmentService } from "../../services/establishment.service";
 import { mapRetrieveResponseToEstablishment } from "../../helpers/parseData";
 import { RootStackParamList } from "../../types/stackParams.types";
+import { CircleArrowLeft } from "lucide-react-native";
+import {PostService} from "../../services/post.service"
 
 const { width, height } = Dimensions.get("window");
 
@@ -42,6 +44,7 @@ const RestaurantSelectScreen = () => {
 
   const { mutate: createEstablishmentMutation } = useCreateEstablishment();
   const { mutate: updatePost } = useUpdatePost();
+  const postService = new PostService();
 
   const handleSelectTag = useCallback((tag: string) => {
     setSelectedTags((prev) =>
@@ -191,13 +194,45 @@ const RestaurantSelectScreen = () => {
 
   const handleCategoryPress = (category: "cuisines" | "foodOccasions" | "restaurantVibes") => {
     setActiveCategory(category === activeCategory ? null : category);
-  };
+  }
+
+  const handleBackPress = useCallback(() => {
+    Alert.alert(
+      "Discard Post",
+      "Are you sure you want to discard this post?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          onPress: async () => {
+            try {
+              await postService.deletePost(postId);
+              console.log("Post deleted successfully");
+              // Navigate back or refresh the UI as needed
+              navigation.navigate("MainTabNavigator", {
+                screen: "Post",
+              });
+            } catch (error) {
+              console.error("Error deleting post:", error);
+              Alert.alert("Error", "Failed to delete post.");
+            }
+          },
+        },
+      ]
+    );
+  }, [postId, postService, navigation]);
+  
 
   return (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity onPress={handleNextPress} style={styles.nextButtonContainer} activeOpacity={1}>
+      <View style={styles.nextButtonContainer}>
+      <TouchableOpacity onPress={handleBackPress} activeOpacity={1}>
+      <CircleArrowLeft size={28} color={Colors.text} />
+      </TouchableOpacity>
+      <TouchableOpacity onPress={handleNextPress} activeOpacity={1}>
         <Text style={styles.nextButton}>Next</Text>
       </TouchableOpacity>
+      </View>
       <View style={styles.header}>
         <Text style={styles.title}>Where did you go to eat?</Text>
       </View>
@@ -285,8 +320,10 @@ const styles = StyleSheet.create({
   },
   nextButtonContainer: {
     marginTop: "5%",
-    alignItems: "flex-end",
-    paddingRight: width * 0.07,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: width * 0.05
   },
   nextButton: {
     color: Colors.highlightText,

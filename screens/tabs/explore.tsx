@@ -152,7 +152,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    marginTop: width * 0.01
   },
   exploreText: {
     fontSize: width * 0.09,
@@ -181,7 +180,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.inputBackground,
     zIndex: 1000,
     maxHeight: height * 0.2,
-    minWidth: width * 0.25,  
+    minWidth: width * 0.25,
   },
   dropdownItem: {
     padding: width * 0.03,
