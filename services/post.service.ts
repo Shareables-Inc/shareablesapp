@@ -8,13 +8,11 @@ import {
   deleteDoc,
   doc,
   DocumentData,
-  DocumentSnapshot,
   getDoc,
   getDocs,
   increment,
   limit,
   orderBy,
-  Query,
   query,
   QueryDocumentSnapshot,
   runTransaction,
@@ -118,6 +116,78 @@ export class PostService {
           this.establishmentsCollection,
           establishmentId
         );
+
+        const postDoc = await transaction.get(postRef);
+        const establishmentDoc = await transaction.get(establishmentRef);
+
+        if (!postDoc.exists()) {
+          throw new Error("Post does not exist!");
+        }
+
+        if (!establishmentDoc.exists()) {
+          throw new Error("Establishment does not exist!");
+        }
+
+        // Update post
+        transaction.set(
+          postRef,
+          {
+            ...updateData,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+
+        // Update establishment
+        const establishmentData = establishmentDoc.data();
+        const currentPostCount = establishmentData.postCount || 0;
+        const currentAverageRating = 0;
+        const currentOverallRating = parseFloat(
+          updateData.ratings?.overall || "0"
+        );
+
+        const newPostCount = currentPostCount + 1;
+        const newTotalRating =
+          currentAverageRating * currentPostCount + currentOverallRating;
+        const newAverageRating = newTotalRating / newPostCount;
+
+        const clampedAverageRating = Math.max(
+          0,
+          Math.min(10, newAverageRating)
+        ).toFixed(1);
+
+        // add the new tags made from the post to the establishment but make sure there are no duplicates
+        const currentTags = establishmentData.tags || [];
+        const newTags = updateData.tags || [];
+        const updatedTags = [...currentTags, ...newTags];
+
+        // remove duplicates
+        const uniqueTags = Array.from(new Set(updatedTags));
+
+        transaction.update(establishmentRef, {
+          averageRating: clampedAverageRating,
+          postCount: increment(1),
+          tags: uniqueTags,
+          updatedAt: serverTimestamp(),
+        });
+      });
+
+      console.log("Post and establishment updated successfully");
+    } catch (error) {
+      console.error("Error updating post and establishment:", error);
+      throw error;
+    }
+  }
+
+  async editPost(
+    postId: string,
+    establishmentId: string,
+    updateData: Partial<Post>
+  ): Promise<void> {
+    try {
+      await runTransaction(db, async (transaction) => {
+        const postRef = doc(this.postsCollection, postId);
+        const establishmentRef = doc(this.establishmentsCollection, establishmentId);
   
         const postDoc = await transaction.get(postRef);
         const establishmentDoc = await transaction.get(establishmentRef);
@@ -130,68 +200,53 @@ export class PostService {
           throw new Error("Establishment does not exist!");
         }
   
-        // Sanitize tags
-        const sanitizedTags = (updateData.tags || []).filter((tag) => tag !== undefined && tag !== null);
+        const establishmentData = establishmentDoc.data();
+        const currentPostCount = establishmentData.postCount || 0;
+        const currentAverageRating = establishmentData.averageRating || 0.0;
+        const newOverallRating = parseFloat(updateData.ratings?.overall || "0");
   
-        // Sanitize accessibility flags
-        const sanitizedAccessibility = {
-          vegetarian: updateData.accessibility?.halal ?? false,
-          vegan: updateData.accessibility?.glutenFree ?? false,
-          familyFriendly: updateData.accessibility?.veg ?? false,
-        };
+        // Fetch the existing post's overall rating
+        const existingPostRating = parseFloat(postDoc.data().ratings?.overall || "0");
   
-        // Update post
+        // Debugging logs
+        console.log("currentPostCount:", currentPostCount);
+        console.log("currentAverageRating:", currentAverageRating);
+        console.log("newOverallRating:", newOverallRating);
+        console.log("existingPostRating:", existingPostRating);
+  
+        // Calculate the new total rating
+        const totalRatingWithoutExisting = currentAverageRating * currentPostCount - existingPostRating;
+        const newTotalRating = totalRatingWithoutExisting + newOverallRating;
+        const newAverageRating = newTotalRating / currentPostCount;
+  
+        // Ensure proper rounding
+        const roundedAverageRating = parseFloat(newAverageRating.toFixed(1));
+  
+        // Debugging logs
+        console.log("totalRatingWithoutExisting:", totalRatingWithoutExisting);
+        console.log("newTotalRating:", newTotalRating);
+        console.log("newAverageRating:", newAverageRating);
+        console.log("roundedAverageRating:", roundedAverageRating);
+  
+        // Add new tags while ensuring no duplicates
+        const currentTags = establishmentData.tags || [];
+        const newTags = updateData.tags || [];
+        const updatedTags = Array.from(new Set([...currentTags, ...newTags]));
+  
+        // Update the post
         transaction.set(
           postRef,
           {
             ...updateData,
-            tags: sanitizedTags, // Use sanitized tags
-            accessibility: sanitizedAccessibility, // Add sanitized accessibility
             updatedAt: serverTimestamp(),
           },
           { merge: true }
         );
   
-        // Update establishment
-        const establishmentData = establishmentDoc.data();
-        const currentPostCount = establishmentData.postCount || 0;
-        const currentAverageRating = establishmentData.averageRating || 0;
-        const currentOverallRating = parseFloat(
-          updateData.ratings?.overall || "0"
-        );
-  
-        const newPostCount = currentPostCount + 1;
-        const newTotalRating =
-          currentAverageRating * currentPostCount + currentOverallRating;
-        const newAverageRating = newTotalRating / newPostCount;
-  
-        const clampedAverageRating = Math.max(
-          1,
-          Math.min(10, newAverageRating)
-        ).toFixed(1);
-  
-        // Add the sanitized tags to the establishment without duplicates
-        const currentTags = establishmentData.tags || [];
-        const updatedTags = Array.from(new Set([...currentTags, ...sanitizedTags]));
-  
-        // Update accessibility statistics in the establishment
-        const updatedAccessibility = {
-          vegetarianCount: sanitizedAccessibility.vegetarian
-            ? (establishmentData.vegetarianCount || 0) + 1
-            : establishmentData.vegetarianCount || 0,
-          veganCount: sanitizedAccessibility.vegan
-            ? (establishmentData.veganCount || 0) + 1
-            : establishmentData.veganCount || 0,
-          familyFriendlyCount: sanitizedAccessibility.familyFriendly
-            ? (establishmentData.familyFriendlyCount || 0) + 1
-            : establishmentData.familyFriendlyCount || 0,
-        };
-  
+        // Update the establishment document
         transaction.update(establishmentRef, {
-          averageRating: clampedAverageRating,
-          postCount: increment(1),
-          tags: updatedTags, // Use sanitized tags
-          ...updatedAccessibility, // Update accessibility counts
+          averageRating: roundedAverageRating,
+          tags: updatedTags,
           updatedAt: serverTimestamp(),
         });
       });
@@ -202,6 +257,8 @@ export class PostService {
       throw error;
     }
   }
+  
+  
   
 
   async deletePost(postId: string): Promise<void> {
@@ -229,42 +286,16 @@ export class PostService {
     return posts;
   }
 
-  async getMostRecentPosts(
-    userId: string,
-    lastVisibleDoc?: DocumentSnapshot
-  ): Promise<{ posts: Post[]; lastVisible: DocumentSnapshot | null }> {
-    // Construct the query
-    let q: Query;
-    if (lastVisibleDoc) {
-      q = query(
-        this.postsCollection,
-        where("userId", "==", userId),
-        orderBy("createdAt", "desc"),
-        startAfter(lastVisibleDoc), // Start after the last document from the previous query
-        limit(30) // Limit to 30 posts
-      );
-    } else {
-      q = query(
-        this.postsCollection,
-        where("userId", "==", userId),
-        orderBy("createdAt", "desc"),
-        limit(30) // Fetch the first 30 posts
-      );
-    }
-  
-    // Fetch the data
+  async getMostRecentPosts(userId: string): Promise<Post[]> {
+    const q = query(
+      this.postsCollection,
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc"),
+      limit(30)
+    );
     const querySnapshot = await getDocs(q);
-  
-    // Map the results to posts
-    const posts = querySnapshot.docs.map(this.documentToPost);
-  
-    // Return the posts and the last visible document for pagination
-    return {
-      posts,
-      lastVisible: querySnapshot.docs[querySnapshot.docs.length - 1] || null,
-    };
+    return querySnapshot.docs.map(this.documentToPost);
   }
-  
 
   async getTopPosters(limit: number = 4): Promise<TopPoster[]> {
     try {

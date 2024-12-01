@@ -338,18 +338,38 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   };
 
   const handleEditPost = () => {
+    if (
+      !expandedPost ||
+      !expandedPost.id ||
+      !expandedPost.establishmentDetails?.id ||
+      !expandedPost.establishmentDetails?.name ||
+      !expandedPost.establishmentDetails?.city ||
+      !expandedPost.establishmentDetails?.country
+    ) {
+      console.error("Required post data is missing");
+      Alert.alert("Error", "Unable to edit the post. Some details are missing.");
+      return;
+    }
+  
     setModalVisible(false);
     navigation.navigate("Review", {
       isEditing: true,
-      postId: expandedPost?.id,
-      establishmentId: expandedPost?.establishmentDetails.id,
-      restaurantName: expandedPost?.establishmentDetails.name,
-      city: expandedPost?.establishmentDetails.city,
-      country: expandedPost?.establishmentDetails.country,
-      review: expandedPost?.review,
-      ratings: expandedPost?.ratings,
+      postId: expandedPost.id,
+      establishmentId: expandedPost.establishmentDetails.id,
+      restaurantName: expandedPost.establishmentDetails.name,
+      city: expandedPost.establishmentDetails.city,
+      country: expandedPost.establishmentDetails.country,
+      review: expandedPost.review,
+      ratings: expandedPost.ratings,
+      tags: expandedPost.tags || [],
+      accessibility: expandedPost.accessibility || {
+        halal: false,
+        glutenFree: false,
+        veg: false,
+      },
     });
   };
+  
   
   
 
@@ -652,17 +672,22 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
             {comments.map((comment, index) => (
               <View key={index} style={styles.commentContainer}>
-                <Image
-                  source={{ uri: comment.userProfilePicture }}
-                  style={styles.commentAvatar}
-                />
+                <TouchableOpacity
+                  onPress={() =>
+                    navigation.navigate("UserProfile", { userId: comment.userId })
+                  }
+                  activeOpacity={1}
+                >
+                  <Image
+                    source={{ uri: comment.userProfilePicture }}
+                    style={styles.commentAvatar}
+                  />
+                </TouchableOpacity>
                 <View style={styles.commentDetails}>
                   <Text style={styles.commentUsername}>
                     @{comment.userName}{" "}
                     <Text style={styles.timestampText}>
-                      {comment.createdAt
-                        ? getDaysAgo(comment.createdAt)
-                        : "now"}
+                      {comment.createdAt ? getDaysAgo(comment.createdAt) : "now"}
                     </Text>
                   </Text>
                   <Text style={styles.commentText}>{comment.comment}</Text>

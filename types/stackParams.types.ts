@@ -57,8 +57,6 @@ export type RootStackParamList = {
   EditProfile: undefined;
   NotificationsSettings: undefined;
   PrivacySettings: undefined;
-  LocationSelection: undefined;
-  TagsSelection: undefined;
   ExpandedPost: { postId: string; isEditing?: boolean };
   UserProfile: { userId: string };
   RestaurantProfile: {

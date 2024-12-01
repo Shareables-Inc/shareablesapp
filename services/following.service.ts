@@ -24,6 +24,7 @@ export class FollowingService {
   private followingCollection = collection(db, "following");
   private userStatsCollection = collection(db, "userStats");
   private postsCollection = collection(db, "posts");
+  
 
   async followUser(followerId: string, followingId: string): Promise<void> {
     const relationshipId = `${followerId}_${followingId}`;

@@ -36,9 +36,24 @@ const EditProfileScreen = () => {
   const locationTabRef = useRef(null);
 
   const locations = [
-    "Brampton", "Burlington", "Guelph", "Hamilton", "Laval", 
-    "London", "Markham", "Mississauga", "Montreal", "Oakville", 
-    "Ottawa", "Scarborough", "Toronto", "Windsor", "York"
+    "Brampton",
+    "Burlington",
+    "Guelph",
+    "Hamilton",
+    "Kingston",
+    "Laval",
+    "London",
+    "Markham",
+    "Mississauga",
+    "Montreal",
+    "Niagara",
+    "Oakville",
+    "Ottawa",
+    "Scarborough",
+    "Toronto",
+    "Waterloo",
+    "Windsor",
+    "York",
   ];
 
   useEffect(() => {

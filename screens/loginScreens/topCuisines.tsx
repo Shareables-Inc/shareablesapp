@@ -65,6 +65,7 @@ const TopCuisinesScreen = () => {
         key={index}
         style={[styles.tag, selectedTags.includes(tag) && styles.selectedTag]}
         onPress={() => handleSelectTag(tag)}
+        activeOpacity={0.7}
       >
         <Text
           style={[
@@ -83,27 +84,15 @@ const TopCuisinesScreen = () => {
       Alert.alert("Selection Error", "Please select at least 5 tags.");
       return;
     }
-  
+
     try {
       const userDocRef = doc(db, "users", user!.uid);
-  
-      // Save the selected cuisines and mark onboarding as complete
       await setDoc(
         userDocRef,
-        {
-          favoriteCuisines: selectedTags,
-          onboardingComplete: true, // Mark onboarding as complete
-        },
+        { favoriteCuisines: selectedTags },
         { merge: true }
       );
-  
-      await refreshUserProfile(); // Refresh the user profile after the update
-  
-      // Navigate to the main feed (MainTabNavigator)
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "MainTabNavigator" }],
-      });
+      navigation.navigate("InviteContacts");
     } catch (error) {
       console.error("Firestore Error:", error);
       Alert.alert("Update Failed", "Failed to save your favorite cuisines.");
@@ -137,18 +126,21 @@ const TopCuisinesScreen = () => {
         <TouchableOpacity
           style={[styles.tagTypeTitle, activeCategory === "cuisines" && styles.activeTagButton]}
           onPress={() => handleCategoryPress("cuisines")}
+          activeOpacity={0.7}
         >
           <Text style={styles.tagType}>Cuisine</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tagTypeTitle, activeCategory === "foodOccasions" && styles.activeTagButton]}
           onPress={() => handleCategoryPress("foodOccasions")}
+          activeOpacity={0.7}
         >
           <Text style={styles.tagType}>Occasion</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tagTypeTitle, activeCategory === "restaurantVibes" && styles.activeTagButton]}
           onPress={() => handleCategoryPress("restaurantVibes")}
+          activeOpacity={0.7}
         >
           <Text style={styles.tagType}>Atmosphere</Text>
         </TouchableOpacity>
@@ -166,8 +158,8 @@ const TopCuisinesScreen = () => {
 
       {/* Next Step Button */}
       <View style={styles.nextButtonContainer}>
-        <TouchableOpacity style={styles.nextButton} onPress={handleNextStep}>
-          <Text style={styles.nextButtonText}>Let's Go!</Text>
+        <TouchableOpacity style={styles.nextButton} onPress={handleNextStep} activeOpacity={1}>
+          <Text style={styles.nextButtonText}>Next Step</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

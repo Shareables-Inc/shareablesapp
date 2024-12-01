@@ -34,8 +34,26 @@ export default function NameInputScreen() {
   const [showLocationDropdown, setShowLocationDropdown] = useState<boolean>(false);
   const locationTabRef = useRef(null);
 
-  const locations = ["Brampton", "Burlington", "Guelph", "Hamilton", "Laval", "London", "Markham", 
-    "Mississauga", "Montreal", "Oakville", "Ottawa", "Scarborough", "Toronto", "Windsor", "York"];
+  const locations = [
+    "Brampton",
+    "Burlington",
+    "Guelph",
+    "Hamilton",
+    "Kingston",
+    "Laval",
+    "London",
+    "Markham",
+    "Mississauga",
+    "Montreal",
+    "Niagara",
+    "Oakville",
+    "Ottawa",
+    "Scarborough",
+    "Toronto",
+    "Waterloo",
+    "Windsor",
+    "York",
+  ];
 
   useLayoutEffect(() => {
     if (locationTabRef.current) {

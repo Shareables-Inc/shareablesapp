@@ -21,9 +21,10 @@ import { db } from "../../firebase/firebaseConfig";
 import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
-import { CircleArrowLeft } from "lucide-react-native";
+import { CircleArrowLeft, CircleCheck } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import { UserProfile } from "../../models/userProfile"; // Import UserProfile model
+import { FollowingService } from "../../services/following.service";
 
 const { width, height } = Dimensions.get("window");
 
@@ -43,6 +44,8 @@ const FollowFriendsScreen = ({
   const [fadeAnims, setFadeAnims] = useState<Animated.Value[]>([]);
   const [nextFriendIndex, setNextFriendIndex] = useState<number>(4);
   const { userContacts } = route.params;
+  const [followedUsers, setFollowedUsers] = useState<Record<string, boolean>>({});
+
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -56,41 +59,55 @@ const FollowFriendsScreen = ({
   const fetchMatchingUsers = async (phoneNumbers: string[]) => {
     const normalizedNumbers = phoneNumbers.map(normalizePhoneNumber);
     const uniqueNumbers = [...new Set(normalizedNumbers)];
-
-    const chunkSize = 10; // Set chunk size to prevent Firestore query limits
     const chunks = [];
-
-    for (let i = 0; i < uniqueNumbers.length; i += chunkSize) {
-      chunks.push(uniqueNumbers.slice(i, i + chunkSize));
+    for (let i = 0; i < uniqueNumbers.length; i += 10) {
+      chunks.push(uniqueNumbers.slice(i, i + 10));
     }
-
+  
     try {
       const usersRef = collection(db, "users");
       const matchingUsers: UserProfile[] = [];
-
+      const followingService = new FollowingService();
+  
+      // Fetch the list of already followed users
+      const followedIds = await followingService.getFollowing(user!.uid);
+      console.log("Followed user IDs:", followedIds);
+  
       for (const chunk of chunks) {
         const q = query(usersRef, where("phoneNumber", "in", chunk));
         const querySnapshot = await getDocs(q);
-
+  
         querySnapshot.forEach((doc) => {
           const userData = doc.data() as UserProfile;
-
-          // Filter out the current user and avoid duplicates
-          if (userData.phoneNumber !== user?.phoneNumber && !matchingUsers.find(u => u.username === userData.username)) {
+  
+          // Add document ID as the user ID
+          userData.id = doc.id;
+  
+          console.log("Fetched user:", userData);
+  
+          const isCurrentUser = userData.email?.toLowerCase() === user?.email?.toLowerCase();
+          const isAlreadyFollowed = followedIds.includes(userData.id);
+  
+          if (!isCurrentUser && !isAlreadyFollowed && !matchingUsers.find(u => u.username === userData.username)) {
             matchingUsers.push(userData);
+            console.log("Added user:", userData.username);
+          } else {
+            console.log("Excluded user:", userData.username);
           }
         });
       }
-
-      // Update friends and initialize animations
+  
       setFriends(matchingUsers);
       setVisibleFriends(matchingUsers.slice(0, 4));
       setFadeAnims(matchingUsers.slice(0, 4).map(() => new Animated.Value(1)));
     } catch (error) {
+      console.error("Error fetching users:", error);
       Alert.alert("Error", "Unable to fetch user data. Please try again.");
     }
   };
-
+  
+  
+  
   useEffect(() => {
     if (userContacts && userContacts.length > 0) {
       fetchMatchingUsers(userContacts);
@@ -108,26 +125,50 @@ const FollowFriendsScreen = ({
     });
   };
 
-  const handleFollow = (index: number) => {
-    Animated.timing(fadeAnims[index], {
-      toValue: 0,
-      duration: 500,
-      useNativeDriver: true,
-    }).start(() => {
-      setVisibleFriends((prevVisibleFriends) => {
-        const updatedVisibleFriends = [...prevVisibleFriends];
-        if (nextFriendIndex < friends.length) {
-          updatedVisibleFriends[index] = friends[nextFriendIndex];
-          setNextFriendIndex(nextFriendIndex + 1);
-          fadeAnims[index].setValue(1); // Reset animation for next use
-        } else {
-          updatedVisibleFriends.splice(index, 1);
-          fadeAnims.splice(index, 1);
-        }
-        return updatedVisibleFriends;
+  const handleFollow = async (index: number) => {
+    const userToFollow = visibleFriends[index];
+    if (!userToFollow || !userToFollow.id) {
+      console.error("User to follow has no ID:", userToFollow);
+      Alert.alert("Error", "Unable to follow this user.");
+      return;
+    }
+  
+    try {
+      await new FollowingService().followUser(user!.uid, userToFollow.id);
+  
+      setFollowedUsers((prev) => ({
+        ...prev,
+        [userToFollow.id]: true,
+      }));
+  
+      Animated.timing(fadeAnims[index], {
+        toValue: 0,
+        duration: 1500,
+        useNativeDriver: true,
+      }).start(() => {
+        setVisibleFriends((prevVisibleFriends) => {
+          const updatedVisibleFriends = [...prevVisibleFriends];
+          if (nextFriendIndex < friends.length) {
+            updatedVisibleFriends[index] = friends[nextFriendIndex];
+            setNextFriendIndex(nextFriendIndex + 1);
+            fadeAnims[index].setValue(1);
+          } else {
+            updatedVisibleFriends.splice(index, 1);
+            fadeAnims.splice(index, 1);
+          }
+          return updatedVisibleFriends;
+        });
       });
-    });
+  
+      console.log(`User ${userToFollow.username} successfully followed.`);
+    } catch (error) {
+      console.error("Error following user:", error);
+      Alert.alert("Error", "Failed to follow the user. Please try again.");
+    }
   };
+  
+  
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -140,7 +181,7 @@ const FollowFriendsScreen = ({
 
       <Text style={styles.title}>Look who's already on Shareables!</Text>
       <Text style={styles.description}>
-        Follow them to curate your recommendations.
+        Follow them to start receiving recommendations.
       </Text>
 
       {visibleFriends.length > 0 ? (
@@ -154,13 +195,21 @@ const FollowFriendsScreen = ({
                 source={{ uri: friend.profilePicture }}
                 style={styles.profileImage}
               />
-              <TouchableOpacity
-                style={styles.inviteButton}
-                activeOpacity={1}
-                onPress={() => handleFollow(index)}
-              >
-                <Text style={styles.inviteButtonText}>follow</Text>
-              </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.inviteButton,
+                followedUsers[friend.id] && styles.followedButton, // Style for followed state
+              ]}
+              activeOpacity={1}
+              onPress={() => handleFollow(index)}
+              disabled={followedUsers[friend.id]} // Disable if already followed
+            >
+              {followedUsers[friend.id] ? (
+                <CircleCheck color={Colors.background} size={20} />
+              ) : (
+                <Text style={styles.inviteButtonText}>Follow</Text>
+              )}
+            </TouchableOpacity>
               <Text style={styles.contactName}>@{friend.username}</Text>
               <Text
                 style={styles.contactNumber}
@@ -258,7 +307,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     marginBottom: 7,
-    borderColor: Colors.background,
+    borderColor: Colors.inputBackground,
     borderWidth: 2,
   },
   contactName: {
@@ -273,8 +322,8 @@ const styles = StyleSheet.create({
   },
   inviteButton: {
     backgroundColor: Colors.background,
-    paddingVertical: 8,
-    paddingHorizontal: 30,
+    paddingVertical: 6,
+    paddingHorizontal: 23,
     borderRadius: 30,
     marginTop: 5,
     marginBottom: 10,
@@ -320,6 +369,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: Fonts.Bold,
   },
+  followedButton: {
+    backgroundColor: Colors.followed,
+  },
+  
 });
 
 export default FollowFriendsScreen;

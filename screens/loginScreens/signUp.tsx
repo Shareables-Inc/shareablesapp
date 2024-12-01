@@ -52,7 +52,7 @@ export default function SignUpScreen() {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <StatusBar style="auto" />
 
         {/* Cancel Button */}
@@ -62,13 +62,13 @@ export default function SignUpScreen() {
 
         <View style={styles.logoContainer}>
           <Image
-            source={require("../../assets/images/signUp.png")}
+            source={require("../../assets/images/createAccount.png")}
             style={styles.logo}
-            resizeMode="contain"
+            resizeMode="cover"
           />
         </View>
 
-        <Text style={styles.title}>Create Account</Text>
+        <Text style={styles.title}>Create Your Account</Text>
 
         <View style={styles.contentContainer}>
           {/* Email Input */}
@@ -146,7 +146,7 @@ export default function SignUpScreen() {
             </TouchableOpacity>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
     </TouchableWithoutFeedback>
   );
 }
@@ -162,37 +162,37 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: height * 0.1,
     left: width * 0.1,
+    zIndex: 100
   },
   cancelButtonText: {
-    fontSize: width * 0.045,
+    fontSize: width * 0.05,
     color: Colors.text,
     fontFamily: Fonts.SemiBold,
   },
   logoContainer: {
-    flex: 0.35,
+    flex: 0.85,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: height * 0.05,
-    marginTop: height * 0.12,
   },
   logo: {
-    width: width * 0.25,
-    height: height * 0.25,
+    width: width, 
+    height: height * 0.6,
+    marginTop: -(width * 0.12),
   },
   title: {
-    fontSize: width * 0.08,
+    fontSize: width * 0.09,
     color: Colors.text,
-    marginBottom: height * 0.05,
+    marginBottom: height * 0.03,
     fontFamily: Fonts.SemiBold,
   },
   contentContainer: {
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     width: "100%",
     paddingHorizontal: width * 0.05,
   },
   inputContainer: {
-    width: width * 0.8,
+    width: width * 0.75,
     backgroundColor: Colors.inputBackground,
     borderRadius: 10,
     height: height * 0.058,
@@ -222,11 +222,11 @@ const styles = StyleSheet.create({
     marginTop: height * 0.05,
   },
   nextButton: {
-    height: height * 0.05,
+    height: width * 0.13,
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    width: width * 0.4,
+    width: width * 0.37,
     backgroundColor: Colors.text,
   },
   nextButtonText: {

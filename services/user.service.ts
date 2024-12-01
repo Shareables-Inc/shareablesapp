@@ -52,6 +52,7 @@ export class UserService {
     }
   }
 
+
   // Method to get top 10 users with the most followers using userStats and cache for 24 hours
   public async getTopFollowedUsers(location?: string): Promise<(UserProfile & { followerCount: number })[]> {
     const now = Date.now();

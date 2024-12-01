@@ -17,9 +17,12 @@ import { UserProfile } from "./user";
 import { Post } from "./post";
 import { v4 as uuidv4 } from "uuid";
 import { sendPushNotifications } from "./api/expo.api";
+import { analyzeImage } from "./api/vision.api";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+
+
 
 export const sendCommentNotification = onDocumentCreated(
   "comments/{commentId}",
@@ -474,8 +477,6 @@ export const autoDeletePostIfNoImages = onDocumentCreated(
 );
 
 
-
-
 export const scheduledDeleteIncompletePosts = onSchedule(
   {
     schedule: "0 4 * * *", // Run at 4:00 AM every day
@@ -523,7 +524,7 @@ export const scheduledDeleteIncompletePosts = onSchedule(
   }
 );
 
-
+export { analyzeImage };
 
 
 

@@ -28,21 +28,31 @@ export class EstablishmentService {
   private establishmentsCollection = collection(db, "establishments");
   private postsCollection = collection(db, "posts");
 
-  async createEstablishment(establishment: Establishment) {
-    // Create the document without the id field
+  async createEstablishment(establishment: Establishment, postRating?: number) {
+    // Extract the id field and create the document without it
     const { id, ...establishmentWithoutId } = establishment;
-
+  
+    // Default values for post count and average rating
+    const initialPostCount = postRating ? 1 : 0;
+    const initialAverageRating = postRating || 0.0;
+  
     // Add the document to Firestore
-    const establishmentDoc = await addDoc(
-      this.establishmentsCollection,
-      establishmentWithoutId
-    );
-
+    const establishmentDoc = await addDoc(this.establishmentsCollection, {
+      ...establishmentWithoutId,
+      postCount: initialPostCount, // Start at 1 if a postRating exists, otherwise 0
+      averageRating: initialAverageRating, // Start with the first post's rating or 0
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+  
     // Update the document with its id
     await updateDoc(establishmentDoc, { id: establishmentDoc.id });
-
+  
+    console.log("Establishment created with ID:", establishmentDoc.id);
+  
     return establishmentDoc.id;
   }
+  
 
   async getEstablishmentByMapboxId(
     mapboxId: string

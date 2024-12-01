@@ -149,7 +149,7 @@ const InviteContactsScreen = () => {
         enjoy sharing restaurants to family and friends.
       </Text>
       <Text style={styles.description}>
-        Invite 3 contacts to start sharing.
+        Invite 3 friends so they don't feel left out.
       </Text>
       <ScrollView
         style={styles.contactsContainer}
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     top: "100%",
   },
   title: {
-    fontSize: width * 0.07,
+    fontSize: width * 0.075,
     color: Colors.text,
     fontFamily: Fonts.SemiBold,
     width: width * 0.9,
@@ -221,18 +221,19 @@ const styles = StyleSheet.create({
     textAlign: "left",
     marginLeft: width * 0.07,
     marginTop: height * 0.095,
+    marginBottom: width * 0.05
   },
   nameText: {
     color: Colors.text,
     fontFamily: Fonts.SemiBold,
   },
   description: {
-    fontSize: width * 0.055,
+    fontSize: width * 0.05,
     textAlign: "left",
     width: width * 0.85,
     fontFamily: Fonts.Medium,
     paddingLeft: width * 0.07,
-    color: Colors.highlightText,
+    color: Colors.tags,
   },
   nextButtonContainer: {
     width: width * 1,
@@ -295,7 +296,7 @@ const styles = StyleSheet.create({
     color: Colors.placeholderText,
   },
   inviteButton: {
-    backgroundColor: Colors.highlightText,
+    backgroundColor: Colors.tags,
     paddingVertical: height * 0.01,
     paddingHorizontal: width * 0.05,
     borderRadius: 10,

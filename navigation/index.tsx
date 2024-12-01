@@ -11,10 +11,8 @@ import FollowFriendsScreen from "../screens/loginScreens/followFriends";
 import InviteContactsScreen from "../screens/loginScreens/inviteContacts";
 import TopCuisinesScreen from "../screens/loginScreens/topCuisines";
 import NotificationsScreen from "../screens/notificationScreens/notifications";
-import LocationSelectionScreen from "../screens/postScreens/locationSelection";
 import RestaurantSelectScreen from "../screens/postScreens/restaurantSelect";
 import ReviewScreen from "../screens/postScreens/postReview";
-import TagsSelectionScreen from "../screens/postScreens/tagsSelection";
 import UserProfileScreen from "../screens/postScreens/userProfile";
 import RestaurantProfileScreen from "../screens/restaurantScreens/restaurantProfile";
 import AccountSettingsScreen from "../screens/settingsScreens/accountSettings";
@@ -244,14 +242,6 @@ export const MainApp = () => {
             <Stack.Screen
               name="PrivacySettings"
               component={PrivacySettingsScreen}
-            />
-            <Stack.Screen
-              name="LocationSelection"
-              component={LocationSelectionScreen}
-            />
-            <Stack.Screen
-              name="TagsSelection"
-              component={TagsSelectionScreen}
             />
             <Stack.Screen name="ExpandedPost" component={ExpandedPost} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} />

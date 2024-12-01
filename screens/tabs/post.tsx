@@ -29,6 +29,7 @@ import { useAuth } from "../../context/auth.context";
 import { serverTimestamp } from "firebase/firestore";
 import { BlurView } from "expo-blur";
 import FastImage from "react-native-fast-image";
+import { checkImageForObjectionableContent } from "../../utils/contentFilter";
 
 const { width, height } = Dimensions.get("window");
 
@@ -48,74 +49,88 @@ const PostScreen = () => {
       quality: 1,
       selectionLimit: 3,
     });
-
+  
     if (!result.canceled && result.assets.length > 0) {
       setUploading(true);
       const selectedImageUris = result.assets.map((asset) => asset.uri);
-
+  
       try {
+        // Step 1: Process images
         const processedImages = await Promise.all(
-          selectedImageUris.map(async (uri) => await processImage(uri))
+          selectedImageUris.map((uri) => processImage(uri))
         );
-
+  
+        // Step 2: Filter images with objectionable content
+        const safeImages: string[] = [];
+        for (const imageUri of processedImages) {
+          const isSafe = await checkImageForObjectionableContent(imageUri);
+          if (isSafe) {
+            safeImages.push(imageUri);
+          } else {
+            console.warn(`Image rejected: ${imageUri}`);
+          }
+        }
+  
+        if (safeImages.length === 0) {
+          Alert.alert(
+            "No Valid Images",
+            "All selected images were rejected. Please choose others."
+          );
+          setUploading(false);
+          return;
+        }
+  
+        // Step 3: Upload valid images
         const uploadedUrls = await Promise.all(
-          processedImages.map(async (imageUri, index) => {
-            const downloadUrl = await uploadImageToFirebase(imageUri, index);
-            return downloadUrl;
-          })
+          safeImages.map((uri, index) => uploadImageToFirebase(uri, index))
         );
-
+  
         setUploadedImageUrls(uploadedUrls.filter((url) => url !== null));
       } catch (error) {
-        console.error("Error uploading images:", error);
-        Alert.alert("Image Upload Error", "There was an error uploading images.");
+        console.error("Error handling images:", error);
+        Alert.alert("Image Upload Error", "There was an issue uploading images.");
       } finally {
         setUploading(false);
       }
     }
   };
-
-  const processImage = async (uri: string) => {
+  
+  
+  const processImage = async (uri: string): Promise<string> => {
     try {
       const manipResult = await ImageManipulator.manipulateAsync(
         uri,
         [{ resize: { width: 1080 } }],
         { compress: 0.65, format: ImageManipulator.SaveFormat.JPEG }
       );
-
-      const response = await fetch(manipResult.uri);
-      const blob = await response.blob();
-
-      if (blob.size > 2 * 1024 * 1024) {
-        throw new Error("File size exceeds the limit of 2MB after processing");
-      }
-
       return manipResult.uri;
     } catch (error) {
       console.error("Error processing image:", error);
-      Alert.alert("Image Processing Error", "There was an error processing the image.");
-      return uri;
+      throw new Error("Image Processing Error");
     }
   };
+  
 
-  const uploadImageToFirebase = async (uri: string, index: number, retries = 3) => {
+  const uploadImageToFirebase = async (uri: string, index: number, retries = 3): Promise<string | null> => {
     try {
       const response = await fetch(uri);
       const blob = await response.blob();
-
+  
       const storageRef = ref(getStorage(), `images/user_${Date.now()}_${index}`);
       await uploadBytes(storageRef, blob);
-
+  
       const downloadURL = await getDownloadURL(storageRef);
       return downloadURL;
     } catch (error) {
       if (retries > 0) {
+        console.warn(`Retrying upload (${retries} retries left) for ${uri}`);
         return uploadImageToFirebase(uri, index, retries - 1);
-      } else {
-        return null;
       }
+      console.error("Upload failed after retries:", error);
+      return null;
     }
   };
+  
 
   const getComponentType = () => {
     if (uploadedImageUrls.length === 1) {
@@ -215,9 +230,9 @@ const PostScreen = () => {
           style={styles.backgroundImage}
           resizeMode="cover"
         />
-        <BlurView style={styles.blurView} intensity={40} tint="light">
+        <BlurView style={styles.blurView} intensity={25} tint="systemChromeMaterial">
           <TouchableOpacity onPress={pickImages} style={styles.imagePicker} activeOpacity={1}>
-            <ImagePlus color={Colors.background} size={45} />
+            <ImagePlus color={Colors.background} size={45} strokeWidth={2.3}/>
             <Text style={styles.addImageText}>select images</Text>
           </TouchableOpacity>
         </BlurView>
@@ -321,12 +336,12 @@ const styles = StyleSheet.create({
   },
   addImageText: {
     fontFamily: Fonts.Bold,
-    fontSize: width * 0.055,
+    fontSize: width * 0.06,
     color: Colors.background,
     marginTop: height * 0.01,
   },
   blurContainer: {
-    width: width * 0.95,
+    width: width * 0.8,
     height: height * 0.45,
     borderRadius: 10,
     overflow: "hidden",
@@ -336,16 +351,16 @@ const styles = StyleSheet.create({
   },
   backgroundImage: {
     position: "absolute",
-    width: "95%",
-    height: "70%",
+    width: "100%",
+    height: "110%",
   },
   blurView: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 10,
-    width: "100%",
-    height: "100%",
+    borderRadius: 50,
+    width: "95%",
+    overflow: "hidden"
   },
   customSwitchContainer: {
     alignItems: "center",

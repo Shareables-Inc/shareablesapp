@@ -19,7 +19,7 @@ import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { TextInput } from "react-native-gesture-handler";
 import { useAuth } from "../../context/auth.context";
-import { useUpdatePost } from "../../hooks/usePost";
+import { useEditPost } from "../../hooks/usePost";
 import { Sparkle, Utensils, HandPlatter, Info, CircleArrowLeft, Salad, WheatOff, LeafyGreen, AccessibilityIcon } from "lucide-react-native";
 import {PostService} from "../../services/post.service"
 
@@ -40,7 +40,7 @@ const ReviewScreen = ({ route }) => {
     ratings = {}, // Default empty object for ratings
   } = route.params;
   const navigation = useNavigation();
-  const { mutate: updatePost } = useUpdatePost();
+  const { mutate: editPost } = useEditPost();
 
   const [review, setReview] = useState<string>(initialReview);
   const [ratingAmbiance, setRatingAmbiance] = useState<number>(
@@ -58,9 +58,9 @@ const ReviewScreen = ({ route }) => {
   const [infoModalVisible, setInfoModalVisible] = useState(false);
 
   // Accessibility ratings state
-  const [isVegetarian, setIsVegetarian] = useState(false);
-  const [isVegan, setIsVegan] = useState(false);
+  const [isHalal, setIsHalal] = useState(false);
   const [isGlutenFree, setIsGlutenFree] = useState(false);
+  const [isVeg, setIsVeg] = useState(false);
 
   const toggleInfoModal = () => setInfoModalVisible(!infoModalVisible);
 
@@ -86,9 +86,9 @@ const ReviewScreen = ({ route }) => {
   };
 
   const handleAccessibilityToggle = (type) => {
-    if (type === "vegetarian") setIsVegetarian(!isVegetarian);
-    if (type === "vegan") setIsVegan(!isVegan);
-    if (type === "glutenFree") setIsGlutenFree(!isGlutenFree);
+    if (type === "halal") setIsHalal(!isHalal);
+    if (type === "glutenfree") setIsGlutenFree(!isGlutenFree);
+    if (type === "veg") setIsVeg(!isVeg);
   };
 
   const handlePost = async () => {
@@ -112,7 +112,7 @@ const ReviewScreen = ({ route }) => {
     );
 
     try {
-      updatePost({
+      editPost({
         id: initialPostId,
         data: {
           review,
@@ -124,9 +124,9 @@ const ReviewScreen = ({ route }) => {
             overall: overallRating,
           },
           accessibility: {
-            vegetarian: isVegetarian,
-            vegan: isVegan,
+            halal: isHalal,
             glutenFree: isGlutenFree,
+            veg: isVeg,
           },
         },
         establishmentId,
@@ -341,45 +341,44 @@ const ReviewScreen = ({ route }) => {
             </View>
 
             <View style={styles.accessibilitySection}>
-              <Text style={styles.accessibilityHeader}>Accessibility</Text>
               <View style={styles.accessibilityRatingsContainer}>
               <TouchableOpacity
                 style={[
                   styles.accessibilityRatingSquareHalal,
-                  isVegetarian && styles.selectedAccessibilitySquare,
+                  isHalal && styles.selectedAccessibilitySquareHalal,
                 ]}
-                onPress={() => handleAccessibilityToggle("vegetarian")}
+                onPress={() => handleAccessibilityToggle("halal")}
               >
-                <View style={styles.circleIconContainer}>
-                  <Salad size={19} color={Colors.text} style={styles.accessibilityIcon} />
+                <View style={[styles.circleIconContainer, isHalal && styles.circleIconContainerSelected]}>
+                  <Salad size={17} color={Colors.text} style={styles.accessibilityIcon} />
                 </View>
-                <Text style={styles.ratingText}>100% Halal</Text>
+                <Text style={[styles.ratingText, isHalal && styles.ratingTextSelected]}>100% Halal</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
                   styles.accessibilityRatingSquareGluten,
-                  isVegan && styles.selectedAccessibilitySquare,
+                  isGlutenFree && styles.selectedAccessibilitySquareGluten,
                 ]}
-                onPress={() => handleAccessibilityToggle("vegan")}
+                onPress={() => handleAccessibilityToggle("glutenfree")}
               >
-                <View style={styles.circleIconContainer}>
-                  <WheatOff size={19} color={Colors.text} style={styles.accessibilityIcon} />
+                <View style={[styles.circleIconContainer, isGlutenFree && styles.circleIconContainerSelected]}>
+                  <WheatOff size={17} color={Colors.text} style={styles.accessibilityIcon} />
                 </View>
-                <Text style={styles.ratingText}>Gluten-free</Text>
+                <Text style={[styles.ratingText, isGlutenFree && styles.ratingTextSelected]}>Gluten-free</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[
                   styles.accessibilityRatingSquareVeg,
-                  isGlutenFree && styles.selectedAccessibilitySquare,
+                  isVeg && styles.selectedAccessibilitySquareVeg,
                 ]}
-                onPress={() => handleAccessibilityToggle("glutenFree")}
+                onPress={() => handleAccessibilityToggle("veg")}
               >
-                <View style={styles.circleIconContainer}>
-                  <LeafyGreen size={19} color={Colors.text} style={styles.accessibilityIcon} />
+                <View style={[styles.circleIconContainer, isVeg && styles.circleIconContainerSelected]}>
+                  <LeafyGreen size={17} color={Colors.text} style={styles.accessibilityIcon} />
                 </View>
-                <Text style={styles.ratingText}>Veg & Vegan</Text>
+                <Text style={[styles.ratingText, isVeg && styles.ratingTextSelected]}>Veg & Vegan</Text>
               </TouchableOpacity>
               </View>
             </View>
@@ -565,51 +564,75 @@ const styles = StyleSheet.create({
   },
   accessibilityRatingSquareHalal: {
     width: width * 0.284,
-    height: width * 0.14,
+    height: width * 0.135,
     borderRadius: 10,
-    backgroundColor: Colors.halal,
+    backgroundColor: Colors.background,
+    borderColor: Colors.halal,
+    borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
-    marginRight: width * 0.02,
-    paddingHorizontal: 8,
   },
   accessibilityRatingSquareGluten: {
     width: width * 0.284,
-    height: width * 0.14,
+    height: width * 0.135,
     borderRadius: 10,
-    backgroundColor: Colors.gluten,
+    backgroundColor: Colors.background,
+    borderColor: Colors.gluten,
+    borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
-    marginRight: width * 0.02,
-    paddingHorizontal: 8,
   },
   accessibilityRatingSquareVeg: {
     width: width * 0.284,
-    height: width * 0.14,
+    height: width * 0.135,
     borderRadius: 10,
-    backgroundColor: Colors.veg,
+    backgroundColor: Colors.background,
+    borderColor: Colors.veg,
+    borderWidth: 2,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
-    marginRight: width * 0.02,
-    paddingHorizontal: 8,
   },
-  selectedAccessibilitySquare: {
-    backgroundColor: Colors.tags,
+  selectedAccessibilitySquareHalal: {
+    backgroundColor: Colors.halal,
+  },
+  selectedAccessibilitySquareGluten: {
+    backgroundColor: Colors.gluten,
+  },
+  selectedAccessibilitySquareVeg: {
+    backgroundColor: Colors.veg,
   },
   ratingText: {
-    fontSize: width * 0.036,
+    fontSize: width * 0.035,
+    color: Colors.text,
+    fontFamily: Fonts.Medium,
+    marginLeft: 5,
+  },
+  ratingTextSelected: {
+    fontSize: width * 0.035,
     color: Colors.background,
     fontFamily: Fonts.Medium,
     marginLeft: 5,
   },
   circleIconContainer: {
-    width: 35, 
-    height: 35,
+    width: 30, 
+    height: 30,
     borderRadius: 90, 
-    backgroundColor: Colors.background, 
+    borderColor: Colors.text,
+    backgroundColor: Colors.background,
+    borderWidth: 1, 
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  circleIconContainerSelected: {
+    width: 30, 
+    height: 30,
+    borderRadius: 90, 
+    borderColor: Colors.background,
+    backgroundColor: Colors.background,
+    borderWidth: 1, 
     justifyContent: "center",
     alignItems: "center",
   },
@@ -618,3 +641,4 @@ const styles = StyleSheet.create({
 });
 
 export default ReviewScreen;
+
