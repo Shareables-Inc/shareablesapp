@@ -145,11 +145,11 @@ const styles = StyleSheet.create({
     marginTop: height * 0.05,
   },
   nextButton: {
-    height: height * 0.05,
+    height: height * 0.06,
     borderRadius: 30,
     alignItems: "center",
     justifyContent: "center",
-    width: width * 0.4,
+    width: width * 0.37,
     backgroundColor: Colors.tags,
   },
   nextButtonText: {

@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "shareablesapp-b7366"
-  }
+    "default": "shareablesapp-b7366",
+    "development": "shareables-development-b0a88"
+  },
+  "targets": {},
+  "etags": {}
 }

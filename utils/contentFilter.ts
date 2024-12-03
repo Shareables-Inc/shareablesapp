@@ -2,28 +2,42 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 
 export const checkImageForObjectionableContent = async (
   imageUri: string
-): Promise<boolean> => {
+): Promise<{ isSafe: boolean; reason?: string }> => {
   const functions = getFunctions();
-  const analyzeImage = httpsCallable<{ imageUri: string }, { isSafe: boolean; safeSearch?: Record<string, string> }>(
-    functions,
-    "analyzeImage"
-  );
+  const analyzeImage = httpsCallable<
+    { imageUri: string },
+    { safeSearch: Record<string, string | null | undefined> }
+  >(functions, "analyzeImage");
 
   try {
+    // Call the Cloud Function
     const response = await analyzeImage({ imageUri });
 
-    // Ensure the response contains the expected structure
-    if (response.data && typeof response.data.isSafe === "boolean") {
-      if (!response.data.isSafe) {
-        console.warn("Objectionable content detected:", response.data.safeSearch || "Details unavailable");
-      }
-      return response.data.isSafe;
-    } else {
-      console.error("Unexpected response structure from Vision API:", response.data);
-      throw new Error("Unexpected response structure from Vision API.");
+    // Extract SafeSearch results
+    const safeSearch = response.data.safeSearch;
+
+    if (!safeSearch) {
+      console.error("SafeSearch results are missing.");
+      return { isSafe: false, reason: "Missing SafeSearch data" };
     }
+
+    // Define objectionable content levels
+    const objectionableLevels = ["LIKELY", "VERY_LIKELY"];
+
+    // Check for objectionable content
+    const isObjectionable =
+      objectionableLevels.includes(safeSearch.adult || "UNKNOWN") ||
+      objectionableLevels.includes(safeSearch.violence || "UNKNOWN") ||
+      objectionableLevels.includes(safeSearch.racy || "UNKNOWN");
+
+    if (isObjectionable) {
+      return { isSafe: false, reason: "Detected objectionable content" };
+    }
+
+    // Image is safe
+    return { isSafe: true };
   } catch (error: any) {
     console.error("Error analyzing image:", error.message || error);
-    return false; // Default to rejecting the image on error
+    return { isSafe: false, reason: error.message || "Unknown error" };
   }
 };

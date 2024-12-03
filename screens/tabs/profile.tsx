@@ -30,6 +30,7 @@ import { useUserGetByUid } from "../../hooks/useUser";
 import { Timestamp } from "firebase/firestore";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
+import * as ImageManipulator from "expo-image-manipulator";
 
 const { width, height } = Dimensions.get("window");
 
@@ -128,17 +129,37 @@ const ProfileScreen = () => {
     }
   };
 
+
+  const compressImage = async (uri: string): Promise<string> => {
+    try {
+      // Resize and compress the image
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 600 } }], // Resize to a maximum width of 600px
+        { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG } // Compress to 70% quality
+      );
+      return manipulatedImage.uri; // Return the new URI of the compressed image
+    } catch (error) {
+      console.error("Image compression failed:", error);
+      throw error;
+    }
+  };
+  
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1,
+      quality: 1, // Start with the highest quality for selection
     });
-
+  
     if (!result.canceled) {
       try {
-        const downloadURL = await uploadImage(result.assets[0].uri);
+        // Compress the image before upload
+        const compressedUri = await compressImage(result.assets[0].uri);
+  
+        // Upload the compressed image
+        const downloadURL = await uploadImage(compressedUri);
         if (downloadURL) {
           setUpdatedProfilePicture(downloadURL);
         }
@@ -157,6 +178,7 @@ const ProfileScreen = () => {
       }
     }
   };
+  
 
   useEffect(() => {
     (async () => {

@@ -14,6 +14,7 @@ export type RootStackParamList = {
   TopCuisines: undefined;
   InviteContacts: undefined;
   FollowFriends: { userContacts: string[] };
+  LetsGo: undefined;
   MainTabNavigator: {
     screen: "Home" | "Post" | "Profile" | "RestaurantProfile" | "UserProfile";
     params?: {

@@ -49,28 +49,30 @@ const PostScreen = () => {
       quality: 1,
       selectionLimit: 3,
     });
-  
+
     if (!result.canceled && result.assets.length > 0) {
       setUploading(true);
       const selectedImageUris = result.assets.map((asset) => asset.uri);
-  
+
       try {
         // Step 1: Process images
         const processedImages = await Promise.all(
           selectedImageUris.map((uri) => processImage(uri))
         );
-  
+
         // Step 2: Filter images with objectionable content
         const safeImages: string[] = [];
+        const rejectedImages: string[] = [];
         for (const imageUri of processedImages) {
-          const isSafe = await checkImageForObjectionableContent(imageUri);
+          const { isSafe, reason } = await checkImageForObjectionableContent(imageUri);
           if (isSafe) {
             safeImages.push(imageUri);
           } else {
-            console.warn(`Image rejected: ${imageUri}`);
+            rejectedImages.push(imageUri);
+            console.warn(`Image rejected (${reason}): ${imageUri}`);
           }
         }
-  
+
         if (safeImages.length === 0) {
           Alert.alert(
             "No Valid Images",
@@ -79,12 +81,20 @@ const PostScreen = () => {
           setUploading(false);
           return;
         }
-  
+
+        // Provide feedback if some images were rejected
+        if (rejectedImages.length > 0) {
+          Alert.alert(
+            "Some Images Rejected",
+            `${safeImages.length} images were accepted, but ${rejectedImages.length} were rejected.`
+          );
+        }
+
         // Step 3: Upload valid images
         const uploadedUrls = await Promise.all(
           safeImages.map((uri, index) => uploadImageToFirebase(uri, index))
         );
-  
+
         setUploadedImageUrls(uploadedUrls.filter((url) => url !== null));
       } catch (error) {
         console.error("Error handling images:", error);
@@ -94,8 +104,7 @@ const PostScreen = () => {
       }
     }
   };
-  
-  
+
   const processImage = async (uri: string): Promise<string> => {
     try {
       const manipResult = await ImageManipulator.manipulateAsync(
@@ -109,16 +118,15 @@ const PostScreen = () => {
       throw new Error("Image Processing Error");
     }
   };
-  
 
   const uploadImageToFirebase = async (uri: string, index: number, retries = 3): Promise<string | null> => {
     try {
       const response = await fetch(uri);
       const blob = await response.blob();
-  
+
       const storageRef = ref(getStorage(), `images/user_${Date.now()}_${index}`);
       await uploadBytes(storageRef, blob);
-  
+
       const downloadURL = await getDownloadURL(storageRef);
       return downloadURL;
     } catch (error) {
@@ -130,7 +138,6 @@ const PostScreen = () => {
       return null;
     }
   };
-  
 
   const getComponentType = () => {
     if (uploadedImageUrls.length === 1) {
@@ -206,7 +213,7 @@ const PostScreen = () => {
         </View>
       );
     }
-  
+
     if (uploadedImageUrls.length === 1) {
       return <SinglePhotoPost post={{ photo: uploadedImageUrls[0] }} onRePick={pickImages} />;
     } else if (uploadedImageUrls.length === 2) {
@@ -222,7 +229,7 @@ const PostScreen = () => {
         <ThreePhotoScrollPost post={{ photos: uploadedImageUrls }} onRePick={pickImages} />
       );
     }
-  
+
     return (
       <View style={styles.blurContainer}>
         <FastImage
@@ -232,14 +239,13 @@ const PostScreen = () => {
         />
         <BlurView style={styles.blurView} intensity={25} tint="systemChromeMaterial">
           <TouchableOpacity onPress={pickImages} style={styles.imagePicker} activeOpacity={1}>
-            <ImagePlus color={Colors.background} size={45} strokeWidth={2.3}/>
+            <ImagePlus color={Colors.background} size={45} strokeWidth={2.3} />
             <Text style={styles.addImageText}>select images</Text>
           </TouchableOpacity>
         </BlurView>
       </View>
     );
   };
-  
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
@@ -269,12 +275,11 @@ const PostScreen = () => {
               </View>
             )}
 
-          {uploadedImageUrls.length > 0 && (
-            <TouchableOpacity onPress={handleNextPress} style={styles.nextButton} activeOpacity={1}>
-              <Text style={styles.nextButtonText}>Next Step</Text>
-            </TouchableOpacity>
+            {uploadedImageUrls.length > 0 && (
+              <TouchableOpacity onPress={handleNextPress} style={styles.nextButton} activeOpacity={1}>
+                <Text style={styles.nextButtonText}>Next Step</Text>
+              </TouchableOpacity>
             )}
-
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -360,7 +365,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 50,
     width: "95%",
-    overflow: "hidden"
+    overflow: "hidden",
   },
   customSwitchContainer: {
     alignItems: "center",

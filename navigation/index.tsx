@@ -28,6 +28,7 @@ import VerifyEmailScreen from "../screens/loginScreens/verifyEmail";
 import UsernameInputScreen from "../screens/loginScreens/usernameInput";
 import ExpandedPost from "../screens/postScreens/expandedPost";
 import FollowersListScreen from "../screens/postScreens/followerList";
+import LetsGoScreen from "../screens/loginScreens/letsGo";
 import { AppState, AppStateStatus } from "react-native";
 import * as Notifications from "expo-notifications";
 import { Subscription } from "expo-notifications";
@@ -199,6 +200,10 @@ export const MainApp = () => {
             <Stack.Screen
               name="FollowFriends"
               component={FollowFriendsScreen}
+            />
+            <Stack.Screen
+              name="LetsGo"
+              component={LetsGoScreen}
             />
           </>
         ) : (

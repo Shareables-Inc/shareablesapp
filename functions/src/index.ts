@@ -17,10 +17,68 @@ import { UserProfile } from "./user";
 import { Post } from "./post";
 import { v4 as uuidv4 } from "uuid";
 import { sendPushNotifications } from "./api/expo.api";
-import { analyzeImage } from "./api/vision.api";
+import { ImageAnnotatorClient } from "@google-cloud/vision";
+import * as functions from "firebase-functions";
 
 // Initialize Firebase Admin SDK
 admin.initializeApp();
+
+const client = new ImageAnnotatorClient();
+
+// Cloud Function to Analyze Images
+export const analyzeImage = functions.https.onCall(
+  async (request: functions.https.CallableRequest<{ imageUri: string }>) => {
+    const { imageUri } = request.data;
+
+    // Validate input
+    if (!imageUri) {
+      throw new functions.https.HttpsError("invalid-argument", "Image URI is required.");
+    }
+
+    try {
+      // Call the Vision API to perform SafeSearch Detection
+      const [result] = await client.safeSearchDetection(imageUri);
+
+      if (!result) {
+        console.error("No response from Vision API.");
+        throw new functions.https.HttpsError("internal", "No response from Vision API.");
+      }
+
+      const safeSearch = result.safeSearchAnnotation;
+
+      // Validate SafeSearch results
+      if (!safeSearch) {
+        console.error("SafeSearch annotation missing in Vision API response.");
+        throw new functions.https.HttpsError(
+          "internal",
+          "SafeSearch annotation is missing from Vision API response."
+        );
+      }
+
+      // Log SafeSearch results for debugging
+      console.log("SafeSearch results:", JSON.stringify(safeSearch));
+
+      // Directly return the SafeSearch results
+      return { safeSearch };
+    } catch (error: any) {
+      console.error("Error analyzing image:", error);
+
+      // Handle specific errors
+      if (error.code === 7) {
+        throw new functions.https.HttpsError(
+          "resource-exhausted",
+          "Vision API quota exceeded. Try again later."
+        );
+      }
+
+      // Fallback for unknown errors
+      throw new functions.https.HttpsError(
+        "internal",
+        `Error analyzing image: ${error.message || "Unknown error"}`
+      );
+    }
+  }
+);
 
 
 
@@ -237,7 +295,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
   async (event) => {
     const postId = event.params?.postId;
     const postData = event.data?.data() as Post | undefined;
-    
+
     if (!postData) {
       console.log(`Post ${postId} data is missing.`);
       return;
@@ -247,6 +305,10 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       console.log(`Post ${postId} has no userId.`);
       return;
     }
+
+    // Delay for 5 minutes
+    console.log(`Delaying notifications for post ${postId} by 5 minutes.`);
+    await new Promise((resolve) => setTimeout(resolve, 300000)); // 5 minutes = 300,000 ms
 
     // Fetch the user who made the post
     const userRef = admin.firestore().collection("users").doc(postData.userId);
@@ -299,11 +361,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
       return;
     }
 
-    // Delay the notification by 15 minutes
-    console.log(`Waiting for 15 minutes before sending notifications for post ${postId}`);
-    await new Promise((resolve) => setTimeout(resolve, 900000));
-
-    // Check if the post still exists
+    // Check if the post still exists after the delay
     const postRef = admin.firestore().collection("posts").doc(postId);
     const postDoc = await postRef.get();
 
@@ -354,6 +412,54 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
   }
 );
 
+
+
+export const scheduledDeleteIncompletePosts = onSchedule(
+  {
+    schedule: "0 4 * * *", // Run at 4:00 AM every day
+    timeZone: "America/Toronto" // Set the timezone to EST (Toronto)
+  },
+  async (event) => {
+    const postsRef = admin.firestore().collection('posts');
+    const establishmentsRef = admin.firestore().collection('establishments');
+    
+    try {
+      // Step 1: Find and delete posts with empty imageUrls
+      const incompletePostsSnapshot = await postsRef
+        .where('imageUrls', '==', [])
+        .get();
+
+      const batch = admin.firestore().batch();
+
+      incompletePostsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+        console.log(`Deleted post ${doc.id} due to empty imageUrls.`);
+      });
+
+      await batch.commit();
+
+      // Step 2: Find and delete establishments with postCount of 0
+      const establishmentsSnapshot = await establishmentsRef
+        .where('postCount', '==', 0)
+        .get();
+
+      if (!establishmentsSnapshot.empty) {
+        const establishmentBatch = admin.firestore().batch();
+
+        establishmentsSnapshot.forEach((doc) => {
+          establishmentBatch.delete(doc.ref);
+          console.log(`Deleted establishment ${doc.id} due to postCount being 0.`);
+        });
+
+        await establishmentBatch.commit();
+      } else {
+        console.log('No establishments with postCount of 0 found.');
+      }
+    } catch (error) {
+      console.error('Error deleting incomplete posts or empty establishments:', error);
+    }
+  }
+);
 
 export const incrementLikeCount = onDocumentCreated(
   "/likes/{likeId}",
@@ -407,124 +513,3 @@ export const decrementLikeCount = onDocumentDeleted(
     }
   }
 );
-
-
-export const autoDeletePostIfNoImages = onDocumentCreated(
-  {
-    document: 'posts/{postId}',
-    timeoutSeconds: 540, // 9-minute timeout to cover your 8-minute delay
-  },
-  async (event) => {
-    const postId = event.params?.postId;
-
-    try {
-      console.log(`Function triggered for post ${postId}`);
-
-      // Wait for 8 minutes (480,000 milliseconds)
-      await new Promise((resolve) => setTimeout(resolve, 480000));
-      console.log(`Waited for 8 minutes for post ${postId}`);
-
-      const postRef = admin.firestore().collection('posts').doc(postId);
-      const postDoc = await postRef.get();
-
-      if (!postDoc.exists) {
-        console.log(`Post ${postId} does not exist, skipping deletion.`);
-        return;
-      }
-
-      const postData = postDoc.data();
-      console.log(`Post data for ${postId}:`, postData);
-
-      // Handle case where imageUrls is undefined or missing
-      if (postData && postData.imageUrls && postData.imageUrls.length === 0) {
-        console.log(`Post ${postId} has no images, proceeding with deletion.`);
-
-        // Delete post if imageUrls is still empty
-        await postRef.delete();
-        console.log(`Deleted post ${postId} due to empty imageUrls.`);
-
-        // Now, check the related establishment
-        const establishmentId = postData.establishmentDetails?.id;
-        if (establishmentId) {
-          console.log(`Checking establishment ${establishmentId}`);
-          const establishmentRef = admin.firestore().collection('establishments').doc(establishmentId);
-          const establishmentDoc = await establishmentRef.get();
-
-          if (establishmentDoc.exists) {
-            const establishmentData = establishmentDoc.data();
-            console.log(`Establishment data for ${establishmentId}:`, establishmentData);
-
-            if (establishmentData && establishmentData.postCount === 0) {
-              // If postCount is 0, delete the establishment
-              await establishmentRef.delete();
-              console.log(`Deleted establishment ${establishmentId} because postCount is 0.`);
-            } else {
-              console.log(`Establishment ${establishmentId} has postCount > 0, skipping deletion.`);
-            }
-          } else {
-            console.log(`Establishment ${establishmentId} does not exist.`);
-          }
-        } else {
-          console.log(`Post ${postId} does not have an associated establishment.`);
-        }
-      } else {
-        console.log(`Post ${postId} has images, skipping deletion.`);
-      }
-    } catch (error) {
-      console.error(`Error deleting post ${postId} or establishment:`, error);
-    }
-  }
-);
-
-
-export const scheduledDeleteIncompletePosts = onSchedule(
-  {
-    schedule: "0 4 * * *", // Run at 4:00 AM every day
-    timeZone: "America/Toronto" // Set the timezone to EST (Toronto)
-  },
-  async (event) => {
-    const postsRef = admin.firestore().collection('posts');
-    const establishmentsRef = admin.firestore().collection('establishments');
-    
-    try {
-      // Step 1: Find and delete posts with empty imageUrls
-      const incompletePostsSnapshot = await postsRef
-        .where('imageUrls', '==', [])
-        .get();
-
-      const batch = admin.firestore().batch();
-
-      incompletePostsSnapshot.forEach((doc) => {
-        batch.delete(doc.ref);
-        console.log(`Deleted post ${doc.id} due to empty imageUrls.`);
-      });
-
-      await batch.commit();
-
-      // Step 2: Find and delete establishments with postCount of 0
-      const establishmentsSnapshot = await establishmentsRef
-        .where('postCount', '==', 0)
-        .get();
-
-      if (!establishmentsSnapshot.empty) {
-        const establishmentBatch = admin.firestore().batch();
-
-        establishmentsSnapshot.forEach((doc) => {
-          establishmentBatch.delete(doc.ref);
-          console.log(`Deleted establishment ${doc.id} due to postCount being 0.`);
-        });
-
-        await establishmentBatch.commit();
-      } else {
-        console.log('No establishments with postCount of 0 found.');
-      }
-    } catch (error) {
-      console.error('Error deleting incomplete posts or empty establishments:', error);
-    }
-  }
-);
-
-export { analyzeImage };
-
-
-

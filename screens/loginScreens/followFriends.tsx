@@ -115,14 +115,7 @@ const FollowFriendsScreen = ({
   }, [userContacts]);
 
   const handleNext = async () => {
-    await updateDoc(doc(db, "users", user!.uid), {
-      onboardingComplete: true,
-    });
-    await refreshUserProfile();
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "MainTabNavigator" }],
-    });
+    navigation.navigate("LetsGo")
   };
 
   const handleFollow = async (index: number) => {
