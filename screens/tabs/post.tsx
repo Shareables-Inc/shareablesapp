@@ -49,30 +49,29 @@ const PostScreen = () => {
       quality: 1,
       selectionLimit: 3,
     });
-
+  
     if (!result.canceled && result.assets.length > 0) {
       setUploading(true);
       const selectedImageUris = result.assets.map((asset) => asset.uri);
-
+  
       try {
-        // Step 1: Process images
+        // Process images
         const processedImages = await Promise.all(
           selectedImageUris.map((uri) => processImage(uri))
         );
-
-        // Step 2: Filter images with objectionable content
+  
+        // Analyze and upload images
         const safeImages: string[] = [];
         const rejectedImages: string[] = [];
-        for (const imageUri of processedImages) {
-          const { isSafe, reason } = await checkImageForObjectionableContent(imageUri);
-          if (isSafe) {
-            safeImages.push(imageUri);
+        for (const uri of processedImages) {
+          const analyzedUrl = await checkAndAnalyzeImage(uri);
+          if (analyzedUrl) {
+            safeImages.push(analyzedUrl);
           } else {
-            rejectedImages.push(imageUri);
-            console.warn(`Image rejected (${reason}): ${imageUri}`);
+            rejectedImages.push(uri);
           }
         }
-
+  
         if (safeImages.length === 0) {
           Alert.alert(
             "No Valid Images",
@@ -81,21 +80,15 @@ const PostScreen = () => {
           setUploading(false);
           return;
         }
-
-        // Provide feedback if some images were rejected
+  
         if (rejectedImages.length > 0) {
           Alert.alert(
             "Some Images Rejected",
             `${safeImages.length} images were accepted, but ${rejectedImages.length} were rejected.`
           );
         }
-
-        // Step 3: Upload valid images
-        const uploadedUrls = await Promise.all(
-          safeImages.map((uri, index) => uploadImageToFirebase(uri, index))
-        );
-
-        setUploadedImageUrls(uploadedUrls.filter((url) => url !== null));
+  
+        setUploadedImageUrls(safeImages);
       } catch (error) {
         console.error("Error handling images:", error);
         Alert.alert("Image Upload Error", "There was an issue uploading images.");
@@ -104,13 +97,40 @@ const PostScreen = () => {
       }
     }
   };
+  
+
+  const checkAndAnalyzeImage = async (uri: string): Promise<string | null> => {
+    try {
+      console.log("Uploading image to Firebase:", uri);
+      const uploadedUrl = await uploadImageToFirebase(uri);
+  
+      if (!uploadedUrl) throw new Error("Failed to upload image");
+  
+      console.log("Uploaded image URL:", uploadedUrl);
+  
+      const { isSafe, reason } = await checkImageForObjectionableContent(uploadedUrl);
+  
+      if (!isSafe) {
+        console.warn(`Image rejected (${reason}): ${uploadedUrl}`);
+        return null;
+      }
+  
+      console.log("Image passed safety check:", uploadedUrl);
+      return uploadedUrl;
+    } catch (error) {
+      console.error("Error analyzing image:", error);
+      return null;
+    }
+  };
+  
+    
 
   const processImage = async (uri: string): Promise<string> => {
     try {
       const manipResult = await ImageManipulator.manipulateAsync(
         uri,
-        [{ resize: { width: 1080 } }],
-        { compress: 0.65, format: ImageManipulator.SaveFormat.JPEG }
+        [{ resize: { width: 1080 } }], // Resize to a width of 1080px
+        { compress: 0.65, format: ImageManipulator.SaveFormat.JPEG } // Compress and format as JPEG
       );
       return manipResult.uri;
     } catch (error) {
@@ -118,26 +138,36 @@ const PostScreen = () => {
       throw new Error("Image Processing Error");
     }
   };
+  
 
-  const uploadImageToFirebase = async (uri: string, index: number, retries = 3): Promise<string | null> => {
+  const uploadImageToFirebase = async (uri: string, retries = 3): Promise<string | null> => {
     try {
       const response = await fetch(uri);
       const blob = await response.blob();
-
-      const storageRef = ref(getStorage(), `images/user_${Date.now()}_${index}`);
-      await uploadBytes(storageRef, blob);
-
+  
+      const storageRef = ref(getStorage(), `images/user_${Date.now()}_${Math.random()}`);
+      const metadata = {
+        cacheControl: 'public,max-age=3600', // Make the file publicly accessible
+      };
+  
+      await uploadBytes(storageRef, blob, metadata);
+  
       const downloadURL = await getDownloadURL(storageRef);
+      console.log("Uploaded image URL:", downloadURL);
+  
       return downloadURL;
     } catch (error) {
       if (retries > 0) {
         console.warn(`Retrying upload (${retries} retries left) for ${uri}`);
-        return uploadImageToFirebase(uri, index, retries - 1);
+        return uploadImageToFirebase(uri, retries - 1);
       }
       console.error("Upload failed after retries:", error);
       return null;
     }
   };
+  
+  
+  
 
   const getComponentType = () => {
     if (uploadedImageUrls.length === 1) {

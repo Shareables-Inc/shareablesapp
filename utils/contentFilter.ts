@@ -10,10 +10,15 @@ export const checkImageForObjectionableContent = async (
   >(functions, "analyzeImage");
 
   try {
-    // Call the Cloud Function
-    const response = await analyzeImage({ imageUri });
+    console.log("Original Image URI:", imageUri);
 
-    // Extract SafeSearch results
+    // Encode the image URI
+    const encodedImageUri = encodeURI(imageUri);
+    console.log("Encoded Image URI:", encodedImageUri);
+
+    // Call the Cloud Function
+    const response = await analyzeImage({ imageUri: encodedImageUri });
+
     const safeSearch = response.data.safeSearch;
 
     if (!safeSearch) {
@@ -21,7 +26,8 @@ export const checkImageForObjectionableContent = async (
       return { isSafe: false, reason: "Missing SafeSearch data" };
     }
 
-    // Define objectionable content levels
+    console.log("SafeSearch results:", safeSearch);
+
     const objectionableLevels = ["LIKELY", "VERY_LIKELY"];
 
     // Check for objectionable content
@@ -34,10 +40,11 @@ export const checkImageForObjectionableContent = async (
       return { isSafe: false, reason: "Detected objectionable content" };
     }
 
-    // Image is safe
     return { isSafe: true };
   } catch (error: any) {
     console.error("Error analyzing image:", error.message || error);
     return { isSafe: false, reason: error.message || "Unknown error" };
   }
 };
+
+

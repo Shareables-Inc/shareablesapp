@@ -36,8 +36,14 @@ export const analyzeImage = functions.https.onCall(
     }
 
     try {
-      // Call the Vision API to perform SafeSearch Detection
-      const [result] = await client.safeSearchDetection(imageUri);
+      console.log("Original Image URI:", imageUri);
+
+      // Encode the image URI
+      const encodedImageUri = encodeURI(imageUri);
+      console.log("Encoded Image URI:", encodedImageUri);
+
+      // Perform SafeSearch Detection
+      const [result] = await client.safeSearchDetection(encodedImageUri);
 
       if (!result) {
         console.error("No response from Vision API.");
@@ -46,7 +52,6 @@ export const analyzeImage = functions.https.onCall(
 
       const safeSearch = result.safeSearchAnnotation;
 
-      // Validate SafeSearch results
       if (!safeSearch) {
         console.error("SafeSearch annotation missing in Vision API response.");
         throw new functions.https.HttpsError(
@@ -55,15 +60,11 @@ export const analyzeImage = functions.https.onCall(
         );
       }
 
-      // Log SafeSearch results for debugging
       console.log("SafeSearch results:", JSON.stringify(safeSearch));
-
-      // Directly return the SafeSearch results
       return { safeSearch };
     } catch (error: any) {
-      console.error("Error analyzing image:", error);
+      console.error("Error analyzing image:", error.message || error);
 
-      // Handle specific errors
       if (error.code === 7) {
         throw new functions.https.HttpsError(
           "resource-exhausted",
@@ -71,7 +72,6 @@ export const analyzeImage = functions.https.onCall(
         );
       }
 
-      // Fallback for unknown errors
       throw new functions.https.HttpsError(
         "internal",
         `Error analyzing image: ${error.message || "Unknown error"}`

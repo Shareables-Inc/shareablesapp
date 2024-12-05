@@ -49,8 +49,6 @@
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "^3.0.7",
     "firebase": "^10.8.1",
-    "firebase-admin": "^12.7.0",
-    "firebase-functions": "^6.1.1",
     "lodash": "^4.17.21",
     "lucide-react-native": "^0.436.0",
     "metro": "^0.80.9",
@@ -78,7 +76,10 @@
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^5.53.0",
     "@types/react": "~18.2.79",
-    "eas-cli": "^10.1.1"
+    "eas-cli": "^10.1.1",
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^6.1.1",
+    "firebase-functions-test": "^3.3.0"
   },
   "private": true
 }
