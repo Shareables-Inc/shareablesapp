@@ -55,20 +55,26 @@ const PostScreen = () => {
       const selectedImageUris = result.assets.map((asset) => asset.uri);
   
       try {
-        // Process images
-        const processedImages = await Promise.all(
-          selectedImageUris.map((uri) => processImage(uri))
-        );
-  
-        // Analyze and upload images
         const safeImages: string[] = [];
         const rejectedImages: string[] = [];
-        for (const uri of processedImages) {
-          const analyzedUrl = await checkAndAnalyzeImage(uri);
-          if (analyzedUrl) {
-            safeImages.push(analyzedUrl);
-          } else {
-            rejectedImages.push(uri);
+  
+        for (const uri of selectedImageUris) {
+          // Process the image
+          const processedUri = await processImage(uri);
+  
+          // Upload to Firebase
+          const uploadedUrl = await uploadImageToFirebase(processedUri);
+  
+          if (uploadedUrl) {
+            // Analyze with Cloud Vision
+            const { isSafe, reason } = await checkImageForObjectionableContent(uploadedUrl);
+  
+            if (isSafe) {
+              safeImages.push(uploadedUrl);
+            } else {
+              rejectedImages.push(uploadedUrl);
+              console.warn(`Image rejected (${reason}): ${uploadedUrl}`);
+            }
           }
         }
   
@@ -77,7 +83,7 @@ const PostScreen = () => {
             "No Valid Images",
             "All selected images were rejected. Please choose others."
           );
-          setUploading(false);
+          setUploadedImageUrls([]);
           return;
         }
   
@@ -98,33 +104,6 @@ const PostScreen = () => {
     }
   };
   
-
-  const checkAndAnalyzeImage = async (uri: string): Promise<string | null> => {
-    try {
-      console.log("Uploading image to Firebase:", uri);
-      const uploadedUrl = await uploadImageToFirebase(uri);
-  
-      if (!uploadedUrl) throw new Error("Failed to upload image");
-  
-      console.log("Uploaded image URL:", uploadedUrl);
-  
-      const { isSafe, reason } = await checkImageForObjectionableContent(uploadedUrl);
-  
-      if (!isSafe) {
-        console.warn(`Image rejected (${reason}): ${uploadedUrl}`);
-        return null;
-      }
-  
-      console.log("Image passed safety check:", uploadedUrl);
-      return uploadedUrl;
-    } catch (error) {
-      console.error("Error analyzing image:", error);
-      return null;
-    }
-  };
-  
-    
-
   const processImage = async (uri: string): Promise<string> => {
     try {
       const manipResult = await ImageManipulator.manipulateAsync(
@@ -139,7 +118,6 @@ const PostScreen = () => {
     }
   };
   
-
   const uploadImageToFirebase = async (uri: string, retries = 3): Promise<string | null> => {
     try {
       const response = await fetch(uri);
@@ -147,7 +125,8 @@ const PostScreen = () => {
   
       const storageRef = ref(getStorage(), `images/user_${Date.now()}_${Math.random()}`);
       const metadata = {
-        cacheControl: 'public,max-age=3600', // Make the file publicly accessible
+        contentType: "image/jpeg", // Ensure content type is set correctly
+        cacheControl: "public,max-age=3600", // Allow public access
       };
   
       await uploadBytes(storageRef, blob, metadata);
@@ -166,8 +145,6 @@ const PostScreen = () => {
     }
   };
   
-  
-  
 
   const getComponentType = () => {
     if (uploadedImageUrls.length === 1) {
@@ -179,8 +156,13 @@ const PostScreen = () => {
     }
     return null;
   };
-
-  const createPost = useCallback(() => {
+  
+  const handleNextPress = useCallback(() => {
+    if (uploadedImageUrls.length === 0) {
+      Alert.alert("Error", "Please upload at least one image before proceeding.");
+      return;
+    }
+  
     const newPost = {
       userId: user?.uid!,
       profilePicture: user!.uid + ".jpeg",
@@ -207,32 +189,29 @@ const PostScreen = () => {
       updatedAt: serverTimestamp(),
       review: "",
     };
-
+  
+    setUploading(true); // Show uploading indicator during the operation
+  
     createPostMutation(
       { ...newPost, id: "" },
       {
         onSuccess: (id) => {
-          setUploadedImageUrls([]);
+          setUploadedImageUrls([]); // Clear uploaded images
           navigation.navigate("RestaurantSelect", {
-            postId: id,
+            postId: id, // Pass the created post ID
           });
         },
         onError: (error) => {
           console.error("Error creating post:", error);
-          Alert.alert("Post Creation Error", "There was an error creating your post.");
+          Alert.alert("Post Creation Error", "There was an error creating your post. Please try again.");
+        },
+        onSettled: () => {
+          setUploading(false); // Hide uploading indicator regardless of success or failure
         },
       }
     );
-  }, [user, userProfile, uploadedImageUrls, createPostMutation, navigation, isGridView]);
-
-  const handleNextPress = useCallback(() => {
-    if (uploadedImageUrls.length === 0) {
-      Alert.alert("Error", "Please upload at least one image before proceeding.");
-      return;
-    }
-
-    createPost();
-  }, [uploadedImageUrls, createPost]);
+  }, [uploadedImageUrls, user, userProfile, createPostMutation, navigation, getComponentType]);
+  
 
   const renderPhotoComponent = () => {
     if (uploading) {

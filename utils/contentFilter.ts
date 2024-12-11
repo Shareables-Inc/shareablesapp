@@ -1,23 +1,26 @@
 import { getFunctions, httpsCallable } from "firebase/functions";
 
+// Define a more specific type for SafeSearch annotations
+type SafeSearchAnnotation = {
+  adult?: "VERY_LIKELY" | "LIKELY" | "POSSIBLE" | "UNLIKELY" | "VERY_UNLIKELY" | "UNKNOWN";
+  violence?: "VERY_LIKELY" | "LIKELY" | "POSSIBLE" | "UNLIKELY" | "VERY_UNLIKELY" | "UNKNOWN";
+  racy?: "VERY_LIKELY" | "LIKELY" | "POSSIBLE" | "UNLIKELY" | "VERY_UNLIKELY" | "UNKNOWN";
+};
+
 export const checkImageForObjectionableContent = async (
   imageUri: string
 ): Promise<{ isSafe: boolean; reason?: string }> => {
-  const functions = getFunctions();
+  const functions = getFunctions(undefined, "us-central1"); // Specify region if necessary
   const analyzeImage = httpsCallable<
     { imageUri: string },
-    { safeSearch: Record<string, string | null | undefined> }
+    { safeSearch: SafeSearchAnnotation }
   >(functions, "analyzeImage");
 
   try {
-    console.log("Original Image URI:", imageUri);
+    console.log("Image URI:", imageUri);
 
-    // Encode the image URI
-    const encodedImageUri = encodeURI(imageUri);
-    console.log("Encoded Image URI:", encodedImageUri);
-
-    // Call the Cloud Function
-    const response = await analyzeImage({ imageUri: encodedImageUri });
+    // Call the Cloud Function with raw URI (no double-encoding)
+    const response = await analyzeImage({ imageUri });
 
     const safeSearch = response.data.safeSearch;
 
@@ -46,5 +49,4 @@ export const checkImageForObjectionableContent = async (
     return { isSafe: false, reason: error.message || "Unknown error" };
   }
 };
-
 

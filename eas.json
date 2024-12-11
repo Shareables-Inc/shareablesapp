@@ -20,7 +20,8 @@
         "EXPO_BUNDLE_IDENTIFIER": "com.shareablesinc.shareablesdev",
         "EXPO_PACKAGE_NAME": "com.shareablesinc.shareablesdev",
         "EXPO_GOOGLE_SERVICES_FILE_IOS": "./GoogleService-Info-Dev.plist",
-        "EXPO_GOOGLE_SERVICES_FILE_ANDROID": "./google-services-dev.json"
+        "EXPO_GOOGLE_SERVICES_FILE_ANDROID": "./google-services-dev.json",
+        "EXPO_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY": "AIzaSyA1k7aL2EqL8JRlkGFiZheP1_pxTFA_Ebk"
       }
     },
     "production": {
@@ -38,7 +39,8 @@
         "EXPO_BUNDLE_IDENTIFIER": "com.shareablesinc.shareables",
         "EXPO_PACKAGE_NAME": "com.shareablesinc.shareables",
         "EXPO_GOOGLE_SERVICES_FILE_IOS": "./GoogleService-Info.plist",
-        "EXPO_GOOGLE_SERVICES_FILE_ANDROID": "./google-services.json"
+        "EXPO_GOOGLE_SERVICES_FILE_ANDROID": "./google-services.json",
+        "EXPO_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY": "AIzaSyAlZ_gciarM5j7nzqAppThAPdpk4sAchW0"
       }
     }
   },

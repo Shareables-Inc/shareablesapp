@@ -23,6 +23,7 @@ import * as functions from "firebase-functions";
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 
+// Initialize Google Cloud Vision API Client
 const client = new ImageAnnotatorClient();
 
 // Cloud Function to Analyze Images
@@ -32,49 +33,60 @@ export const analyzeImage = functions.https.onCall(
 
     // Validate input
     if (!imageUri) {
-      throw new functions.https.HttpsError("invalid-argument", "Image URI is required.");
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "The 'imageUri' parameter is required."
+      );
     }
 
     try {
       console.log("Original Image URI:", imageUri);
 
-      // Encode the image URI
+      // Encode the image URI to handle special characters
       const encodedImageUri = encodeURI(imageUri);
       console.log("Encoded Image URI:", encodedImageUri);
 
-      // Perform SafeSearch Detection
-      const [result] = await client.safeSearchDetection(encodedImageUri);
+      // Perform SafeSearch Detection using the Vision API
+      const [result] = await client.safeSearchDetection({ image: { source: { imageUri: encodedImageUri } } });
 
       if (!result) {
         console.error("No response from Vision API.");
-        throw new functions.https.HttpsError("internal", "No response from Vision API.");
+        throw new functions.https.HttpsError(
+          "internal",
+          "No response from the Vision API."
+        );
       }
 
+      // Extract SafeSearch annotations from the result
       const safeSearch = result.safeSearchAnnotation;
 
       if (!safeSearch) {
-        console.error("SafeSearch annotation missing in Vision API response.");
+        console.error("SafeSearch annotation is missing in the Vision API response.");
         throw new functions.https.HttpsError(
           "internal",
-          "SafeSearch annotation is missing from Vision API response."
+          "SafeSearch annotation is missing from the Vision API response."
         );
       }
 
       console.log("SafeSearch results:", JSON.stringify(safeSearch));
+
+      // Return the SafeSearch annotation to the client
       return { safeSearch };
     } catch (error: any) {
       console.error("Error analyzing image:", error.message || error);
 
+      // Handle Vision API quota errors
       if (error.code === 7) {
         throw new functions.https.HttpsError(
           "resource-exhausted",
-          "Vision API quota exceeded. Try again later."
+          "Vision API quota exceeded. Please try again later."
         );
       }
 
+      // Handle general errors
       throw new functions.https.HttpsError(
         "internal",
-        `Error analyzing image: ${error.message || "Unknown error"}`
+        `An error occurred while analyzing the image: ${error.message || "Unknown error"}`
       );
     }
   }
@@ -461,6 +473,7 @@ export const scheduledDeleteIncompletePosts = onSchedule(
   }
 );
 
+
 export const incrementLikeCount = onDocumentCreated(
   "/likes/{likeId}",
   async (event) => {
@@ -513,3 +526,4 @@ export const decrementLikeCount = onDocumentDeleted(
     }
   }
 );
+

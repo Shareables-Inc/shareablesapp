@@ -147,11 +147,11 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
               }}
               style={styles.featuredRestaurantImage}
             />
-            <View style={styles.featuredRestaurantOverlay}>
+            {/* <View style={styles.featuredRestaurantOverlay}>
               <BlurView style={styles.locationBadge} intensity={100} tint="default">
                 <Bookmark size={20} color={Colors.background} />
               </BlurView>
-            </View>
+            </View> */}
           </View>
         </TouchableOpacity>
         <Text style={styles.restaurantNameText} numberOfLines={1} ellipsizeMode="tail">
