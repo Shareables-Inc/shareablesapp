@@ -34,8 +34,9 @@ export default {
     ],
     ios: {
       supportsTablet: false,
-      bundleIdentifier: "com.shareablesinc.shareables",
+      bundleIdentifier: process.env.EXPO_BUNDLE_IDENTIFIER || "com.shareablesinc.shareables",
       buildNumber: "1.0.7",
+      googleServicesFile: process.env.EXPO_GOOGLE_SERVICES_FILE_IOS,
       infoPlist: {
         LSApplicationQueriesSchemes: [
           "maps",
@@ -52,11 +53,10 @@ export default {
         NSLocationAlwaysAndWhenInUseUsageDescription: "Allow Shareables to use your location.",
         NSLocationAlwaysUsageDescription: "Allow Shareables to access your location",
         NSLocationWhenInUseUsageDescription: "Allow Shareables to access your location"
-      },
-      googleServicesFile: process.env.EXPO_GOOGLE_SERVICES_FILE_IOS
+      }
     },
     android: {
-      package: process.env.EXPO_PACKAGE_NAME,
+      package: process.env.EXPO_PACKAGE_NAME || "com.shareablesinc.shareables",
       googleServicesFile: process.env.EXPO_GOOGLE_SERVICES_FILE_ANDROID,
       adaptiveIcon: {
         backgroundColor: "#ffffff"
@@ -77,9 +77,17 @@ export default {
       favicon: "./assets/images/favicon.png"
     },
     extra: {
+      firebaseApiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+      firebaseAuthDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      firebaseProjectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+      firebaseStorageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      firebaseMessagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      firebaseAppId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+      firebaseMeasurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
       jiraApiToken: process.env.EXPO_PUBLIC_JIRA_API_TOKEN,
+      googleCloudVisionApiKey: process.env.EXPO_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY,
       eas: {
-        projectId: 'ef6370a3-a025-4a4c-920d-69ff87de0a82',
+        projectId: 'ef6370a3-a025-4a4c-920d-69ff87de0a82'
       }
     },
     owner: "shareables"
