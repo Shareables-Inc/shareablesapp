@@ -29,7 +29,8 @@ import { useAuth } from "../../context/auth.context";
 import { serverTimestamp } from "firebase/firestore";
 import { BlurView } from "expo-blur";
 import FastImage from "react-native-fast-image";
-import { checkImageForObjectionableContent } from "../../utils/contentFilter";
+import { analyzeImageWithVisionAPI } from "../../utils/contentFilter";
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -39,6 +40,7 @@ const PostScreen = () => {
   const [isGridView, setIsGridView] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadedImageUrls, setUploadedImageUrls] = useState<string[]>([]);
+
 
   const { mutate: createPostMutation } = useCreatePost();
 
@@ -59,15 +61,12 @@ const PostScreen = () => {
         const rejectedImages: string[] = [];
   
         for (const uri of selectedImageUris) {
-          // Process the image
           const processedUri = await processImage(uri);
   
-          // Upload to Firebase
           const uploadedUrl = await uploadImageToFirebase(processedUri);
   
           if (uploadedUrl) {
-            // Analyze with Cloud Vision
-            const { isSafe, reason } = await checkImageForObjectionableContent(uploadedUrl);
+            const { isSafe, reason } = await analyzeImageWithVisionAPI(uploadedUrl);
   
             if (isSafe) {
               safeImages.push(uploadedUrl);
@@ -80,8 +79,8 @@ const PostScreen = () => {
   
         if (safeImages.length === 0) {
           Alert.alert(
-            "No Valid Images",
-            "All selected images were rejected. Please choose others."
+            "Objectionable Content Detected",
+            "Please select different photos."
           );
           setUploadedImageUrls([]);
           return;
@@ -89,8 +88,8 @@ const PostScreen = () => {
   
         if (rejectedImages.length > 0) {
           Alert.alert(
-            "Some Images Rejected",
-            `${safeImages.length} images were accepted, but ${rejectedImages.length} were rejected.`
+            "Objectionable Content Detected",
+            "Please select different photos."
           );
         }
   
@@ -104,12 +103,14 @@ const PostScreen = () => {
     }
   };
   
+  
+  
   const processImage = async (uri: string): Promise<string> => {
     try {
       const manipResult = await ImageManipulator.manipulateAsync(
         uri,
         [{ resize: { width: 1080 } }], // Resize to a width of 1080px
-        { compress: 0.65, format: ImageManipulator.SaveFormat.JPEG } // Compress and format as JPEG
+        { compress: 0.6, format: ImageManipulator.SaveFormat.JPEG } // Compress and format as JPEG
       );
       return manipResult.uri;
     } catch (error) {
@@ -126,7 +127,7 @@ const PostScreen = () => {
       const storageRef = ref(getStorage(), `images/user_${Date.now()}_${Math.random()}`);
       const metadata = {
         contentType: "image/jpeg", // Ensure content type is set correctly
-        cacheControl: "public,max-age=3600", // Allow public access
+        cacheControl: "public,max-age=3600", // Allow public accessx
       };
   
       await uploadBytes(storageRef, blob, metadata);
@@ -248,7 +249,7 @@ const PostScreen = () => {
         />
         <BlurView style={styles.blurView} intensity={25} tint="systemChromeMaterial">
           <TouchableOpacity onPress={pickImages} style={styles.imagePicker} activeOpacity={1}>
-            <ImagePlus color={Colors.background} size={45} strokeWidth={2.3} />
+            <ImagePlus color={Colors.background} size={50} strokeWidth={2.3} />
             <Text style={styles.addImageText}>select images</Text>
           </TouchableOpacity>
         </BlurView>
@@ -350,7 +351,7 @@ const styles = StyleSheet.create({
   },
   addImageText: {
     fontFamily: Fonts.Bold,
-    fontSize: width * 0.06,
+    fontSize: width * 0.065,
     color: Colors.background,
     marginTop: height * 0.01,
   },

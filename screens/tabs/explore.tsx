@@ -38,14 +38,6 @@ const SearchScreen = () => {
     }
   }, [userProfile]);
 
-  // Measure the layout of the location button when the component mounts
-  useEffect(() => {
-    if (locationTabRef.current) {
-      locationTabRef.current.measure((x, y, width, height, pageX, pageY) => {
-        setDropdownLayout({ width, x: pageX });
-      });
-    }
-  }, []);
 
   const handleLocationSelection = (location: string) => {
     setSelectedLocation(location);
@@ -108,10 +100,15 @@ const SearchScreen = () => {
           ref={locationTabRef}
           style={[styles.tabButton]}
           onPress={() => setShowLocationDropdown(!showLocationDropdown)}
+          onLayout={(event) => {
+            const { width, x } = event.nativeEvent.layout;
+            setDropdownLayout({ width, x: x + width / 2 }); // Center dropdown based on button center
+          }}
         >
-          <MapPin color={Colors.background} size={20} style={{marginRight: width * 0.01}} />
+          <MapPin color={Colors.background} size={20} style={{ marginRight: width * 0.01 }} />
           <Text style={[styles.tabButtonText]}>{selectedLocation}</Text>
         </TouchableOpacity>
+
       </View>
       <Text style={styles.description}>Try new local favorites</Text>
 
@@ -122,7 +119,7 @@ const SearchScreen = () => {
             styles.dropdown,
             {
               width: dropdownLayout.width,
-              left: dropdownLayout.x,
+              left: dropdownLayout.x - dropdownLayout.width / 2, // Center dropdown
             },
           ]}
         >
@@ -138,6 +135,7 @@ const SearchScreen = () => {
           ))}
         </ScrollView>
       )}
+
 
       <View style={styles.container}>
         {activeTab === null && <RestaurantsView location={selectedLocation!} />}
@@ -198,7 +196,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.tags,
     padding: width * 0.027,
     borderRadius: 10,
-    marginBottom: -(width * 0.09)
+    marginBottom: -(width * 0.09),
   },
   tabButtonSearch: {
     flexDirection: "row",
@@ -206,8 +204,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f0f0",
     padding: width * 0.027,
     borderRadius: 90,
-    marginRight: -(width * 0.22),
-    marginBottom: -(width * 0.09)
+    marginBottom: -(width * 0.09),
+    marginRight: -(width * 0.17)
   },
   activeTab: {
     backgroundColor: Colors.tags,

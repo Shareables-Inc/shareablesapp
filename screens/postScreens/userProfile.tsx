@@ -809,7 +809,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.Medium,
     textAlign: "left",
     flexShrink: 1,
-    maxWidth: "90%",
+    maxWidth: width * 0.35,
   },
   gridGallery: {
     flexDirection: "row",

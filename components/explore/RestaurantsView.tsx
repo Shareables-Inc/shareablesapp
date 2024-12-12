@@ -15,12 +15,11 @@ import { Fonts } from "../../utils/fonts";
 import { UserService } from "../../services/user.service";
 import type { FeaturedEstablishment } from "../../models/establishment";
 import FastImage from "react-native-fast-image";
-import { BlurView } from "expo-blur";
 import { useNavigation } from "@react-navigation/native";
 import { useGetFeaturedEstablishments } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
 import { UserProfile } from "../../models/userProfile";
-import {Bookmark} from "lucide-react-native";
+
 
 const { width } = Dimensions.get("window");
 

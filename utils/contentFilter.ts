@@ -1,52 +1,60 @@
-import { getFunctions, httpsCallable } from "firebase/functions";
+import axios from "axios";
 
-// Define a more specific type for SafeSearch annotations
-type SafeSearchAnnotation = {
-  adult?: "VERY_LIKELY" | "LIKELY" | "POSSIBLE" | "UNLIKELY" | "VERY_UNLIKELY" | "UNKNOWN";
-  violence?: "VERY_LIKELY" | "LIKELY" | "POSSIBLE" | "UNLIKELY" | "VERY_UNLIKELY" | "UNKNOWN";
-  racy?: "VERY_LIKELY" | "LIKELY" | "POSSIBLE" | "UNLIKELY" | "VERY_UNLIKELY" | "UNKNOWN";
-};
-
-export const checkImageForObjectionableContent = async (
+export const analyzeImageWithVisionAPI = async (
   imageUri: string
 ): Promise<{ isSafe: boolean; reason?: string }> => {
-  const functions = getFunctions(undefined, "us-central1"); // Specify region if necessary
-  const analyzeImage = httpsCallable<
-    { imageUri: string },
-    { safeSearch: SafeSearchAnnotation }
-  >(functions, "analyzeImage");
+  const apiKey = process.env.EXPO_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY;
+  const apiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
 
   try {
-    console.log("Image URI:", imageUri);
+    const requestData = {
+      requests: [
+        {
+          image: {
+            source: {
+              imageUri: imageUri, // Use the public URL directly
+            },
+          },
+          features: [
+            {
+              type: "SAFE_SEARCH_DETECTION",
+            },
+          ],
+        },
+      ],
+    };
 
-    // Call the Cloud Function with raw URI (no double-encoding)
-    const response = await analyzeImage({ imageUri });
-
-    const safeSearch = response.data.safeSearch;
+    const response = await axios.post(apiUrl, requestData);
+    const safeSearch = response.data.responses[0]?.safeSearchAnnotation;
 
     if (!safeSearch) {
       console.error("SafeSearch results are missing.");
       return { isSafe: false, reason: "Missing SafeSearch data" };
     }
 
-    console.log("SafeSearch results:", safeSearch);
-
     const objectionableLevels = ["LIKELY", "VERY_LIKELY"];
+    const isAdultContent = objectionableLevels.includes(safeSearch.adult || "UNKNOWN");
+    const isViolentContent = objectionableLevels.includes(safeSearch.violence || "UNKNOWN");
 
-    // Check for objectionable content
-    const isObjectionable =
-      objectionableLevels.includes(safeSearch.adult || "UNKNOWN") ||
-      objectionableLevels.includes(safeSearch.violence || "UNKNOWN") ||
-      objectionableLevels.includes(safeSearch.racy || "UNKNOWN");
-
-    if (isObjectionable) {
+    // Allow flexibility for racy content, but block if it's also adult or violent
+    const isRacyContent = objectionableLevels.includes(safeSearch.racy || "UNKNOWN");
+    if (isAdultContent || isViolentContent || (isRacyContent && (isAdultContent || isViolentContent))) {
       return { isSafe: false, reason: "Detected objectionable content" };
     }
 
+    // Log details for transparency
+    console.log("SafeSearch Analysis:", {
+      adult: safeSearch.adult,
+      violence: safeSearch.violence,
+      racy: safeSearch.racy,
+    });
+
     return { isSafe: true };
-  } catch (error: any) {
-    console.error("Error analyzing image:", error.message || error);
-    return { isSafe: false, reason: error.message || "Unknown error" };
+  } catch (error: unknown) {
+    console.error(
+      "Error analyzing image:",
+      error instanceof Error ? error.message : error
+    );
+    return { isSafe: false, reason: error instanceof Error ? error.message : "Unknown error" };
   }
 };
-
