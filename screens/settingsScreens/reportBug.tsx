@@ -20,11 +20,13 @@ import { doc, serverTimestamp, setDoc, getDoc } from "firebase/firestore";
 import { ChevronDown, CircleArrowLeft } from "lucide-react-native";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { reportBugToJira } from "../../helpers/bugCreation";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const ReportBugScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
@@ -46,20 +48,20 @@ const ReportBugScreen = () => {
 
   const handleSaveChanges = async () => {
     if (!title || !description) {
-      Alert.alert("Error", "Please fill in both the title and description.");
+      Alert.alert(t("general.error"), t("settings.reportBug.fillError"));
       return;
     }
   
     try {
       setLoading(true); // Start loading
       await reportBugToJira(title, description);
-      Alert.alert("Success", "Thank you for improving the app!");
+      Alert.alert(t("general.success"), t("settings.reportBug.success"));
       setHasChanges(false);
       setLoading(false); // Stop loading
       navigation.goBack();
     } catch (error) {
       console.log("Error reporting bug to Jira:", error);
-      Alert.alert("Error", "Failed to report the bug.");
+      Alert.alert(t("general.error"), t("settings.reportBug.failed"));
       setLoading(false); // Stop loading in case of error
     }
   };
@@ -72,23 +74,20 @@ const ReportBugScreen = () => {
           <CircleArrowLeft size={28} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Bug Report</Text>
+          <Text style={styles.headerTitle}>{t("settings.reportBug.bugReport")}</Text>
         </View>
       </View>
 
       <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
-        <Text style={styles.infoText}>
-            Reporting a bug helps us quickly fix issues and improve the app's performance for a smoother experience. 
-            Your feedback makes a big difference in keeping the app running well for you and others!
-        </Text>
+        <Text style={styles.infoText}>{t("settings.reportBug.description")}</Text>
       </TouchableWithoutFeedback>
 
       <TouchableWithoutFeedback style={styles.inputContainer} onPress={Keyboard.dismiss}>
-        <Text style={styles.inputHeader}>Title</Text>
+        <Text style={styles.inputHeader}>{t("settings.reportBug.title")}</Text>
 
         <TextInput
             style={[styles.input]}
-            placeholder="add a title"
+            placeholder={t("settings.reportBug.titleMessage")}
             placeholderTextColor={Colors.placeholderText}
             value={title}
             onChangeText={handleTitleChange}
@@ -97,11 +96,11 @@ const ReportBugScreen = () => {
       </TouchableWithoutFeedback>
 
       <TouchableWithoutFeedback style={styles.inputContainer} onPress={Keyboard.dismiss}>
-        <Text style={styles.inputHeader}>Description</Text>
+        <Text style={styles.inputHeader}>{t("settings.reportBug.bugDescription")}</Text>
 
         <TextInput
             style={[styles.input, styles.inputDescription]}
-            placeholder="let us know how the issue occured"
+            placeholder={t("settings.reportBug.bugMessage")}
             placeholderTextColor={Colors.placeholderText}
             value={description}
             onChangeText={handleDescriptionChange}
@@ -112,7 +111,7 @@ const ReportBugScreen = () => {
 
       {hasChanges && (
         <Text style={styles.unsavedChangesText}>
-          You have unsaved changes
+          {t("settings.reportBug.unsaved")}
         </Text>
       )}
 
@@ -125,7 +124,7 @@ const ReportBugScreen = () => {
           onPress={handleSaveChanges}
           disabled={!hasChanges}
         >
-          <Text style={styles.saveButtonText}>Report Bug</Text>
+          <Text style={styles.saveButtonText}>{t("settings.reportBug.report")}</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

@@ -17,11 +17,13 @@ import Colors from "../../utils/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Fonts } from "../../utils/fonts";
 import { CircleArrowLeft, SquareArrowOutUpRight } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const PrivacySettingsScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [isPrivateAccountEnabled, setPrivateAccountEnabled] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -41,20 +43,17 @@ const PrivacySettingsScreen = () => {
             <CircleArrowLeft size={28} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Privacy</Text>
+            <Text style={styles.headerTitle}>{t("settings.privacySettings.privacy")}</Text>
           </View>
         </View>
 
         <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
-          <Text style={styles.infoText}>
-            Our app uses your location to provide tailored recommendations and improve your experience by showing you relevant content.
-            We use your photos to create a profile picture and to help you share your experiences with the community.
-          </Text>
+          <Text style={styles.infoText}>{t("settings.privacySettings.description")}</Text>
         </TouchableWithoutFeedback>
 
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <View style={styles.preferencesContainer}>
-            <Text style={styles.preferencesText}>Device Permissions</Text>
+            <Text style={styles.preferencesText}>{t("settings.privacySettings.devicePermissions")}</Text>
 
             {/* <View style={styles.preferenceContainer}>
               <Text style={styles.bodyText}>Private Account</Text>
@@ -70,7 +69,7 @@ const PrivacySettingsScreen = () => {
 
             {/* Allow Location Services */}
             <View style={styles.preferenceContainer}>
-              <Text style={styles.bodyText}>Allow Location Services</Text>
+              <Text style={styles.bodyText}>{t("settings.privacySettings.location")}</Text>
               <TouchableOpacity onPress={openDeviceSettings}>
                 <SquareArrowOutUpRight size={24} color={Colors.tags} />
               </TouchableOpacity>
@@ -80,7 +79,7 @@ const PrivacySettingsScreen = () => {
 
             {/* Photo Access */}
             <View style={styles.preferenceContainer}>
-              <Text style={styles.bodyText}>Photo Access</Text>
+              <Text style={styles.bodyText}>{t("settings.privacySettings.photo")}</Text>
               <TouchableOpacity onPress={openDeviceSettings}>
                 <SquareArrowOutUpRight size={24} color={Colors.tags} />
               </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import { useAuth } from "../../context/auth.context";
 import { useFollowingActions } from "../../hooks/useUserFollowing";
 import { useNavigation } from "@react-navigation/native";
 import { Fonts } from "../../utils/fonts";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -34,6 +35,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
   const [topFollowedUsers, setTopFollowedUsers] = useState<UserProfile[]>([]); // Store top followed users
 
   const navigation = useNavigation<any>();
+  const {t} = useTranslation();
   const userService = new UserService();
 
   // Hook to handle follow state for search result
@@ -72,7 +74,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
     const lowercaseQuery = searchQuery.toLowerCase();
 
     if (lowercaseQuery === userProfile?.username.toLowerCase()) {
-      setError("You cannot search for your own profile.");
+      setError(t("explore.ownProfileSearch"));
       setSearchResults(undefined);
       setIsLoading(false);
       return;
@@ -85,11 +87,11 @@ const ProfilesView = ({ location }: { location?: string }) => {
         setSearchResults(userData[0]);
       } else {
         setSearchResults(undefined);
-        setError("No results found.");
+        setError(t("explore.noResults"));
       }
     } catch (err) {
       console.error("Error searching for user:", err);
-      setError("An error occurred while searching.");
+      setError(t("explore.searchError"));
       setSearchResults(undefined);
     } finally {
       setIsLoading(false);
@@ -127,7 +129,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
           <ActivityIndicator color={Colors.background} size="small" />
         ) : (
           <Text style={styles.followButtonText}>
-            {isFollowing ? "Following" : "Follow"}
+            {isFollowing ? t("explore.following") : t("explore.follow")}
           </Text>
         )}
       </TouchableOpacity>
@@ -151,7 +153,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
       <View style={styles.profileInfo}>
         <Text style={styles.profileName}>@{item.username}</Text>
         <Text style={styles.profileReviews}>
-          {item.followerCount} followers
+          {item.followerCount} {t("explore.followersExplore")}
         </Text>
       </View>
       <TouchableOpacity
@@ -159,7 +161,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
         onPress={() => handleOpeningUserProfile(item.id)} 
         activeOpacity={1}
       >
-        <Text style={styles.followButtonText}>View Profile</Text>
+        <Text style={styles.followButtonText}>{t("explore.viewProfile")}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -177,7 +179,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
           <Search size={20} color={Colors.placeholderText} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
-            placeholder="search username..."
+            placeholder={t("explore.searchUsername")}
             placeholderTextColor={Colors.placeholderText}
             selectionColor={Colors.tags}
             value={searchQuery}
@@ -189,9 +191,7 @@ const ProfilesView = ({ location }: { location?: string }) => {
             keyboardType="default"
           />
         </View>
-        <Text style={styles.searchTip}>
-          Spell the username correctly for accurate results.
-        </Text>
+        <Text style={styles.searchTip}>{t("explore.searchTip")}</Text>
 
         {/* Search results */}
         {isLoading && searchQuery ? (
@@ -207,20 +207,20 @@ const ProfilesView = ({ location }: { location?: string }) => {
         ) : null}
 
         {/* Always display the section title */}
-        <Text style={styles.sectionTitle}>Notable Foodies in {location} </Text>
+        <Text style={styles.sectionTitle}>{t("explore.notableFoodies")} {location} </Text>
 
         {/* Show loading spinner with "finding locals" */}
         {isLoading && !searchQuery && (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.tags} />
-            <Text style={styles.loadingText}>Finding locals...</Text>
+            <Text style={styles.loadingText}>{t("explore.findingLocals")}</Text>
           </View>
         )}
 
         {/* Show no foodies message if no users found */}
         {!isLoading && topFollowedUsers.length === 0 && (
           <View style={styles.noResultsContainer}>
-            <Text style={styles.noResultsText}>No foodies in the area yet</Text>
+            <Text style={styles.noResultsText}>{t("explore.noFoodies")}</Text>
           </View>
         )}
 

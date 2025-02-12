@@ -25,11 +25,13 @@ import type { RootStackParamList } from "../../types/stackParams.types";
 import type { NavigationProp } from "@react-navigation/native";
 import SkeletonFeed from "../../components/skeleton/skeletonFeed";
 import { Post } from "../../models/post";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const FeedScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
 
   const {
     data,
@@ -102,10 +104,7 @@ const FeedScreen = () => {
         />
       ) : posts.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            Looks like there aren't any posts yet. Be the first to share your
-            culinary adventure!
-          </Text>
+          <Text style={styles.emptyText}>{t("feed.feed.noPosts")}</Text>
         </View>
       ) : (
         <FlatList

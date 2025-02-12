@@ -31,6 +31,7 @@ import { Timestamp } from "firebase/firestore";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
 import * as ImageManipulator from "expo-image-manipulator";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -42,6 +43,7 @@ const ProfileScreen = () => {
   const posts = usePostsByUser(userId!);
   const { data: userCounts, isLoading: countsLoading, refetch: refetchUserCounts } = useUserCounts(userId!);
   const [refreshing, setRefreshing] = useState(false);
+  const {t} = useTranslation();
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -50,7 +52,7 @@ const ProfileScreen = () => {
       await Promise.all([refetchUserCounts(), posts.refetch()]);
     } catch (error) {
       console.error("Error refreshing profile:", error);
-      Alert.alert("Error", "Failed to refresh profile. Please try again.");
+      Alert.alert(t("general.error"), t("profile.profile.refreshError"));
     } finally {
       setRefreshing(false);
     }
@@ -98,7 +100,7 @@ const ProfileScreen = () => {
   const uploadImage = async (uri: string) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
-      Alert.alert("Error", "User not authenticated");
+      Alert.alert(t("general.error"), t("profile.profile.notAuthenticated"));
       return;
     }
 
@@ -150,7 +152,7 @@ const ProfileScreen = () => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 1, // Start with the highest quality for selection
+      quality: 0.6, 
     });
   
     if (!result.canceled) {
@@ -174,7 +176,7 @@ const ProfileScreen = () => {
         }
       } catch (error) {
         console.error("Error uploading image:", error);
-        Alert.alert("Error", "Failed to upload image. Please try again.");
+        Alert.alert(t("general.error"), t("profile.profile.imageError"));
       }
     }
   };
@@ -186,7 +188,7 @@ const ProfileScreen = () => {
         const { status } =
           await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== "granted") {
-          alert("Sorry, we need camera roll permissions to make this work!");
+          alert(t("profile.profile.cameraPermission"));
         }
       }
     })();
@@ -273,7 +275,7 @@ const ProfileScreen = () => {
       {isHeaderVisible && (
         <View style={styles.stickyHeader}>
           <Text style={styles.stickyHeaderText}>
-            {userProfile.firstName}'s Profile
+            {userProfile.firstName}'s {t("profile.profile.profile")}
           </Text>
         </View>
       )}
@@ -314,12 +316,12 @@ const ProfileScreen = () => {
               >
               <Text style={styles.ovalText}>
                 {userCounts?.followerCount}
-                {userCounts?.followerCount === 1 ? " Follower" : " Followers"}
+                {userCounts?.followerCount === 1 ? t("profile.profile.follower") : t("profile.profile.followers")}
               </Text>
               </TouchableOpacity>
             </View>
             <View style={styles.followerOval}>
-              <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
+              <Text style={styles.ovalText}>{reviewCount} {t("profile.profile.reviews")}</Text>
             </View>
           </View>
         </View>
@@ -346,7 +348,7 @@ const ProfileScreen = () => {
           <View style={styles.iconCircle}>
             <SquarePen size={18} color={Colors.background} />
           </View>
-          <Text style={styles.editProfileText}>Edit Profile</Text>
+          <Text style={styles.editProfileText}>{t("profile.profile.editProfile")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -355,7 +357,7 @@ const ProfileScreen = () => {
       {reviewCount > 0 ? (
         <>
           <View style={styles.featuredGalleryContainer}>
-            <Text style={styles.featuredGalleryText}>Top Picks</Text>
+            <Text style={styles.featuredGalleryText}>{t("profile.profile.topPicks")}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -400,7 +402,7 @@ const ProfileScreen = () => {
           </View>
 
           <View style={styles.remainingReviewsContainer}>
-            <Text style={styles.remainingReviewsText}>All Reviews</Text>
+            <Text style={styles.remainingReviewsText}>{t("profile.profile.allReviews")}</Text>
           </View>
 
           <View style={styles.gridGallery}>
@@ -418,9 +420,7 @@ const ProfileScreen = () => {
             <NotepadText color={Colors.noReviews} size={width * 0.08}/>
           </View>
 
-          <Text style={styles.noReviewText}>
-            No reviews yet
-          </Text>
+          <Text style={styles.noReviewText}>{t("profile.profile.noReviews")}</Text>
         </View>
       )}
     </ScrollView>

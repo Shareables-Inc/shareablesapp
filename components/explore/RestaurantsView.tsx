@@ -19,6 +19,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useGetFeaturedEstablishments } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
 import { UserProfile } from "../../models/userProfile";
+import { useTranslation } from "react-i18next";
 
 
 const { width } = Dimensions.get("window");
@@ -28,6 +29,7 @@ interface RestaurantsViewProps {
 }
 
 const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
+  const {t} = useTranslation();
   const navigation = useNavigation<any>();
   const userService = new UserService();
   const { userProfile } = useAuth();
@@ -119,7 +121,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
           <Text style={styles.topPosterUsername} numberOfLines={1} ellipsizeMode="tail">
             @{item.username}
           </Text>
-          <Text style={styles.topPosterFollowers}>{item.followerCount} followers</Text>
+          <Text style={styles.topPosterFollowers}>{item.followerCount} {t("explore.followersExplore")}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -173,7 +175,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.tags} />
       }
     >
-      <Text style={styles.sectionTitleFeatured}>Top Restaurants</Text>
+      <Text style={styles.sectionTitleFeatured}>{t("explore.topRestaurants")}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ paddingRight: width * 0.03, flexDirection: "row" }}>
           {getTopTenEstablishments().slice(0,5).map((item) => (
@@ -194,7 +196,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
         </View>
       </ScrollView>
 
-      <Text style={styles.sectionTitleFoodies}>Local Foodies</Text>
+      <Text style={styles.sectionTitleFoodies}>{t("explore.localFoodies")}</Text>
       {isTopFollowedLoading ? (
         <ActivityIndicator size="small" color={Colors.tags} />
       ) : (

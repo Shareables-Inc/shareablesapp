@@ -15,6 +15,7 @@ import { RootStackParamList } from "../../types/stackParams.types";
 import { Post } from "../../models/post";
 import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -26,6 +27,7 @@ const ThreePhotoScroll: React.FC<ThreePhotoScrollProps> = ({ post }) => {
   const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
 
   const handleScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -60,7 +62,7 @@ const ThreePhotoScroll: React.FC<ThreePhotoScrollProps> = ({ post }) => {
             />
           </TouchableOpacity>
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{post.username} reviewed</Text>
+            <Text style={styles.userName}>{post.username} {t("feed.feed.reviewed")}</Text>
             
             {/* Split the establishment name and location */}
             <View style={styles.locationContainer}>

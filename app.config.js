@@ -4,7 +4,7 @@ export default {
   expo: {
     name: "Shareables",
     slug: "shareablesapp",
-    version: "1.0.0",
+    version: "1.1.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "light",
@@ -19,10 +19,10 @@ export default {
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Shareables to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow Shareables to use your location to determine what restaurants surround you on the map page."
         }
       ],
-      "expo-font"
+      "expo-font",
     ],
     splash: {
       image: "./assets/images/splash.png",
@@ -35,7 +35,7 @@ export default {
     ios: {
       supportsTablet: false,
       bundleIdentifier: process.env.EXPO_BUNDLE_IDENTIFIER || "com.shareablesinc.shareables",
-      buildNumber: "1.0.7",
+      buildNumber: "1.0.1",
       googleServicesFile: process.env.EXPO_GOOGLE_SERVICES_FILE_IOS,
       infoPlist: {
         LSApplicationQueriesSchemes: [
@@ -43,16 +43,16 @@ export default {
           "comgooglemaps",
           "waze"
         ],
-        NSContactsUsageDescription: "This app uses contacts to invite friends.",
-        NSPhotoLibraryUsageDescription: "This app needs access to your photo library to select photos.",
-        NSCameraUsageDescription: "This app needs access to your camera to take photos.",
+        NSContactsUsageDescription: "This app uses your contacts to recommend users to follow. We do not store this data.",
+        NSPhotoLibraryUsageDescription: "This app uses your photo library to allow you to make posts. We only store the photos that you select for posting.",
+        NSCameraUsageDescription: "This app uses your camera to either add photos to your post or create a new profile image.",
         UIBackgroundModes: [
           "fetch",
           "remote-notification"
         ],
-        NSLocationAlwaysAndWhenInUseUsageDescription: "Allow Shareables to use your location.",
-        NSLocationAlwaysUsageDescription: "Allow Shareables to access your location",
-        NSLocationWhenInUseUsageDescription: "Allow Shareables to access your location"
+        NSLocationAlwaysAndWhenInUseUsageDescription: "Allow Shareables to use your location to determine what restaurants surround you on the map page.",
+        NSLocationAlwaysUsageDescription: "Allow Shareables to access your location to determine what restaurants surround you on the map page.",
+        NSLocationWhenInUseUsageDescription: "Allow Shareables to access your location to determine what restaurants surround you on the map page."
       }
     },
     android: {

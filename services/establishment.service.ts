@@ -115,26 +115,15 @@ export class EstablishmentService {
 
   async getFeaturedEstablishments(
     city: string,
-    selectedTag?: string
   ): Promise<FeaturedEstablishment[]> {
     try {
       let establishmentsQuery: Query;
-      if (selectedTag) {
-        establishmentsQuery = query(
-          this.establishmentsCollection,
-          where("city", "==", city),
-          where("tags", "array-contains", selectedTag),
-          orderBy("updatedAt", "desc"),
-          limit(10) // Limit to 10 establishments
-        );
-      } else {
         establishmentsQuery = query(
           this.establishmentsCollection,
           where("city", "==", city),
           orderBy("updatedAt", "desc"),
           limit(10) // Limit to 10 establishments
         );
-      }
   
       const establishmentsSnapshot = await getDocs(establishmentsQuery);
       const establishmentIds = establishmentsSnapshot.docs.map((doc) => doc.id);
@@ -192,8 +181,6 @@ export class EstablishmentService {
   }
   
   
-  
-
   async getEstablishmentById(establishmentId: string) {
     const establishmentDoc = doc(
       this.establishmentsCollection,

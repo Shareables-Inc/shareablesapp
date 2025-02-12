@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  LayoutChangeEvent,
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,10 +18,12 @@ import ProfilesView from "../../components/explore/ProfilesView";
 import RestaurantsView from "../../components/explore/RestaurantsView";
 import { Fonts } from "../../utils/fonts";
 import { useAuth } from "../../context/auth.context";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const SearchScreen = () => {
+  const {t} = useTranslation();
   const [activeTab, setActiveTab] = useState<"Profiles" | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<string>();
   const [dropdownLayout, setDropdownLayout] = useState({ width: 0, x: 0 });
@@ -73,7 +74,7 @@ const SearchScreen = () => {
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.tabContainer}>
-        <Text style={styles.exploreText}>Explore</Text>
+        <Text style={styles.exploreText}>{t("explore.explore")}</Text>
         <TouchableOpacity
           style={[
             styles.tabButtonSearch,
@@ -110,7 +111,7 @@ const SearchScreen = () => {
         </TouchableOpacity>
 
       </View>
-      <Text style={styles.description}>Try new local favorites</Text>
+      <Text style={styles.description}>{t("explore.exploreDescription")}</Text>
 
       {showLocationDropdown && (
         <ScrollView

@@ -25,7 +25,7 @@ export const useGetEstablishments = (establishmentIds: string[]) => {
   return useQuery({
     queryKey: ["establishments", establishmentIds],
     queryFn: async () => {
-      const establishments = await establishmentService.getEstablishments(establishmentIds);
+      const establishments = await establishmentService.getEstablishment(establishmentIds);
       // Filter out establishments with postCount of 0
       return establishments.filter(
         (establishment) => establishment.postCount > 0

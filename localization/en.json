@@ -1,0 +1,200 @@
+{
+  "general": {
+    "next": "Next",
+    "nextStep": "Next Step",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "error": "Error",
+    "confirm": "Confirm",
+    "deactivate": "Deactivate",
+    "invalid": "Invalid Input",
+    "updateFail": "Update Failed",
+    "success": "Success"
+  },
+  "tabNavigator": {
+    "home": "Home",
+    "post": "Post",
+    "explore": "Explore",
+    "profile": "Profile"
+  },
+  "feed": {
+    "feed": {
+      "noPosts": "Looks like there aren't any posts yet. Be the first to share your culinary adventure!",
+      "reviewed": "reviewed"
+    },
+    "discover": {},
+    "tabLayout": {},
+    "restaurantList": {},
+    "restaurantCard": {},
+    "bottomModal": {},
+    "notifications": {}
+  },
+  "discover": {
+    "locationMessage": {}
+  },
+  "post": {
+    "post": {
+      "upload": "Upload photos from your recent restaurant visit",
+      "uploadDescription": "Whether it's your meal, the restaurant's unique vibe, or memories made at the table, we want to see it all.",
+      "selectImages": "Select images",
+      "uploadingImages": "Uploading images...",
+      "objectionableContent": "Objectionable Content Detected",
+      "selectDifferentPhotos": "Please select different photos.",
+      "imageUploadError": "Image Upload Error",
+      "imageUploadIssue": "There was an issue uploading images.",
+      "atLeastOneImage": "Please upload at least one image before proceeding.",
+      "postCreationError": "Post Creation Error",
+      "postCreationIssue": "There was an error creating your post. Please try again."
+    },
+    "expandedPost": {},
+    "postReview": {},
+    "restaurantSelect": {}
+  },
+  "explore": {
+    "explore": "Explore",
+    "exploreDescription": "Try new local favourites",
+    "topRestaurants": "Top Restaurants",
+    "localFoodies": "Local Foodies",
+    "followersExplore": "followers",
+    "searchUsername": "search username...",
+    "searchTip": "Spell the username correctly for accurate results.",
+    "notableFoodies": "Notable Foodies in ",
+    "viewProfile": "View Profile",
+    "ownProfileSearch": "You cannot search for your own profile.",
+    "noResults": "No results found.",
+    "searchError": "An error ocurred while searching.",
+    "follow": "Follow",
+    "following": "Following",
+    "findingLocals": "Finding locals...",
+    "noFoodies": "No foodies in the area yet"
+  },
+  "profile": {
+    "profile": {
+      "refreshError": "Failed to refresh profile. Please try again.",
+      "notAuthenticated": "User not authenticated",
+      "imageError": "Failed to upload image. Please try again",
+      "cameraPermission": "Sorry, we need camera roll permissions to make this work!",
+      "profile": "Profile",
+      "follower": " Follower",
+      "followers": " Followers",
+      "reviews": "Reviews",
+      "editProfile": "Edit Profile",
+      "topPicks": "Top Picks",
+      "allReviews": "All Reviews",
+      "noReviews": "No reviews yet"
+    },
+    "userProfile": {},
+    "followerList": {},
+    "restaurantProfile": {}
+  },
+  "login": {
+    "login": {},
+    "signUp": {},
+    "verifyEmail": {},
+    "nameInput": {},
+    "usernameInput": {},
+    "topCuisines": {},
+    "inviteContacts": {},
+    "followFriends": {},
+    "letsGo": {}
+  },
+  "settings": {
+    "mainSettings": {
+      "settings": "Settings",
+      "preferences": "Preferences",
+      "accountCenter": "Account Center",
+      "notifications": "Notifications",
+      "permissions": "Permissions and Privacy",
+      "feedback": "Feedback",
+      "report": "Report Bugs",
+      "request": "Request Features"
+    },
+    "accountSettings": {
+      "account": "Account",
+      "personal": "Personal Details",
+      "edit": "Edit Profile",
+      "login": "Login and Security",
+      "logout": "Logout",
+      "deactivate": "Deactivate Account",
+      "logoutAlert": "Are you sure you want to log out?",
+      "logoutConfirm": "Yes, Logout",
+      "logoutError": "Logout Error",
+      "logoutErrorMessage": "An error occurred while logging out. Please try again.",
+      "deactivateError": "No user is logged in or email is unavailable.",
+      "password": "Password Confirmation",
+      "passwordConfirm": "Please enter your password to confirm account deletion.",
+      "passwordError": "Password is required.",
+      "deactivateAccount": "Deactivate Account",
+      "deactivateMessage": "Your account, posts, comments, likes, and followings will be permanently deleted. This cannot be undone.",
+      "deactivateFail": "Failed to delete your account. Please try again.",
+      "reauthError": "Reauthentication Error",
+      "reauthMessage": "Incorrect password. Please try again."      
+    },
+    "editProfile": {
+      "noUser": "No user found. Please login again.",
+      "nearestCity": "Nearest City",
+      "noData": "User data not found.",
+      "firstNameError": "First name is required and can only contain letters.",
+      "citySelectError": "You must select a city.",
+      "phoneError": "Please enter a valid phone number with digits only.",
+      "bioError": "Your bio contains inappropriate language.",
+      "updateError": "Failed to save your details. Please try again.",
+      "profileDetails": "Profile Details",
+      "description": "Your name and bio will be visible to others. Choosing a location personalizes your feed. Your phone number will only be used for account verification later.",
+      "personalInfo": "Personal Information",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "phone": "Phone Number",
+      "profileInfo": "Profile Information",
+      "bio": "Write your bio here...",
+      "unsaved": "You have unsaved changes",
+      "save": "Save Changes"
+    },
+    "notificationSettings": {
+      "notifications": "Notifications",
+      "description": "Our app sends notifications to keep you updated on your friend’s recommendations and the status of your posts, ensuring you don’t miss anything relevant.",
+      "allow": "Allow Notifications",
+      "preferences": "Preferences",
+      "reminders": "Review Reminders",
+      "followers": "New Followers",
+      "likes": "Likes on Your Posts",
+      "comments": "Comments on Your Posts",
+      "friend": "Friends Posts",
+      "unsaved": "You have unsaved changes",
+      "save": "Save Changes"
+    },
+    "privacySettings": {
+      "privacy": "Privacy",
+      "description": "Our app uses your location to provide tailored recommendations and improve your experience by showing you relevant content. We use your photos to create a profile picture and to help you share your experiences with the community.",
+      "devicePermissions": "Device Permissions",
+      "location": "Allow Location Services",
+      "photo": "Photo Access"
+    },
+    "reportBug": {
+      "fillError": "Please fill in both the title and description.",
+      "success": "Thank you for improving the app!",
+      "failed": "failed to report the bug.",
+      "bugReport": "Bug Report",
+      "description": "Reporting a bug helps us quickly fix issues and improve the app's performance for a smoother experience. Your feedback makes a big difference in keeping the app running well for you and others!",
+      "title": "Title",
+      "titleMessage": "add a title",
+      "bugDescription": "Description",
+      "bugMessage": "let us know how the issue occurred",
+      "unsaved": "You have unsaved changes",
+      "report": "Report Bug"
+    },
+    "requestFeature": {
+      "fillError": "Please fill in both the name and reason",
+      "success": "Thank you for the request!",
+      "failed": "failed to send the request",
+      "featureRequest": "Feature Request",
+      "description": "Got an idea to make the app better? Let us know! Your suggestions help shape future updates,bringing features that matter most to you and enhancing the overall experience for everyone.",
+      "featureName": "Feature Name",
+      "nameMessage": "add a feature name",
+      "reason": "Reason",
+      "reasonMessage": "let us know how this feature would make your experience better",
+      "unsaved": "You have unsaved changes",
+      "request": "Send Request"
+    }
+  }
+}

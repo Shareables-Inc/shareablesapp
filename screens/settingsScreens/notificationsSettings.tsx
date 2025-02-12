@@ -17,6 +17,7 @@ import { Fonts } from "../../utils/fonts";
 import { CircleArrowLeft } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import { useUserGetByUid, useUserUpdatePreferences } from "../../hooks/useUser";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -25,6 +26,7 @@ const NotificationsSettingsScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { data: userProfile } = useUserGetByUid(user?.uid || "");
   const { mutate: updatePreferences } = useUserUpdatePreferences();
+  const {t} = useTranslation();
 
   const [preferences, setPreferences] = useState({
     notifications: false,
@@ -107,19 +109,17 @@ const NotificationsSettingsScreen = () => {
             <CircleArrowLeft size={28} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Notifications</Text>
+            <Text style={styles.headerTitle}>{t("settings.notificationSettings.notifications")}</Text>
           </View>
         </View>
 
         <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
-          <Text style={styles.infoText}>
-            Our app sends notifications to keep you updated on your friend’s recommendations and the status of your posts, ensuring you don’t miss anything relevant.
-          </Text>
+          <Text style={styles.infoText}>{t("settings.notificationSettings.description")}</Text>
         </TouchableWithoutFeedback>
 
         <View>
           <View style={styles.allowNotificationsContainer}>
-            <Text style={styles.bodyText}>Allow Notifications</Text>
+            <Text style={styles.bodyText}>{t("settings.notificationSettings.allow")}</Text>
             <Switch
               trackColor={{ false: Colors.highlightText, true: Colors.highlightText }}
               thumbColor={preferences.notifications ? Colors.background : Colors.background}
@@ -129,12 +129,12 @@ const NotificationsSettingsScreen = () => {
           </View>
 
           <View style={styles.PreferencesContainer}>
-            <Text style={styles.PreferencesText}>Preferences</Text>
+            <Text style={styles.PreferencesText}>{t("settings.notificationSettings.preferences")}</Text>
 
             {/* Review Reminders */}
             <View style={styles.preferenceContainer}>
               <Text style={[styles.bodyText, !preferences.notifications && styles.disabledText]}>
-                Review Reminders
+              {t("settings.notificationSettings.reminders")}
               </Text>
               <Switch
                 trackColor={{ false: Colors.highlightText, true: Colors.highlightText }}
@@ -150,7 +150,7 @@ const NotificationsSettingsScreen = () => {
             {/* New Followers */}
             <View style={styles.preferenceContainer}>
               <Text style={[styles.bodyText, !preferences.notifications && styles.disabledText]}>
-                New Followers
+              {t("settings.notificationSettings.followers")}
               </Text>
               <Switch
                 trackColor={{ false: Colors.highlightText, true: Colors.highlightText }}
@@ -166,7 +166,7 @@ const NotificationsSettingsScreen = () => {
             {/* Likes on Posts */}
             <View style={styles.preferenceContainer}>
               <Text style={[styles.bodyText, !preferences.notifications && styles.disabledText]}>
-                Likes on Posts
+              {t("settings.notificationSettings.likes")}
               </Text>
               <Switch
                 trackColor={{ false: Colors.highlightText, true: Colors.highlightText }}
@@ -182,7 +182,7 @@ const NotificationsSettingsScreen = () => {
             {/* Comments on Posts */}
             <View style={styles.preferenceContainer}>
               <Text style={[styles.bodyText, !preferences.notifications && styles.disabledText]}>
-                Comments on Posts
+              {t("settings.notificationSettings.comments")}
               </Text>
               <Switch
                 trackColor={{ false: Colors.highlightText, true: Colors.highlightText }}
@@ -198,7 +198,7 @@ const NotificationsSettingsScreen = () => {
             {/* Friend Posts */}
             <View style={styles.preferenceContainer}>
               <Text style={[styles.bodyText, !preferences.notifications && styles.disabledText]}>
-                Friend Posts
+              {t("settings.notificationSettings.friend")}
               </Text>
               <Switch
                 trackColor={{ false: Colors.highlightText, true: Colors.highlightText }}
@@ -212,7 +212,7 @@ const NotificationsSettingsScreen = () => {
         </View>
 
         {hasChanges && (
-          <Text style={styles.unsavedChangesText}>You have unsaved changes</Text>
+          <Text style={styles.unsavedChangesText}>{t("settings.notificationSettings.unsaved")}</Text>
         )}
 
         <TouchableOpacity
@@ -220,7 +220,7 @@ const NotificationsSettingsScreen = () => {
           style={[styles.saveButton, !hasChanges && styles.saveButtonDisabled]}
           disabled={!hasChanges}
         >
-          <Text style={styles.saveButtonText}>Save Changes</Text>
+          <Text style={styles.saveButtonText}>{t("settings.notificationSettings.save")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

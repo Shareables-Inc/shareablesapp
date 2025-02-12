@@ -1,0 +1,45 @@
+{
+    "general": {
+      "next": "Suivant",
+      "nextStep": "Étape suivante",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "error": "Erreur"
+    },
+    "tabNavigator": {
+      "home": "Accueil",
+      "post": "Publier",
+      "explore": "Explorer",
+      "profile": "Profil"
+    },
+    "feed": {
+      "feed": "Paître",
+      "map": "Carte",
+      "reviewed": "examiné"
+    },
+    "post": {
+      "upload": "Téléchargez des photos de votre dernière visite au restaurant",
+      "uploadDescription": "Que ce soit votre repas, l'ambiance unique du restaurant ou les souvenirs créés à table, nous voulons tout voir.",
+      "selectImages": "Sélectionner des images",
+      "uploadingImages": "Téléchargement des images...",
+      "objectionableContent": "Contenu inapproprié détecté",
+      "selectDifferentPhotos": "Veuillez sélectionner d'autres photos.",
+      "imageUploadError": "Erreur de téléchargement d'image",
+      "imageUploadIssue": "Un problème est survenu lors du téléchargement des images.",
+      "atLeastOneImage": "Veuillez télécharger au moins une image avant de continuer.",
+      "postCreationError": "Erreur de création de publication",
+      "postCreationIssue": "Une erreur s'est produite lors de la création de votre message. Veuillez réessayer."
+    },
+    "explore": {
+      "explore": "Explorer",
+      "exploreDescription": "Essayez les favoris locaux",
+      "topRestaurants": "Meilleurs restaurants",
+      "localFoodies": "Gastronomes locaux",
+      "followersExplore": "abonnés",
+      "searchUsername": "Rechercher un nom d'utilisateur...",
+      "searchTip": "Veuillez orthographier correctement le nom d'utilisateur pour des résultats précis.",
+      "notableFoodies": "Gastronomes notables à ",
+      "viewProfile": "Voir le profil"
+}
+  }
+  

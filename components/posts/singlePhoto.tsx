@@ -14,6 +14,7 @@ import { Post } from "../../models/post";
 import { RootStackParamList } from "../../types/stackParams.types";
 import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -24,6 +25,7 @@ interface SinglePhotoProps {
 const SinglePhoto: React.FC<SinglePhotoProps> = ({ post }) => {
   const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
 
   const handleImagePress = () => {
     navigation.navigate("ExpandedPost", { postId: post.id });
@@ -54,7 +56,7 @@ const SinglePhoto: React.FC<SinglePhotoProps> = ({ post }) => {
             style={styles.userImage}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{post.username} reviewed</Text>
+            <Text style={styles.userName}>{post.username} {t("feed.feed.reviewed")}</Text>
             
             {/* Separate the establishment name and the location info */}
             <View style={styles.locationContainer}>

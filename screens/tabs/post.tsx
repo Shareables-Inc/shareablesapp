@@ -30,12 +30,14 @@ import { serverTimestamp } from "firebase/firestore";
 import { BlurView } from "expo-blur";
 import FastImage from "react-native-fast-image";
 import { analyzeImageWithVisionAPI } from "../../utils/contentFilter";
+import { useTranslation } from "react-i18next";
 
 
 const { width, height } = Dimensions.get("window");
 
 const PostScreen = () => {
   const navigation = useNavigation();
+  const {t} = useTranslation();
   const { user, userProfile } = useAuth();
   const [isGridView, setIsGridView] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -79,8 +81,8 @@ const PostScreen = () => {
   
         if (safeImages.length === 0) {
           Alert.alert(
-            "Objectionable Content Detected",
-            "Please select different photos."
+            t("post.post.objectionableContent"),
+            t("post.post.selectDifferentPhotos.")
           );
           setUploadedImageUrls([]);
           return;
@@ -88,15 +90,15 @@ const PostScreen = () => {
   
         if (rejectedImages.length > 0) {
           Alert.alert(
-            "Objectionable Content Detected",
-            "Please select different photos."
+            t("post.post.objectionableContent"),
+            t("post.post.selectDifferentPhotos.")
           );
         }
   
         setUploadedImageUrls(safeImages);
       } catch (error) {
         console.error("Error handling images:", error);
-        Alert.alert("Image Upload Error", "There was an issue uploading images.");
+        Alert.alert(t("post.post.imageUploadError"), t("post.post.imageUploadIssue"));
       } finally {
         setUploading(false);
       }
@@ -160,7 +162,7 @@ const PostScreen = () => {
   
   const handleNextPress = useCallback(() => {
     if (uploadedImageUrls.length === 0) {
-      Alert.alert("Error", "Please upload at least one image before proceeding.");
+      Alert.alert(t("general.error"), t("post.post.atLeastOneImage"));
       return;
     }
   
@@ -204,7 +206,7 @@ const PostScreen = () => {
         },
         onError: (error) => {
           console.error("Error creating post:", error);
-          Alert.alert("Post Creation Error", "There was an error creating your post. Please try again.");
+          Alert.alert(t("post.post.postCreationError"), t("post.post.postCreationIssue"));
         },
         onSettled: () => {
           setUploading(false); // Hide uploading indicator regardless of success or failure
@@ -219,7 +221,7 @@ const PostScreen = () => {
       return (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={Colors.tags} />
-          <Text style={styles.loadingText}>Uploading images...</Text>
+          <Text style={styles.loadingText}>{t("post.post.uploadingImages")}</Text>
         </View>
       );
     }
@@ -250,7 +252,7 @@ const PostScreen = () => {
         <BlurView style={styles.blurView} intensity={25} tint="systemChromeMaterial">
           <TouchableOpacity onPress={pickImages} style={styles.imagePicker} activeOpacity={1}>
             <ImagePlus color={Colors.background} size={50} strokeWidth={2.3} />
-            <Text style={styles.addImageText}>select images</Text>
+            <Text style={styles.addImageText}>{t("post.post.selectImages")}</Text>
           </TouchableOpacity>
         </BlurView>
       </View>
@@ -260,10 +262,8 @@ const PostScreen = () => {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
       <View style={styles.header}>
-        <Text style={styles.title}>Upload photos from your recent restaurant visit</Text>
-        <Text style={styles.description}>
-          Whether it's your meal, the restaurant's unique vibe, or memories made at the table, we want to see it all.
-        </Text>
+        <Text style={styles.title}>{t("post.post.upload")}</Text>
+        <Text style={styles.description}>{t("post.post.uploadDescription")}</Text>
       </View>
 
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -287,7 +287,7 @@ const PostScreen = () => {
 
             {uploadedImageUrls.length > 0 && (
               <TouchableOpacity onPress={handleNextPress} style={styles.nextButton} activeOpacity={1}>
-                <Text style={styles.nextButtonText}>Next Step</Text>
+                <Text style={styles.nextButtonText}>{t("post.post.nextStep")}</Text>
               </TouchableOpacity>
             )}
           </View>

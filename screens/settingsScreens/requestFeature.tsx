@@ -18,11 +18,13 @@ import { Fonts } from "../../utils/fonts";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { requestFeatureToJira } from "../../helpers/featureRequest";
 import { CircleArrowLeft } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const RequestFeatureScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
@@ -44,20 +46,20 @@ const RequestFeatureScreen = () => {
 
   const handleSaveChanges = async () => {
     if (!title || !description) {
-      Alert.alert("Error", "Please fill in both the title and description.");
+      Alert.alert(t("general.error"), t("settings.requestFeature.fillError"));
       return;
     }
 
     try {
       setLoading(true); // Start loading
       await requestFeatureToJira(title, description);
-      Alert.alert("Success", "Thank you for the request!");
+      Alert.alert(t("general.success"), t("settings.requestFeature.success"));
       setHasChanges(false);
       setLoading(false); // Stop loading
       navigation.goBack();
     } catch (error) {
       console.log("Error reporting feature to Jira:", error);
-      Alert.alert("Error", "Failed to send request.");
+      Alert.alert(t("general.error"), t("settings.requestFeature.failed"));
       setLoading(false); // Stop loading in case of error
     }
   };
@@ -69,15 +71,12 @@ const RequestFeatureScreen = () => {
           <CircleArrowLeft size={28} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Feature Request</Text>
+          <Text style={styles.headerTitle}>{t("settings.requestFeature.featureRequest")}</Text>
         </View>
       </View>
 
       <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
-        <Text style={styles.infoText}>
-          Got an idea to make the app better? Let us know! Your suggestions help shape future updates,
-          bringing features that matter most to you and enhancing the overall experience for everyone.
-        </Text>
+        <Text style={styles.infoText}>{t("settings.requestFeature.description")}</Text>
       </TouchableWithoutFeedback>
 
       <TouchableWithoutFeedback style={styles.inputContainer} onPress={Keyboard.dismiss}>
@@ -85,7 +84,7 @@ const RequestFeatureScreen = () => {
 
         <TextInput
           style={[styles.input]}
-          placeholder="add a feature name"
+          placeholder={t("settings.requestFeature.nameMessage")}
           placeholderTextColor={Colors.placeholderText}
           value={title}
           onChangeText={handleTitleChange}
@@ -93,11 +92,11 @@ const RequestFeatureScreen = () => {
       </TouchableWithoutFeedback>
 
       <TouchableWithoutFeedback style={styles.inputContainer} onPress={Keyboard.dismiss}>
-        <Text style={styles.inputHeader}>Reason</Text>
+        <Text style={styles.inputHeader}>{t("settings.requestFeature.reason")}</Text>
 
         <TextInput
           style={[styles.input, styles.inputDescription]}
-          placeholder="let us know how this feature would make your experience better"
+          placeholder={t("settings.requestFeature.reasonMessage")}
           placeholderTextColor={Colors.placeholderText}
           value={description}
           onChangeText={handleDescriptionChange}
@@ -107,7 +106,7 @@ const RequestFeatureScreen = () => {
 
       {hasChanges && (
         <Text style={styles.unsavedChangesText}>
-          You have unsaved changes
+          {t("settings.requestFeature.unsaved")}
         </Text>
       )}
 
@@ -120,7 +119,7 @@ const RequestFeatureScreen = () => {
           onPress={handleSaveChanges}
           disabled={!hasChanges}
         >
-          <Text style={styles.saveButtonText}>Send Request</Text>
+          <Text style={styles.saveButtonText}>{t("settings.requestFeature.request")}</Text>
         </TouchableOpacity>
       )}
     </SafeAreaView>

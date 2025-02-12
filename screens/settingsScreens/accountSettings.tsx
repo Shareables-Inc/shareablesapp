@@ -7,6 +7,7 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  Alert
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NavigationProp } from "@react-navigation/native";
@@ -17,13 +18,17 @@ import { Fonts } from "../../utils/fonts";
 import { CircleArrowLeft } from "lucide-react-native";
 import { auth } from "../../firebase/firebaseConfig";
 import { useAuth } from "../../context/auth.context";
-import { Alert } from "react-native";
+import { EmailAuthProvider, reauthenticateWithCredential, deleteUser, getAuth } from "firebase/auth";
+import { deleteDoc, doc, getDocs, query, collection, where } from "firebase/firestore";
+import { db } from "../../firebase/firebaseConfig";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const AccountSettingsScreen = () => {
   const { logout } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -31,15 +36,15 @@ const AccountSettingsScreen = () => {
 
   const handleLogout = async () => {
     Alert.alert(
-      "Logout",
-      "Are you sure you want to log out?",
+      t("settings.accountSettings.logout"),
+      t("settings.accountSettings.logoutAlert"),
       [
         {
-          text: "Cancel",
+          text: t("general.cancel"),
           style: "cancel",
         },
         {
-          text: "Yes, Logout",
+          text: t("settings.accountSettings.logoutConfirm"),
           onPress: async () => {
             try {
               await logout();
@@ -52,8 +57,8 @@ const AccountSettingsScreen = () => {
             } catch (error) {
               console.error("Error signing out: ", error);
               Alert.alert(
-                "Logout Error",
-                "An error occurred while logging out. Please try again."
+                t("settings.accountSettings.logoutError"),
+                t("settings.accountSettings.logoutErrorMessage")
               );
             }
           },
@@ -62,7 +67,120 @@ const AccountSettingsScreen = () => {
       { cancelable: false }
     );
   };
+    
+  const handleDeactivate = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+  
+    if (!user || !user.email) {
+      Alert.alert(t("general.error"), t("settings.accountSettings.deactivateError"));
+      return;
+    }
+  
+    // Reauthenticate user with password
+    let password: string = "";
+  
+    Alert.prompt(
+      t("settings.accountSettings.password"),
+      t("settings.accountSettings.passwordConfirm"),
+      [
+        { text: t("general.cancel"), style: "cancel" },
+        {
+          text: t("general.confirm"),
+          onPress: async (input: string | undefined) => {
+            if (!input) {
+              Alert.alert(t("general.error"), t("settings.accountSettings.passwordError"));
+              return;
+            }
+  
+            password = input;
+  
+            try {
+              // Confirm Authentication
+              const credential = EmailAuthProvider.credential(user.email as string, password);
+              await reauthenticateWithCredential(user, credential);
+              console.log("User successfully reauthenticated.");
+  
+              // Alert to Confirm Deactivation
+              Alert.alert(
+                t("settings.accountSettings.deactivateAccount"),
+                t("settings.accountSettings.deactivateMessage"),
+                [
+                  { text: t("general.cancel"), style: "cancel" },
+                  {
+                    text: t("general.deactivate"),
+                    onPress: async () => {
+                      try {
+                        const userId = user.uid;
+                        console.log("Starting account deletion for user:", userId);
+  
+                        // Collections With userId in Field
+                        const collections = [
+                          { name: "posts", field: "userId" },
+                          { name: "comments", field: "userId" },
+                          { name: "likes", field: "userId" },
+                          { name: "following", fields: ["followerId", "followingId"] },
+                        ];
+  
+                        // Delete Documents
+                        for (const col of collections) {
+                          const colRef = collection(db, col.name);
+                          console.log(`Deleting from collection: ${col.name}`);
+  
+                          if (col.fields) {
+                            for (const field of col.fields) {
+                              const q = query(colRef, where(field, "==", userId));
+                              const snapshot = await getDocs(q);
+  
+                              for (const docSnapshot of snapshot.docs) {
+                                await deleteDoc(doc(db, col.name, docSnapshot.id));
+                              }
+                            }
+                          } else {
+                            const q = query(colRef, where(col.field, "==", userId));
+                            const snapshot = await getDocs(q);
+  
+                            for (const docSnapshot of snapshot.docs) {
+                              await deleteDoc(doc(db, col.name, docSnapshot.id));
+                            }
+                          }
+                        }
+  
+                        // Delete User Saves and Stats
+                        await deleteDoc(doc(db, "userSaves", userId));
+                        await deleteDoc(doc(db, "userStats", userId));
+  
+                        // Delete User
+                        await deleteDoc(doc(db, "users", userId));
+  
+                        // Remove Authentication
+                        await deleteUser(user);
+  
+                        console.log("Account successfully deleted.");
 
+                        // Logout
+                        navigation.reset({ index: 0, routes: [{ name: "Login" }] });
+                      } catch (error) {
+                        console.error("Error during deletion:", error);
+                        Alert.alert(t("general.error"), t("settings.accountSettings.deactivateFail"));
+                      }
+                    },
+                  },
+                ],
+                { cancelable: false }
+              );
+            } catch (error) {
+              console.error("Reauthentication failed:", error);
+              Alert.alert(t("settings.accountSettings.reauthError"), t("settings.accountSettings.reauthMessage"));
+            }
+          },
+        },
+      ],
+      "secure-text"
+    );
+  };
+  
+  
   return (
     <SafeAreaView
       edges={["bottom", "top"]}
@@ -75,19 +193,17 @@ const AccountSettingsScreen = () => {
             <CircleArrowLeft size={28} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Account</Text>
+            <Text style={styles.headerTitle}>{t("settings.accountSettings.account")}</Text>
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-
         <View style={styles.personalDetailsContainer}>
-            <Text style={styles.loginSecurityText}>Personal Details</Text>
+            <Text style={styles.loginSecurityText}>{t("settings.accountSettings.personal")}</Text>
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => navigation.navigate("EditProfile")}
             >
-              <Text style={styles.bodyText}>Edit Profile</Text>
+              <Text style={styles.bodyText}>{t("settings.accountSettings.edit")}</Text>
             </TouchableOpacity>
             <View style={styles.separatorSmall} />
 
@@ -95,7 +211,7 @@ const AccountSettingsScreen = () => {
 
 
           <View style={styles.loginSecurityContainer}>
-            <Text style={styles.loginSecurityText}>Login & Security</Text>
+            <Text style={styles.loginSecurityText}>{t("settings.accountSettings.login")}</Text>
             {/* <TouchableOpacity
               activeOpacity={1}
               onPress={() => navigation.navigate("ChangePassword")}
@@ -104,13 +220,18 @@ const AccountSettingsScreen = () => {
             </TouchableOpacity>
             <View style={styles.separatorSmall} /> */}
             <TouchableOpacity activeOpacity={1} onPress={handleLogout}>
-              <Text style={styles.bodyText}>Logout</Text>
+              <Text style={styles.bodyText}>{t("settings.accountSettings.logout")}</Text>
             </TouchableOpacity>
             <View style={styles.separatorSmall} />
           </View>
 
-        </ScrollView>
-      </View>
+          <View style={styles.deactivateContainer}>
+            <TouchableOpacity activeOpacity={1} onPress={handleDeactivate} style={styles.deactivateButton}>
+              <Text style={styles.deactivateText}>{t("settings.accountSettings.deactivate")}</Text>
+            </TouchableOpacity>
+          </View>
+
+        </View>
     </SafeAreaView>
   );
 };
@@ -179,6 +300,24 @@ const styles = StyleSheet.create({
     paddingTop: height * 0.02,
     paddingHorizontal: width * 0.07,
   },
+  deactivateContainer: {
+    position: "absolute",
+    bottom: height * 0.1,
+    alignSelf: "center",
+    justifyContent: "center"
+  },
+  deactivateButton: {
+    backgroundColor: Colors.inputBackground,
+    borderRadius: 15,
+    textAlign: "center",
+  },
+  deactivateText: {
+    fontSize: width * 0.05,
+    color: Colors.text,
+    fontFamily: Fonts.Regular,
+    paddingVertical: 10,
+    paddingHorizontal: 20
+  }
 });
 
 export default AccountSettingsScreen;

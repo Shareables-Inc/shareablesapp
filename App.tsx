@@ -1,28 +1,25 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { Platform, Alert, AppStateStatus, AppState } from "react-native";
-import * as Notifications from "expo-notifications";
-import Constants from "expo-constants";
+import React, { useEffect, useState, useRef } from "react";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import { createStackNavigator } from "@react-navigation/stack";
-import config from "./config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthProvider, useAuth } from "./context/auth.context";
 import { MainApp } from "./navigation";
-import type { RootStackParamList } from "./types/stackParams.types";
 import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { queryClient } from "./utils/query.client";
 import { useLocationStore } from "./store/useLocationStore";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import {
   registerForPushNotificationsAsync,
   updatePushNotificationTokenFirebase,
   scheduleWeeklyRestaurantNotification,
 } from "./services/pushNotification.service";
-import { QueryKey } from "@tanstack/react-query";
+
+// Import i18n for translations
+import "./localization/i18n.ts"; 
+import { I18nextProvider } from "react-i18next";
+import i18next from "./localization/i18n.ts"
 
 interface CustomManifest {
   extra?: {
@@ -129,7 +126,10 @@ const App = () => {
       >
         <GestureHandlerRootView style={{ flex: 1 }}>
           <BottomSheetModalProvider>
-            <AppContent />
+            {/* Wrap the entire app with I18nextProvider */}
+            <I18nextProvider i18n={i18next}>
+              <AppContent />
+            </I18nextProvider>
           </BottomSheetModalProvider>
         </GestureHandlerRootView>
       </PersistQueryClientProvider>

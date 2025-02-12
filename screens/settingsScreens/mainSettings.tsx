@@ -15,11 +15,13 @@ import Colors from "../../utils/colors";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Fonts } from "../../utils/fonts";
 import { CircleArrowLeft } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const MainSettingsScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
 
   const handleBackPress = () => {
     navigation.goBack();
@@ -39,18 +41,18 @@ const MainSettingsScreen = () => {
             <CircleArrowLeft size={28} color={Colors.text}/>
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Settings</Text>
+            <Text style={styles.headerTitle}>{t("settings.mainSettings.settings")}</Text>
           </View>
         </View>
 
         <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
           <View style={styles.loginSecurityContainer}>
-            <Text style={styles.loginSecurityText}>Preferences</Text>
+            <Text style={styles.loginSecurityText}>{t("settings.mainSettings.preferences")}</Text>
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => navigation.navigate("AccountSettings")}
             >
-              <Text style={styles.bodyText}>Account Center</Text>
+              <Text style={styles.bodyText}>{t("settings.mainSettings.accountCenter")}</Text>
             </TouchableOpacity>
 
             <View style={styles.separatorSmall} />
@@ -59,7 +61,7 @@ const MainSettingsScreen = () => {
               activeOpacity={1}
               onPress={() => navigation.navigate("NotificationsSettings")}
             >
-              <Text style={styles.bodyText}>Notifications</Text>
+              <Text style={styles.bodyText}>{t("settings.mainSettings.notifications")}</Text>
             </TouchableOpacity>
 
             <View style={styles.separatorSmall} />
@@ -68,19 +70,19 @@ const MainSettingsScreen = () => {
               activeOpacity={1}
               onPress={() => navigation.navigate("PrivacySettings")}
             >
-              <Text style={styles.bodyText}>Permissions and Privacy</Text>
+              <Text style={styles.bodyText}>{t("settings.mainSettings.permissions")}</Text>
             </TouchableOpacity>
 
             <View style={styles.separatorSmall} />
           </View>
 
           <View style={styles.feedbackContainer}>
-            <Text style={styles.loginSecurityText}>Feedback</Text>
+            <Text style={styles.loginSecurityText}>{t("settings.mainSettings.feedback")}</Text>
             <TouchableOpacity 
               onPress={() => navigation.navigate("ReportBug")}
               activeOpacity={1}
             >
-              <Text style={styles.bodyText}>Report Bugs</Text>
+              <Text style={styles.bodyText}>{t("settings.mainSettings.report")}</Text>
             </TouchableOpacity>
 
             <View style={styles.separatorSmall} />
@@ -89,7 +91,7 @@ const MainSettingsScreen = () => {
               onPress={() => navigation.navigate("RequestFeature")}
               activeOpacity={1}
             >
-              <Text style={styles.bodyText}>Request Features</Text>
+              <Text style={styles.bodyText}>{t("settings.mainSettings.request")}</Text>
             </TouchableOpacity>
 
             <View style={styles.separatorSmall} />

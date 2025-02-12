@@ -15,6 +15,7 @@ import { RootStackParamList } from "../../types/stackParams.types";
 import { Post } from "../../models/post";
 import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -26,6 +27,7 @@ const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
 
   const handleScroll = (event: any) => {
     const contentOffsetX = event.nativeEvent.contentOffset.x;
@@ -62,7 +64,7 @@ const TwoPhotoScroll: React.FC<TwoPhotoScrollProps> = ({ post }) => {
             style={styles.userImage}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{post.username} reviewed</Text>
+            <Text style={styles.userName}>{post.username} {t("feed.feed.reviewed")}</Text>
             
             {/* Split the establishment name and the location info */}
             <View style={styles.locationContainer}>

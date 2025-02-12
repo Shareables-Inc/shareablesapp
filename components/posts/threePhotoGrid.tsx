@@ -14,6 +14,7 @@ import { RootStackParamList } from "../../types/stackParams.types";
 import { Post } from "../../models/post";
 import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -24,6 +25,7 @@ interface ThreePhotoGridProps {
 const ThreePhotoGrid: React.FC<ThreePhotoGridProps> = ({ post }) => {
   const { user } = useAuth();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
 
   const handleImagePress = () => {
     navigation.navigate("ExpandedPost", { postId: post.id });
@@ -54,7 +56,7 @@ const ThreePhotoGrid: React.FC<ThreePhotoGridProps> = ({ post }) => {
             style={styles.userImage}
           />
           <View style={styles.userInfo}>
-            <Text style={styles.userName}>{post.username} reviewed</Text>
+            <Text style={styles.userName}>{post.username} {t("feed.feed.reviewed")}</Text>
 
             {/* Split the restaurant name and location */}
             <View style={styles.locationContainer}>

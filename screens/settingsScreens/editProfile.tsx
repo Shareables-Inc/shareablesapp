@@ -19,16 +19,18 @@ import { auth, db } from "../../firebase/firebaseConfig";
 import { doc, serverTimestamp, setDoc, getDoc } from "firebase/firestore";
 import { ChevronDown, CircleArrowLeft } from "lucide-react-native";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const EditProfileScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [bio, setBio] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<string>("Nearest City");
+  const [selectedLocation, setSelectedLocation] = useState<string>(t("settings.editProfile.nearestCity"));
   const [showLocationDropdown, setShowLocationDropdown] = useState<boolean>(false);
   const [dropdownPosition, setDropdownPosition] = useState<number>(0);
   const [inputWidth, setInputWidth] = useState<number>(0);
@@ -60,7 +62,7 @@ const EditProfileScreen = () => {
     const fetchUserData = async () => {
       const userId = auth.currentUser?.uid;
       if (!userId) {
-        Alert.alert("Error", "No user found. Please login again.");
+        Alert.alert(t("general.error"), t("settings.editProfile.noUser"));
         return;
       }
 
@@ -73,9 +75,9 @@ const EditProfileScreen = () => {
         setLastName(userData.lastName || "");
         setBio(userData.bio || "");
         setPhoneNumber(userData.phoneNumber || "");
-        setSelectedLocation(userData.location || "Nearest City");
+        setSelectedLocation(userData.location || t("settings.editProfile.nearestCity"));
       } else {
-        Alert.alert("Error", "User data not found.");
+        Alert.alert(t("general.error"), t("settings.editProfile.noData"));
       }
     };
 
@@ -104,28 +106,28 @@ const EditProfileScreen = () => {
     const nameRegex = /^[A-Za-z]+$/;
   
     if (!firstName.trim().match(nameRegex)) {
-      Alert.alert("Invalid Input", "First name is required and can only contain letters.");
+      Alert.alert(t("general.invalid"), t("settings.editProfile.firstNameError"));
       return;
     }
   
     if (selectedLocation === "Nearest City") {
-      Alert.alert("Invalid Input", "You must select a city.");
+      Alert.alert(t("general.invalid"), t("settings.editProfile.citySelectError"));
       return;
     }
   
     if (phoneNumber && !/^\d+$/.test(phoneNumber)) {
-      Alert.alert("Invalid Input", "Please enter a valid phone number with digits only.");
+      Alert.alert(t("general.invalid"), t("settings.editProfile.phoneError"));
       return;
     }
   
     if (bio && containsSwearWords(bio)) {
-      Alert.alert("Invalid Input", "Your bio contains inappropriate language.");
+      Alert.alert(t("general.invalid"), t("settings.editProfile.bioError"));
       return;
     }
   
     const userId = auth.currentUser?.uid;
     if (!userId) {
-      Alert.alert("Error", "No user found. Please login again.");
+      Alert.alert(t("general.error"), t("settings.editProfile.noUser"));
       return;
     }
   
@@ -147,7 +149,7 @@ const EditProfileScreen = () => {
       navigation.navigate("Profile");
     } catch (error) {
       console.error("Firestore Error:", error);
-      Alert.alert("Update Failed", "Failed to save your details. Please try again.");
+      Alert.alert(t("general.updateFail"), t("settings.editProfile.updateError"));
     }
   };
   
@@ -182,24 +184,21 @@ const EditProfileScreen = () => {
           <CircleArrowLeft size={28} color={Colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Profile Details</Text>
+          <Text style={styles.headerTitle}>{t("settings.editProfile.profileDetails")}</Text>
         </View>
       </View>
 
       <TouchableWithoutFeedback style={styles.infoContainer} onPress={Keyboard.dismiss}>
-        <Text style={styles.infoText}>
-          Your name and bio will be visible to others. Choosing a location personalizes your feed. 
-          Your phone number will only be used for account verification later.
-        </Text>
+        <Text style={styles.infoText}>{t("settings.editProfile.description")}</Text>
       </TouchableWithoutFeedback>
 
       <TouchableWithoutFeedback style={styles.inputContainer} onPress={Keyboard.dismiss}>
-        <Text style={styles.inputHeader}>Personal Information</Text>
+        <Text style={styles.inputHeader}>{t("settings.editProfile.personalInfo")}</Text>
 
         <View style={styles.row}>
           <TextInput
             style={[styles.input, styles.halfInput]}
-            placeholder="First Name"
+            placeholder={t("settings.editProfile.firstName")}
             placeholderTextColor={Colors.placeholderText}
             value={firstName}
             onChangeText={handleFirstNameChange}
@@ -207,7 +206,7 @@ const EditProfileScreen = () => {
 
           <TextInput
             style={[styles.input, styles.halfInput]}
-            placeholder="Last Name"
+            placeholder={t("settings.editProfile.lastName")}
             placeholderTextColor={Colors.placeholderText}
             value={lastName}
             onChangeText={handleLastNameChange}
@@ -217,7 +216,7 @@ const EditProfileScreen = () => {
         <View style={styles.row}>
           <TextInput
             style={[styles.input, styles.halfInput]}
-            placeholder="Phone Number"
+            placeholder={t("settings.editProfile.phone")}
             placeholderTextColor={Colors.placeholderText}
             value={phoneNumber}
             onChangeText={handlePhoneNumberChange}
@@ -225,11 +224,11 @@ const EditProfileScreen = () => {
           />
         </View>
 
-        <Text style={styles.inputHeader}>Profile Information</Text>
+        <Text style={styles.inputHeader}>{t("settings.editProfile.profileInfo")}</Text>
 
         <TextInput
           style={[styles.input, styles.bioInput]}
-          placeholder="Write your bio here..."
+          placeholder={t("settings.editProfile.bio")}
           placeholderTextColor={Colors.placeholderText}
           value={bio}
           onChangeText={handleBioChange}
@@ -274,9 +273,7 @@ const EditProfileScreen = () => {
         )}
 
         {hasChanges && (
-          <Text style={styles.unsavedChangesText}>
-            You have unsaved changes
-          </Text>
+          <Text style={styles.unsavedChangesText}>{t("settings.editProfile.unsaved")}</Text>
         )}
 
         <TouchableOpacity
@@ -285,7 +282,7 @@ const EditProfileScreen = () => {
           onPress={handleSaveChanges}
           disabled={!hasChanges}
         >
-          <Text style={styles.saveButtonText}>Save Changes</Text>
+          <Text style={styles.saveButtonText}>{t("settings.editProfile.save")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -1,40 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Image } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { useTranslation } from "react-i18next"; // Import translation hook
+import FastImage from "react-native-fast-image";
+import { doc, onSnapshot } from "firebase/firestore";
+
+import { Binoculars, Home, CirclePlus, UserCircle } from "lucide-react-native";
 import Colors from "../utils/colors";
-import PostStack from "../navigation/postStack";
-import ProfileStack from "../navigation/profileStack";
 import { Fonts } from "../utils/fonts";
 import { auth, db } from "../firebase/firebaseConfig";
-import { doc, onSnapshot } from "firebase/firestore";
-import {
-  Binoculars,
-  Home,
-  MapPin,
-  Search,
-  CirclePlus,
-  UserCircle,
-} from "lucide-react-native";
-import { View } from "react-native";
-import { StyleSheet } from "react-native";
-import HomeTab from "../screens/tabs/home";
 import { useAuth } from "../context/auth.context";
-import HomeStack from "./homeStack";
 
+import PostStack from "../navigation/postStack";
+import ProfileStack from "../navigation/profileStack";
+import HomeStack from "./homeStack";
 import SearchScreen from "../screens/tabs/explore";
-import FastImage from "react-native-fast-image";
 
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator = () => {
+  const { t } = useTranslation(); // Translation hook
   const { userProfile } = useAuth();
   const [profilePicture, setProfilePicture] = useState(
     userProfile?.profilePicture || ""
   );
 
-  // setup a listener to update the user profile picture when the userProfile changes in firebase
   useEffect(() => {
-
     if (userProfile?.id) {
       const unsubscribe = onSnapshot(
         doc(db, "users", userProfile.id),
@@ -64,11 +55,11 @@ const MainTabNavigator = () => {
           let iconSize = size;
           let iconStyle = {};
 
-          if (route.name === "Home") {
+          if (route.name === t("tabNavigator.home")) {
             icon = <Home size={iconSize} color={color} />;
-          } else if (route.name === "Post") {
+          } else if (route.name === t("tabNavigator.post")) {
             icon = <CirclePlus size={iconSize} color={color} />;
-          } else if (route.name === "Profile") {
+          } else if (route.name === t("tabNavigator.profile")) {
             iconSize = 27;
             iconStyle = {
               width: iconSize,
@@ -88,7 +79,7 @@ const MainTabNavigator = () => {
             ) : (
               <UserCircle size={iconSize} color={color} />
             );
-          } else if (route.name === "Explore") {
+          } else if (route.name === t("tabNavigator.explore")) {
             icon = <Binoculars size={iconSize} color={color} />;
           }
 
@@ -104,12 +95,12 @@ const MainTabNavigator = () => {
           );
         },
       })}
-      initialRouteName="Home"
+      initialRouteName={t("tabNavigator.home")} // Use translated name
     >
-      <Tab.Screen name="Home" component={HomeStack} />
-      <Tab.Screen name="Post" component={PostStack} />
-      <Tab.Screen name="Explore" component={SearchScreen} />
-      <Tab.Screen name="Profile" component={ProfileStack} />
+      <Tab.Screen name={t("tabNavigator.home")} component={HomeStack} />
+      <Tab.Screen name={t("tabNavigator.post")} component={PostStack} />
+      <Tab.Screen name={t("tabNavigator.explore")} component={SearchScreen} />
+      <Tab.Screen name={t("tabNavigator.profile")} component={ProfileStack} />
     </Tab.Navigator>
   );
 };
