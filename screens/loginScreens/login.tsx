@@ -19,11 +19,13 @@ import { Feather } from "@expo/vector-icons";
 import Colors from "../../utils/colors";
 import { useAuth } from "../../context/auth.context";
 import { Fonts } from "../../utils/fonts";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 export default function LoginScreen() {
   const { user, login, sendVerificationEmail, forgotPassword } = useAuth();
+  const {t} = useTranslation();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +37,7 @@ export default function LoginScreen() {
       const passwordTrimmed = password.trim();
 
       if (!emailTrimmed || !passwordTrimmed) {
-        Alert.alert("Login Failed", "Please enter your email and password.");
+        Alert.alert(t("login.login.loginFail"), t("login.login.loginFailMessage"));
         return;
       }
 
@@ -43,20 +45,20 @@ export default function LoginScreen() {
 
       if (needsVerification) {
         Alert.alert(
-          "Email Not Verified",
-          "Your email is not verified. Would you like to resend the verification email?",
+          t("login.login.emailError"),
+          t("login.login.emailErrorMessage"),
           [
             {
-              text: "Cancel",
+              text: t("general.cancel"),
               style: "cancel",
             },
             {
-              text: "Resend",
+              text: t("login.login.resend"),
               onPress: async () => {
                 await sendVerificationEmail();
                 Alert.alert(
-                  "Verification Email Sent",
-                  "Please check your inbox and verify your email."
+                  t("login.login.emailSent"),
+                  t("login.login.emailSentMessage")
                 );
               },
             },
@@ -70,17 +72,17 @@ export default function LoginScreen() {
   };
 
   const handleAuthErrors = (error: unknown) => {
-    let errorMessage = "Login failed. Please try again.";
+    let errorMessage = t("login.login.loginError");
     if ((error as any).code.includes("auth/")) {
       switch ((error as any).code) {
         case "auth/wrong-password":
-          errorMessage = "Incorrect password. Please try again.";
+          errorMessage = t("login.login.passwordError");
           break;
         case "auth/user-not-found":
-          errorMessage = "No user found with this email. Please sign up.";
+          errorMessage = t("login.login.noUserError");
           break;
         case "auth/invalid-email":
-          errorMessage = "Please enter a valid email address.";
+          errorMessage = t("login.login.validEmail");
           break;
         default:
           console.log((error as any).code); // Log unexpected codes
@@ -88,27 +90,27 @@ export default function LoginScreen() {
     } else {
       console.log("Firebase Auth Error:", (error as any).message); // Log generic Firebase errors not related to auth
     }
-    Alert.alert("Login Failed", errorMessage);
+    Alert.alert(t("login.login.loginFail"), errorMessage);
   };
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
-      Alert.alert("Forgot Password", "Please enter your email address.");
+      Alert.alert(t("login.login.forgotPassword"), t("login.login.forgotPasswordMessage"));
       return;
     }
     try {
       await forgotPassword(email.trim());
       Alert.alert(
-        "Password Reset Email Sent",
-        "Please check your inbox for further instructions."
+        t("login.login.passwordReset"),
+        t("login.login.passwordResetMessage")
       );
     } catch (error) {
       if ((error as any).code === "auth/user-not-found") {
-        Alert.alert("Error", "No user found with this email address.");
+        Alert.alert(t("general.error"), t("login.login.noUserError"));
       } else if ((error as any).code === "auth/invalid-email") {
-        Alert.alert("Error", "Please enter a valid email address.");
+        Alert.alert(t("general.error"), t("login.login.validEmail"));
       } else {
-        Alert.alert("Error", "Failed to send password reset email. Try again.");
+        Alert.alert(t("general.error"), t("login.login.passwordResetFail"));
       }
     }
   };
@@ -128,7 +130,7 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={t("login.login.email")}
               placeholderTextColor={Colors.placeholderText}
               selectionColor={Colors.placeholderText}
               onChangeText={setEmail}
@@ -141,7 +143,7 @@ export default function LoginScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={[styles.input, styles.passwordInput]}
-              placeholder="Password"
+              placeholder={t("login.login.password")}
               secureTextEntry={!passwordIsVisible}
               placeholderTextColor={Colors.placeholderText}
               selectionColor={Colors.placeholderText}
@@ -163,7 +165,7 @@ export default function LoginScreen() {
           </View>
           <View style={styles.signInButtonContainer}>
             <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
-              <Text style={styles.signInButtonText}>Sign In</Text>
+              <Text style={styles.signInButtonText}>{t("login.login.signIn")}</Text>
             </TouchableOpacity>
           </View>
 
@@ -174,8 +176,8 @@ export default function LoginScreen() {
             activeOpacity={1}
           >
             <Text style={styles.registerButtonText}>
-              New to Shareables?{" "}
-              <Text style={styles.registerButtonTextHighlight}>Sign Up!</Text>
+            {t("login.login.new")}{" "}
+              <Text style={styles.registerButtonTextHighlight}>{t("login.login.signUp")}</Text>
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -183,7 +185,7 @@ export default function LoginScreen() {
             onPress={handleForgotPassword} // Added onPress handler
           >
             <Text style={styles.forgotPasswordButtonText}>
-              Forgot password?
+            {t("login.login.forgotPasswordButton")}
             </Text>
           </TouchableOpacity>
         </View>

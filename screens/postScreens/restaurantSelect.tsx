@@ -28,11 +28,13 @@ import { mapRetrieveResponseToEstablishment } from "../../helpers/parseData";
 import { RootStackParamList } from "../../types/stackParams.types";
 import { CircleArrowLeft } from "lucide-react-native";
 import {PostService} from "../../services/post.service"
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const RestaurantSelectScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const route = useRoute();
   const { postId } = route.params as { postId: string }; // Extract postId from route params
   const { user, userProfile } = useAuth();
@@ -95,7 +97,7 @@ const RestaurantSelectScreen = () => {
         }
       } catch (error) {
         console.error("Error retrieving search result:", error);
-        Alert.alert("Error", "Failed to retrieve restaurant details. Please try again.");
+        Alert.alert(t("general.error"), t("post.restaurantSelect.detailsError"));
       }
       Keyboard.dismiss();
     },
@@ -106,7 +108,7 @@ const RestaurantSelectScreen = () => {
     (establishmentId: string) => {
       if (!postId || !establishmentId) {
         console.error("Error: Missing postId or establishmentId.");
-        Alert.alert("Error", "Missing postId or establishmentId.");
+        Alert.alert(t("general.error"), t("post.restaurantSelect.missingIdError"));
         return;
       }
   
@@ -146,7 +148,7 @@ const RestaurantSelectScreen = () => {
           },
           onError: (error) => {
             console.error("Error updating post:", error);
-            Alert.alert("Post Update Error", "There was an error updating your post.");
+            Alert.alert(t("post.restaurantSelect.updateError"), t("post.restaurantSelect.updateErrorMessage"));
           },
         }
       );
@@ -157,12 +159,12 @@ const RestaurantSelectScreen = () => {
 
   const handleNextPress = useCallback(async () => {
     if (!retrievedSuggestion) {
-      Alert.alert("Error", "Please select a restaurant before proceeding.");
+      Alert.alert(t("general.error"), t("post.restaurantSelect.restaurantSelectError"));
       return;
     }
 
     if (selectedTags.length === 0) {
-      Alert.alert("Error", "Please select at least one tag before proceeding.");
+      Alert.alert(t("general.error"), t("post.restaurantSelect.tagSelectError"));
       return;
     }
 
@@ -184,11 +186,11 @@ const RestaurantSelectScreen = () => {
       if (establishmentId) {
         updateExistingPost(establishmentId);
       } else {
-        Alert.alert("Error", "Establishment ID is invalid. Please try again.");
+        Alert.alert(t("general.error"), t("post.restaurantSelect.establishmentError"));
       }
     } catch (error) {
       console.error("Error in handleNextPress:", error);
-      Alert.alert("Error", "There was an unexpected error. Please try again.");
+      Alert.alert(t("general.error"), t("post.restaurantSelect.unexpectedError"));
     }
   }, [retrievedSuggestion, selectedTags, createEstablishmentMutation, updateExistingPost]);
 
@@ -198,12 +200,12 @@ const RestaurantSelectScreen = () => {
 
   const handleBackPress = useCallback(() => {
     Alert.alert(
-      "Discard Post",
-      "Are you sure you want to discard this post?",
+      t("post.restaurantSelect.discardPost"),
+      t("post.restaurantSelect.discardPostMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("general.Cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("post.restaurantSelect.discard"),
           onPress: async () => {
             try {
               await postService.deletePost(postId);
@@ -214,7 +216,7 @@ const RestaurantSelectScreen = () => {
               });
             } catch (error) {
               console.error("Error deleting post:", error);
-              Alert.alert("Error", "Failed to delete post.");
+              Alert.alert(t("general.error"), t("post.restaurantSelect.discardError"));
             }
           },
         },
@@ -230,11 +232,11 @@ const RestaurantSelectScreen = () => {
       <CircleArrowLeft size={28} color={Colors.text} />
       </TouchableOpacity>
       <TouchableOpacity onPress={handleNextPress} activeOpacity={1}>
-        <Text style={styles.nextButton}>Next</Text>
+        <Text style={styles.nextButton}>{t("general.next")}</Text>
       </TouchableOpacity>
       </View>
       <View style={styles.header}>
-        <Text style={styles.title}>Where did you go to eat?</Text>
+        <Text style={styles.title}>{t("post.restaurantSelect.where")}</Text>
       </View>
       <View style={styles.contentContainer}>
         <View style={styles.searchContainer}>
@@ -242,7 +244,7 @@ const RestaurantSelectScreen = () => {
             refreshKey={Math.random()}
             country={"ca"}
             language={"en"}
-            placeholder={"Search for a restaurant"}
+            placeholder={t("post.restaurantSelect.search")}
             sessionToken={user?.uid!}
             onPlaceSelect={handleSuggestionPress}
           />
@@ -257,7 +259,7 @@ const RestaurantSelectScreen = () => {
           />
         )}
 
-        <Text style={styles.tagContainerTitle}>Select up to 4 tags</Text>
+        <Text style={styles.tagContainerTitle}>{t("post.restaurantSelect.tags")}</Text>
 
         <View style={styles.tagContainer}>
           <TouchableOpacity
@@ -265,21 +267,21 @@ const RestaurantSelectScreen = () => {
             onPress={() => handleCategoryPress("cuisines")}
             activeOpacity={1}
           >
-            <Text style={styles.tagType}>Cuisine</Text>
+            <Text style={styles.tagType}>{t("post.restaurantSelect.cuisine")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tagTypeTitle, activeCategory === "foodOccasions" && styles.activeTagButton]}
             onPress={() => handleCategoryPress("foodOccasions")}
             activeOpacity={1}
           >
-            <Text style={styles.tagType}>Occasion</Text>
+            <Text style={styles.tagType}>{t("post.restaurantSelect.occasion")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.tagTypeTitle, activeCategory === "restaurantVibes" && styles.activeTagButton]}
             onPress={() => handleCategoryPress("restaurantVibes")}
             activeOpacity={1}
           >
-            <Text style={styles.tagType}>Atmosphere</Text>
+            <Text style={styles.tagType}>{t("post.restaurantSelect.atmosphere")}</Text>
           </TouchableOpacity>
         </View>
 

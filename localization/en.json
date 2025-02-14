@@ -22,15 +22,35 @@
       "noPosts": "Looks like there aren't any posts yet. Be the first to share your culinary adventure!",
       "reviewed": "reviewed"
     },
-    "discover": {},
-    "tabLayout": {},
-    "restaurantList": {},
-    "restaurantCard": {},
-    "bottomModal": {},
-    "notifications": {}
+    "tabSelector": {
+      "feed": "Feed",
+      "map": "Map"
+    },
+    "restaurantList": {
+      "saved": "Saved Restaurants",
+      "your": "Your Restaurants",
+      "friend": "Friends Restaurants",
+      "all": "All Restaurants"
+    },
+    "restaurantCard": {
+      "messageAppError": "Messaging app is not available.",
+      "failedOpen": "Failed to open messaging app.",
+      "invite": "Invite",
+      "letsGo": "Let's Go",
+      "featured": "Featured Gallery",
+      "reviews": "Reviews"
+    },
+    "notifications": {
+      "notifications": "Notifications",
+      "noNotifications": "No notifications yet!"
+    }
   },
   "discover": {
-    "locationMessage": {}
+    "locationMessage": {
+      "access": "Location Access Required",
+      "description": "Please enable location services to use the Discover map",
+      "settings": "Open Settings"
+    }
   },
   "post": {
     "post": {
@@ -46,9 +66,66 @@
       "postCreationError": "Post Creation Error",
       "postCreationIssue": "There was an error creating your post. Please try again."
     },
-    "expandedPost": {},
-    "postReview": {},
-    "restaurantSelect": {}
+    "expandedPost": {
+      "justNow": "Just now",
+      "now": "now",
+      "today": "today",
+      "editError": "Unable to edit the post. Some details are missing.",
+      "delete": "Delete Post",
+      "deleteMessage": "Are you sure you want to delete this post?",
+      "deleteFail": "Failed to delete post.",
+      "review": "Review",
+      "overall": "Overall Score:",
+      "comments": "Comments",
+      "addComment": "add a comment...",
+      "editPost": "Edit Post",
+      "deletePost": "Delete Post"
+    },
+    "postReview": {
+      "incompleteReview": "Incomplete Review",
+      "incompleteReviewMessage": "Please write a review before posting.",
+      "incompleteRatings": "Incomplete Ratings",
+      "incompleteRatingsMessage": "Please provide ratings for ambiance, food quality, and service.",
+      "postError": "Post Error",
+      "postErrorMessage": "There was an error creating your post.",
+      "discardPost": "Discard Post",
+      "discardPostMessage": "Are you sure you want to discard this post?",
+      "discard": "Discard",
+      "discardError": "Failed to discard post. Please try again.",
+      "update": "Update",
+      "post": "Post",
+      "review": "Write your review here...",
+      "scores": "Scores",
+      "overall": "Overall",
+      "icons": "What do these icons mean?",
+      "ambiance": "Ambiance",
+      "food": "Food Quality",
+      "service": "Service Quality",
+      "gotIt": "Got it!",
+      "halal": "Halal",
+      "gluten": "Gluten-Free",
+      "vegan": "Veg & Vegan"
+    },
+    "restaurantSelect": {
+      "detailsError": "Failed to retrieve restaurant details. Please try again.",
+      "missingIdError": "Missing postId or establishmentId.",
+      "updateError": "Post Update Error",
+      "updateErrorMessage": "There was an error updating your post.",
+      "restaurantSelectError": "Please select a restaurant before proceeding.",
+      "tagSelectError": "Please select at least one tag before proceeding.",
+      "establishmentError": "Establishment ID is invalid. Please try again.",
+      "unexpectedError": "There was an unexpected error. Please try again.",
+      "discardPost": "Discard Post",
+      "discardPostMessage": "Are you sure you want to discard this post?",
+      "discard": "Discard",
+      "discardError": "Failed to discard post. Please try again.",
+      "where": "Where did you go to eat?",
+      "search": "search for a restaurant",
+      "tags": "Select up to 4 tags",
+      "cusine": "Cuisine",
+      "occasion": "Occasion",
+      "atmosphere": "Atmosphere"
+    }
   },
   "explore": {
     "explore": "Explore",
@@ -88,7 +165,30 @@
     "restaurantProfile": {}
   },
   "login": {
-    "login": {},
+    "login": {
+      "loginFail": "Login failed",
+      "loginFailMessage": "Please enter the correct email and password.",
+      "emailError": "Email not verified",
+      "emailErrorMessage": "Your email is not verified. Would you like us to resend the verification email?",
+      "resend": "Resend",
+      "emailSent": "Verification email sent",
+      "emailSentMessage": "Please check your inbox to verify your email.",
+      "loginError": "Login failed. Please try again.",
+      "passwordError": "Incorrect password. Please try again.",
+      "noUserError": "No user found with this email address.",
+      "validEmail": "Please enter a valid email address.",
+      "forgotPassword": "Forgot Password",
+      "forgotPasswordMessage": "Please enter your email address.",
+      "passwordReset": "Password reset email sent",
+      "passwordResetMessage": "Please check your inbox for further instructions",
+      "passwordResetFail": "Failed to send password reset email. Please try again.",
+      "email": "Email",
+      "password": "Password",
+      "signIn": "Sign In",
+      "new": "New to Shareables?",
+      "signUp": "Sign Up!",
+      "forgotPasswordButton": "Forgot password?"
+    },
     "signUp": {},
     "verifyEmail": {},
     "nameInput": {},

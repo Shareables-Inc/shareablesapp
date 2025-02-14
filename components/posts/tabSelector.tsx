@@ -9,10 +9,13 @@ import {
 } from "react-native";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const TabSelector = ({ activeTab, onTabChange, animation }) => {
+  const { t } = useTranslation(); // Load translations
+
   // Adjust slider translation based on the width of the tabs
   const translateX = animation.interpolate({
     inputRange: [0, 1],
@@ -30,7 +33,7 @@ const TabSelector = ({ activeTab, onTabChange, animation }) => {
         <Text
           style={[styles.tabText, activeTab === "Feed" && styles.activeTabText]}
         >
-          Feed
+          {t("feed.tabSelector.feed")} 
         </Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -44,7 +47,7 @@ const TabSelector = ({ activeTab, onTabChange, animation }) => {
             activeTab === "Discover" && styles.activeTabText,
           ]}
         >
-          Map
+          {t("feed.tabSelector.map")} 
         </Text>
       </TouchableOpacity>
     </View>

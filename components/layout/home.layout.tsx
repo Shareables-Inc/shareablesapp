@@ -23,6 +23,7 @@ import { useLocationStore } from "../../store/useLocationStore";
 import { RootStackParamList } from "../../types/stackParams.types";
 import useNotificationStore from "../../store/useNotificationStore";
 import { Fonts } from "../../utils/fonts";
+import { useTranslation } from "react-i18next";
 interface HomeLayoutProps {
   children: React.ReactNode;
   activeTab: "Feed" | "Discover";
@@ -33,6 +34,7 @@ const { height, width } = Dimensions.get("window");
 
 const HomeLayout = ({ children, activeTab, onTabChange }: HomeLayoutProps) => {
   const insets = useSafeAreaInsets();
+  const {t} = useTranslation();
   const notificationStore = useNotificationStore();
   const notificationCount = notificationStore.notifications.length;
 

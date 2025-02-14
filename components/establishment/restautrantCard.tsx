@@ -32,6 +32,7 @@ import { useCreateUserSave, useGetUserSaves } from "../../hooks/useUserSave";
 import { useDeleteUserSave } from "../../hooks/useUserSave";
 import { Save } from "../../models/save";
 import { Post } from "../../models/post";
+import { useTranslation } from "react-i18next";
 const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = height * 0.06;
 
@@ -47,6 +48,7 @@ const RestaurantCard = ({
   onOpenReviewPost,
 }: RestaurantCardProps) => {
   const { user } = useAuth();
+  const {t} = useTranslation();
   const { data: userSaves } = useGetUserSaves(user!.uid);
   const [isSaved, setIsSaved] = useState<boolean>(false);
   const { mutate: createSave } = useCreateUserSave();
@@ -156,12 +158,12 @@ const RestaurantCard = ({
         if (supported) {
           return Linking.openURL(url);
         } else {
-          Alert.alert("Error", "Messaging app is not available.");
+          Alert.alert(t("general.error"), t("feed.restaurantCard.messageAppError"));
         }
       })
       .catch((err) => {
         console.error("Failed to open messaging app:", err);
-        Alert.alert("Error", "Failed to open messaging app.");
+        Alert.alert(t("general.error"), t("feed.restaurantCard.failedOpen"));
       });
   };
 
@@ -201,7 +203,7 @@ const RestaurantCard = ({
                   onPress={handleInvite}
                   >
                   <MessageCircle size={20} color={Colors.text} />
-                  <Text style={styles.actionButtonText}>Invite</Text>
+                  <Text style={styles.actionButtonText}>{t("feed.restaurantCard.invite")}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.actionButton}
@@ -209,7 +211,7 @@ const RestaurantCard = ({
                   activeOpacity={1}
                 >
                   <MapPin size={20} color={Colors.text} />
-                  <Text style={styles.actionButtonText}>Let's Go</Text>
+                  <Text style={styles.actionButtonText}>{t("feed.restaurantCard.letsGo")}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -218,7 +220,7 @@ const RestaurantCard = ({
       case "gallery":
         return (
           <>
-            <Text style={styles.galleryTitle}>Featured Gallery</Text>
+            <Text style={styles.galleryTitle}>{t("feed.restaurantCard.featured")}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -335,7 +337,7 @@ const RestaurantCard = ({
           <>
             <View style={styles.reviewsContainer}>
               <Text style={styles.reviewsCount}>
-                {restaurant.postCount || 0} Reviews
+                {restaurant.postCount || 0} {t("feed.restaurantCard.reviews")}
               </Text>
               <View style={styles.gridGallery}>
                 {columnItems.map((items, index) => (
@@ -458,7 +460,7 @@ const styles = StyleSheet.create({
   galleryContainer: {
     marginTop: height * 0.01,
     overflow: "visible",
-    paddingLeft: "3%",
+    paddingLeft: width * 0.04,
   },
   galleryItemContainer: {
     flexDirection: "column",

@@ -22,11 +22,13 @@ import { useAuth } from "../../context/auth.context";
 import { useEditPost } from "../../hooks/usePost";
 import { Sparkle, Utensils, HandPlatter, Info, CircleArrowLeft, Salad, WheatOff, LeafyGreen, AccessibilityIcon } from "lucide-react-native";
 import {PostService} from "../../services/post.service"
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const ReviewScreen = ({ route }) => {
   const { user } = useAuth();
+  const {t} = useTranslation();
   const postService = new PostService();
   const {
     restaurantName,
@@ -93,14 +95,14 @@ const ReviewScreen = ({ route }) => {
 
   const handlePost = async () => {
     if (!review.trim()) {
-      Alert.alert("Incomplete Review", "Please write a review before posting.");
+      Alert.alert(t("post.expandedPost.incompleteReview"), t("post.expandedPost.incompleteReviewMessage"));
       return;
     }
 
     if (ratingAmbiance === 0 || ratingFoodQuality === 0 || ratingService === 0) {
       Alert.alert(
-        "Incomplete Ratings",
-        "Please provide ratings for ambiance, food quality, and service."
+        t("post.expandedPost.incompleteRatings"),
+        t("post.expandedPost.incompleteRatingsMessage")
       );
       return;
     }
@@ -138,18 +140,18 @@ const ReviewScreen = ({ route }) => {
       });
     } catch (error) {
       console.error("Error in handlePost:", error);
-      Alert.alert("Post Error", "There was an error creating your post.");
+      Alert.alert(t("post.expandedPost.postError"), t("post.expandedPost.postErrorMessage"));
     }
   };
 
   const handleBackPress = useCallback(() => {
     Alert.alert(
-      "Discard Post",
-      "Are you sure you want to discard this post?",
+      t("post.expandedPost.discardPost"),
+      t("post.expandedPost.discardPostMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("general.cancel"), style: "cancel" },
         {
-          text: "Delete",
+          text: t("post.expandedPost.discard"),
           onPress: async () => {
             try {
               await postService.deletePost(initialPostId); // Use initialPostId instead of postId
@@ -159,7 +161,7 @@ const ReviewScreen = ({ route }) => {
               });
             } catch (error) {
               console.error("Error deleting post:", error);
-              Alert.alert("Error", "Failed to delete post.");
+              Alert.alert(t("general.error"), t("post.expandedPost.discardError"));
             }
           },
         },
@@ -178,7 +180,7 @@ const ReviewScreen = ({ route }) => {
             </TouchableOpacity>
             <TouchableOpacity onPress={handlePost} style={styles.postButton}>
               <Text style={styles.postButtonText}>
-                {isEditing ? "Update" : "Post"}
+                {isEditing ? t("post.expandedPost.update") : t("post.expandedPost.post")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -194,7 +196,7 @@ const ReviewScreen = ({ route }) => {
               </Text>
 
               <TextInput
-                placeholder="Write your review here..."
+                placeholder={t("post.postReview.review")}
                 style={styles.reviewInput}
                 multiline
                 placeholderTextColor={Colors.placeholderText}
@@ -205,13 +207,13 @@ const ReviewScreen = ({ route }) => {
 
             <View style={styles.headersContainer}>
               <View style={styles.scoresContainer}>
-                <Text style={styles.ratingHeader}>Scores</Text>
+                <Text style={styles.ratingHeader}>{t("post.postReview.scores")}</Text>
                 <TouchableOpacity onPress={toggleInfoModal}>
                   <Info style={styles.infoIcon} color={Colors.tags} size={18} />
                 </TouchableOpacity>
               </View>
               <View style={styles.overallContainer}>
-                <Text style={styles.priceHeader}>Overall</Text>
+                <Text style={styles.priceHeader}>{t("post.postReview.overall")}</Text>
               </View>
             </View>
 
@@ -224,27 +226,27 @@ const ReviewScreen = ({ route }) => {
               <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
                   <Text style={styles.modalTitle}>
-                    What Do These Icons Mean?
+                  {t("post.postReview.icons")}
                   </Text>
                   <View style={styles.modalContent}>
                     <View style={styles.iconRow}>
                       <Sparkle color={Colors.charcoal} size={25} />
-                      <Text style={styles.iconDescription}>Ambiance</Text>
+                      <Text style={styles.iconDescription}>{t("post.postReview.ambiance")}</Text>
                     </View>
                     <View style={styles.iconRow}>
                       <Utensils color={Colors.charcoal} size={25} />
-                      <Text style={styles.iconDescription}>Food Quality</Text>
+                      <Text style={styles.iconDescription}>{t("post.postReview.food")}</Text>
                     </View>
                     <View style={styles.iconRow}>
                       <HandPlatter color={Colors.charcoal} size={25} />
-                      <Text style={styles.iconDescription}>Service Quality</Text>
+                      <Text style={styles.iconDescription}>{t("post.postReview.service")}</Text>
                     </View>
                   </View>
                   <TouchableOpacity
                     onPress={toggleInfoModal}
                     style={styles.closeButton}
                   >
-                    <Text style={styles.closeButtonText}>Got It!</Text>
+                    <Text style={styles.closeButtonText}>{t("post.postReview.gotIt")}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -352,7 +354,7 @@ const ReviewScreen = ({ route }) => {
                 <View style={[styles.circleIconContainer, isHalal && styles.circleIconContainerSelected]}>
                   <Salad size={17} color={Colors.text} style={styles.accessibilityIcon} />
                 </View>
-                <Text style={[styles.ratingText, isHalal && styles.ratingTextSelected]}>100% Halal</Text>
+                <Text style={[styles.ratingText, isHalal && styles.ratingTextSelected]}>{t("post.postReview.halal")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -365,7 +367,7 @@ const ReviewScreen = ({ route }) => {
                 <View style={[styles.circleIconContainer, isGlutenFree && styles.circleIconContainerSelected]}>
                   <WheatOff size={17} color={Colors.text} style={styles.accessibilityIcon} />
                 </View>
-                <Text style={[styles.ratingText, isGlutenFree && styles.ratingTextSelected]}>Gluten-free</Text>
+                <Text style={[styles.ratingText, isGlutenFree && styles.ratingTextSelected]}>{t("post.postReview.gluten")}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -378,7 +380,7 @@ const ReviewScreen = ({ route }) => {
                 <View style={[styles.circleIconContainer, isVeg && styles.circleIconContainerSelected]}>
                   <LeafyGreen size={17} color={Colors.text} style={styles.accessibilityIcon} />
                 </View>
-                <Text style={[styles.ratingText, isVeg && styles.ratingTextSelected]}>Veg & Vegan</Text>
+                <Text style={[styles.ratingText, isVeg && styles.ratingTextSelected]}>{t("post.postReview.vegan")}</Text>
               </TouchableOpacity>
               </View>
             </View>

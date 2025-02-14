@@ -11,25 +11,27 @@ import {
 import { MapPin } from "lucide-react-native";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
+import { useTranslation } from "react-i18next";
 
 const { width, height} = Dimensions.get("window");
 
 const LocationErrorMessage = () => {
   const isIOS = Platform.OS === "ios";
+  const {t} = useTranslation();
 
   return (
     <View style={styles.container}>
       <MapPin size={64} color={Colors.text} />
-      <Text style={styles.title}>Location Access Required</Text>
+      <Text style={styles.title}>{t("discover.locationMessage.access")}</Text>
       <Text style={styles.message}>
-        Please enable location services to use the Discover map.
+        {("discover.locationMessage.description")}
       </Text>
       <TouchableOpacity
         style={styles.button}
         onPress={() => Linking.openSettings()}
         activeOpacity={1}
       >
-        <Text style={styles.buttonText}>Open Settings</Text>
+        <Text style={styles.buttonText}>{t("discover.locationMessage.settings")}</Text>
       </TouchableOpacity>
     </View>
   );

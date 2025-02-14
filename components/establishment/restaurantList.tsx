@@ -12,6 +12,7 @@ import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { MarkerType } from "../discover/MapViewWithMarkers";
 import { Circle, Path, Svg } from "react-native-svg";
+import { useTranslation } from "react-i18next";
 
 interface RestaurantListProps {
   restaurants: MarkerType[];
@@ -23,6 +24,7 @@ interface RestaurantListProps {
 
 const { width, height } = Dimensions.get("window");
 
+
 const RestaurantList = ({
   restaurants,
   userLocation,
@@ -30,6 +32,7 @@ const RestaurantList = ({
   selectedFilter,
   onItemSelect,
 }: RestaurantListProps) => {
+  const {t} = useTranslation();
   const handleFilterPress = (filterType: "save" | "post" | "following") => {
     if (selectedFilter === filterType) {
       onFilterChange(null); // Unselect the filter
@@ -118,13 +121,13 @@ const RestaurantList = ({
   // Label for the filters
   const getFilterLabel = () => {
     if (selectedFilter === "save") {
-      return "Saved Restaurants";
+      return t("feed.restaurantList.saved");
     } else if (selectedFilter === "post") {
-      return "Your Restaurants";
+      return t("feed.restaurantList.your");
     } else if (selectedFilter === "following") {
-      return "Friends Restaurants";
+      return t("feed.restaurantList.friend");
     } else {
-      return "All Restaurants";
+      return t("feed.restaurantList.all");
     }
   };
 

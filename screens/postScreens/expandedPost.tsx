@@ -61,6 +61,7 @@ import {
 import ExpandedPostSkeleton from "../../components/skeleton/expandedPostSkeleton";
 import {PostService} from "../../services/post.service"
 import { useFocusEffect } from "@react-navigation/native";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = height * 0.13;
@@ -76,6 +77,7 @@ type ExpandedPostScreenProps = {
 
 const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   const { user, userProfile } = useAuth();
+  const {t} = useTranslation();
   const { postId } = route.params as { postId: string };
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { data: expandedPost, isLoading, refetch } = usePostById(postId);
@@ -285,7 +287,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   const getDaysAgo = (timestamp: any) => {
     if (!timestamp || !timestamp.toDate) {
-      return "Just now"; // Fallback if timestamp is not yet set or not a Firestore Timestamp
+      return t("post.expandedPost.justNow"); // Fallback if timestamp is not yet set or not a Firestore Timestamp
     }
 
     const now = new Date();
@@ -295,13 +297,13 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
     // Check if the comment is within the last 10 minutes (600,000 milliseconds)
     const tenMinutes = 1000 * 60 * 10;
     if (diffTime < tenMinutes) {
-      return "now";
+      return t("post.expandedPost.now");
     }
 
     // Check if the comment is within the last 24 hours (86,400,000 milliseconds)
     const oneDay = 1000 * 60 * 60 * 24;
     if (diffTime < oneDay) {
-      return "today";
+      return t("post.expandedPost.today");
     }
 
     // Calculate the number of days ago
@@ -347,7 +349,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       !expandedPost.establishmentDetails?.country
     ) {
       console.error("Required post data is missing");
-      Alert.alert("Error", "Unable to edit the post. Some details are missing.");
+      Alert.alert(t("general.error"), t("post.expandedPost.editError"));
       return;
     }
   
@@ -377,12 +379,12 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   const handleDeletePost = () => {
     Alert.alert(
-      "Delete Post",
-      "Are you sure you want to delete this post?",
+      t("post.expandedPost.delete"),
+      t("post.expandedPost.deleteMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t('general.cancel'), style: "cancel" },
         {
-          text: "Delete",
+          text: t("general.delete"),
           onPress: async () => {
             try {
               await postService.deletePost(postId);
@@ -391,7 +393,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
               navigation.goBack();
             } catch (error) {
               console.error("Error deleting post:", error);
-              Alert.alert("Error", "Failed to delete post.");
+              Alert.alert(t("general.error"), t("post.expandedPost.deleteFail"));
             }
           },
         },
@@ -585,10 +587,10 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
               <View style={styles.userNameContainer}>
                 <Text style={styles.userName}>
-                  {expandedPost?.username}'s Review
+                  {expandedPost?.username}'s {t("post.expandedPost.review")}
                 </Text>
                 <Text style={styles.overallRating}>
-                  Overall Score: {expandedPost?.ratings.overall}
+                  {t("post.expandedPost.overall")} {expandedPost?.ratings.overall}
                 </Text>
               </View>
             </View>
@@ -667,7 +669,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
           <View style={styles.commentsSection}>
             <View style={styles.commentsHeader}>
-              <Text style={styles.commentsTitle}>Comments</Text>
+              <Text style={styles.commentsTitle}>{t("post.expandedPost.comments")}</Text>
             </View>
 
             {comments.map((comment, index) => (
@@ -687,7 +689,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
                   <Text style={styles.commentUsername}>
                     @{comment.userName}{" "}
                     <Text style={styles.timestampText}>
-                      {comment.createdAt ? getDaysAgo(comment.createdAt) : "now"}
+                      {comment.createdAt ? getDaysAgo(comment.createdAt) : t("post.expandedPost.now")}
                     </Text>
                   </Text>
                   <Text style={styles.commentText}>{comment.comment}</Text>
@@ -708,7 +710,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           />
           <TextInput
             style={styles.addCommentInput}
-            placeholder="add a comment..."
+            placeholder={t("post.expandedPost.addComment")}
             placeholderTextColor={Colors.placeholderText}
             value={comment}
             onChangeText={setComment}
@@ -731,14 +733,14 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
                 onPress={handleEditPost}
               >
                 <SquarePen color={Colors.text} size={20} />
-                <Text style={styles.optionText}>Edit Post</Text>
+                <Text style={styles.optionText}>{t("post.expandedPost.editPost")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.optionButton}
                 onPress={handleDeletePost}
               >
                 <Trash2 color={Colors.text} size={20} />
-                <Text style={styles.optionText}>Delete Post</Text>
+                <Text style={styles.optionText}>{t("post.expandedPost.deletePost")}</Text>
               </TouchableOpacity>
             </View>
           </Modal>

@@ -20,11 +20,13 @@ import useNotificationStore, {
 } from "../../store/useNotificationStore";
 import { RootStackParamList } from "../../types/stackParams.types";
 import FastImage from "react-native-fast-image";
+import { useTranslation } from "react-i18next";
 
 const { height, width } = Dimensions.get("window");
 
 const NotificationsScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const { notifications, removeNotification } = useNotificationStore();
 
   const handleBackPress = () => {
@@ -70,7 +72,7 @@ const NotificationsScreen = () => {
             <CircleArrowLeft size={30} color={Colors.text} />
           </TouchableOpacity>
           <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Notifications</Text>
+            <Text style={styles.headerTitle}>{t("feed.notifications.notifications")}</Text>
           </View>
         </View>
 
@@ -80,7 +82,7 @@ const NotificationsScreen = () => {
         {notifications.length === 0 ? (
           <View style={styles.noNotificationsContainer}>
             <Text style={styles.noNotificationsText}>
-              No notifications yet!
+            {t("feed.notifications.noNotifications")}
             </Text>
           </View>
         ) : (
