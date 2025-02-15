@@ -9,7 +9,8 @@
     "deactivate": "Deactivate",
     "invalid": "Invalid Input",
     "updateFail": "Update Failed",
-    "success": "Success"
+    "success": "Success",
+    "required": "Required"
   },
   "tabNavigator": {
     "home": "Home",
@@ -122,7 +123,7 @@
       "where": "Where did you go to eat?",
       "search": "search for a restaurant",
       "tags": "Select up to 4 tags",
-      "cusine": "Cuisine",
+      "cuisine": "Cuisine",
       "occasion": "Occasion",
       "atmosphere": "Atmosphere"
     }
@@ -160,9 +161,63 @@
       "allReviews": "All Reviews",
       "noReviews": "No reviews yet"
     },
-    "userProfile": {},
-    "followerList": {},
-    "restaurantProfile": {}
+    "userProfile": {
+      "inappropriate": "Inappropriate content",
+      "pretending": "They are pretending to be someone else",
+      "underage": "They may be under the age of 15",
+      "spam": "Spam or advertising",
+      "hate": "Hate speech or discrimination",
+      "bullying": "Harassment or bullying",
+      "false": "Sharing false information",
+      "violence": "Violence or threats",
+      "privacy": "Privacy violation",
+      "scam": "Scam or fraud",
+      "unblockMessage": "Are you sure you want to unblock this user?",
+      "blockMessage": "Are you sure you want to block this user?",
+      "unblock": "Unblock",
+      "block": "Block",
+      "userUnblocked": "User Unblocked",
+      "userBlocked": "User Blocked",
+      "successfully": "You have successfully",
+      "unblocked": "Unblocked",
+      "blocked": "Blocked",
+      "user": "this user.",
+      "blockFail": "Failed to update block state. Please try again.",
+      "reportSent": "Report Sent",
+      "reportSentMessage": "Thank you for your report. We will review it shortly.",
+      "reportFail": "Failed to sent report. Please try again later.",
+      "reasonError": "Please select a reason for reporting.",
+      "profile": "Profile",
+      "follower": " Follower",
+      "followers": " Followers",
+      "reviews": "Reviews",
+      "follow": "Follow",
+      "blockedMessage": "This account is blocked",
+      "topPicks": "Top Picks",
+      "allReviews": "All Reviews",
+      "noReviews": "No reviews yet",
+      "reportUser": "Report User",
+      "blockUser": "Block User",
+      "unblockUser": "Unblock User",
+      "report": "Report",
+      "title": "What do you want to report? (Select 1 below)",
+      "description": "Your report will remain anonymous. If there is an immediate threat, please contact your local emergency services right away.",
+      "sendReport": "Send Report"
+    },
+    "followerList": {
+      "followers": "Followers",
+      "following": "Following"
+    },
+    "restaurantProfile": {
+      "message1": "I just found this restaurant called",
+      "message2": "on Shareables. We should go check it out!",
+      "messagingAppError": "Unable to open messaging app.",
+      "away": "away",
+      "invite": "Invite",
+      "letsGo": "Let's Go",
+      "featured": "Featured Gallery",
+      "reviews": "Reviews"
+    }
   },
   "login": {
     "login": {
@@ -189,14 +244,87 @@
       "signUp": "Sign Up!",
       "forgotPasswordButton": "Forgot password?"
     },
-    "signUp": {},
-    "verifyEmail": {},
-    "nameInput": {},
-    "usernameInput": {},
-    "topCuisines": {},
-    "inviteContacts": {},
-    "followFriends": {},
-    "letsGo": {}
+    "signUp": {
+      "passwordMatch": "Passwords do not match",
+      "passwordMatchMessage": "Please make sure your passwords match.",
+      "signUpFail": "Sign Up Failed",
+      "create": "Create Your Account",
+      "email": "Email",
+      "password": "Password",
+      "confirm": "Confirm Password"
+    },
+    "verifyEmail": {
+      "emailSent": "Email Sent",
+      "emailSentMessage": "A verification email has been resent.",
+      "noUserError": "No user is currently signed in.",
+      "verify": "Verify Your Email",
+      "description": "We have sent you a verification email to confirm your information.",
+      "sending": "Sending...",
+      "resend": "Resend Email",
+      "login": "Go to Login"
+    },
+    "nameInput": {
+      "firstNameError": "Please enter your first name",
+      "phoneError": "Please enter a valid phone number with digits only.",
+      "noUserError": "No user is currently signed in.",
+      "nearestCity": "Nearest City",
+      "saveFail": "Failed to save your details. Please try again.",
+      "heyThere": "Hey there!",
+      "setUp": "Let's set up your profile.",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "shown": "Shown on your profile",
+      "phoneNumber": "Phone Number",
+      "find": "Used to find your friends"
+    },
+    "usernameInput": {
+      "there": "there",
+      "spaces": "Username mist not contain any spaces",
+      "symbols": "Username contains invalid symbols",
+      "symbolsRow": "Username must not have three symbols in a row",
+      "characterMin": "Username must be at least 3 characters long",
+      "characterMax": "Username must not be more than 25 characters",
+      "notAvailable": "Username is not available",
+      "unavailable": "Username Unavailable",
+      "unavailableMessage": "Please choose a different username",
+      "noUserError": "No user found. Please login again.",
+      "saveFail": "Failed to save your username. Please try again.",
+      "doingWell": "We hope you're doing well, ",
+      "create": "Let's create your username.",
+      "username": "Username",
+      "available": "Username is available!"
+    },
+    "topCuisines": {
+      "selectionError": "Selection Error",
+      "selectionErrorMessage": "Please select at least 5 tags",
+      "saveFail": "Failed to save your favorite cuisines.",
+      "title": "our goal is to help you find amazing, unique places to eat.",
+      "choose": "Choose 5 to 10 of your favourite tags.",
+      "cuisine": "Cuisine",
+      "occasion": "Occasion",
+      "atmosphere": "Atmosphere"
+    },
+    "inviteContacts": {
+      "textMessage": "Hi! Join me on this amazing app and discover great places to eat. Here's the link to download the app: [app link]",
+      "messagingAppError": "Unable to open messaging app.",
+      "research": "Research tells us that ",
+      "stat": "85% of people ",
+      "share": "enjoy sharing restaurants to family and friends.",
+      "invite": "Invite 3 friends so they don't feel left out.",
+      "inviteButton": "Invite"
+    },
+    "followFriends": {
+      "fetchError": "Unable to fetch user data. Please try again.",
+      "followError": "Unable to follow this user.",
+      "title": "Look who's already on Shareables!",
+      "description": "Follow them to start receiving recommendations.",
+      "follow": "Follow",
+      "searching": "Searching for your friends...",
+      "letsGo": "Let's Go"
+    },
+    "letsGo": {
+      "startSharing": "Start Sharing"
+    }
   },
   "settings": {
     "mainSettings": {

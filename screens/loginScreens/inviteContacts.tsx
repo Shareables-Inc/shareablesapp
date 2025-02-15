@@ -22,6 +22,7 @@ import { Fonts } from "../../utils/fonts";
 import { PhoneNumber } from "expo-contacts";
 import { CircleArrowLeft } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -37,6 +38,7 @@ interface EnhancedContact extends Contact {
 
 const InviteContactsScreen = () => {
   const { user, refreshUserProfile } = useAuth();
+  const {t} = useTranslation();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [contacts, setContacts] = useState<Contact[]>([]);
 
@@ -45,7 +47,7 @@ const InviteContactsScreen = () => {
   };
 
   const sendInvite = async (phoneNumber: string) => {
-    const message = `Hi! Join me on this amazing app and discover great places to eat. Here's the link to download the app: [app link]`;
+    const message = t("login.inviteContacts.textMessage");
     // Encoding the message to ensure that spaces and special characters are handled correctly
     const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
 
@@ -54,7 +56,7 @@ const InviteContactsScreen = () => {
     if (canOpen) {
       Linking.openURL(url);
     } else {
-      Alert.alert("Error", "Unable to open messaging app");
+      Alert.alert(t("general.error"), t("login.inviteContacts.messagingAppError"));
     }
   };
 
@@ -142,14 +144,14 @@ const InviteContactsScreen = () => {
         </TouchableOpacity>
       </View>
       <Text style={styles.title}>
-        Research tells us that{" "}
+        {t("login.inviteContacts.research")}
         <Text style={{ color: Colors.highlightText, fontWeight: "bold" }}>
-          85% of people
-        </Text>{" "}
-        enjoy sharing restaurants to family and friends.
+        {t("login.inviteContacts.stat")}
+        </Text>
+        {t("login.inviteContacts.share")}
       </Text>
       <Text style={styles.description}>
-        Invite 3 friends so they don't feel left out.
+        {t("login.inviteContacts.invite")}
       </Text>
       <ScrollView
         style={styles.contactsContainer}
@@ -180,7 +182,7 @@ const InviteContactsScreen = () => {
               }
               activeOpacity={1}
             >
-              <Text style={styles.inviteButtonText}>Invite</Text>
+              <Text style={styles.inviteButtonText}>{t("login.inviteContacts.inviteButton")}</Text>
             </TouchableOpacity>
           </View>
         ))}
@@ -190,7 +192,7 @@ const InviteContactsScreen = () => {
           style={styles.nextButton}
           onPress={navigateToFollowFriends}
         >
-          <Text style={styles.nextButtonText}>Next Step</Text>
+          <Text style={styles.nextButtonText}>{t("general.nextStep")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

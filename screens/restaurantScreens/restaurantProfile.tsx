@@ -38,6 +38,7 @@ import { Save } from "../../models/save";
 import { useLocationStore } from "../../store/useLocationStore";
 import { SkeletonRestaurantProfile } from "../../components/skeleton/skeletonRestaurantProfile";
 import { Post } from "../../models/post";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -54,6 +55,7 @@ type RestaurantProfileScreenProps = {
 
 const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const { user } = useAuth();
   const { establishmentId } = route.params;
 
@@ -276,7 +278,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
     // Fallback URL if the user doesn't have the app installed
     const fallbackUrl = `https://shareablesapp.com/discover.html`; 
     
-    const message = `I just found this restaurant called ${restaurantName} on Shareables. We should go check it out! ${fallbackUrl}`;
+    const message = `${t("profile.restaurantProfile.message1")} ${restaurantName} ${t("profile.restaurantProfile.message2")} ${fallbackUrl}`;
     
     const url = `sms:?body=${encodeURIComponent(message)}`;
     
@@ -285,12 +287,12 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
         if (supported) {
           return Linking.openURL(url);
         } else {
-          Alert.alert("Error", "Messaging app is not available.");
+          Alert.alert(t("general.error"), t("profile.restaurantProfile.messagingAppError"));
         }
       })
       .catch((err) => {
         console.error("Failed to open messaging app:", err);
-        Alert.alert("Error", "Failed to open messaging app.");
+        Alert.alert(t("general.error"), t("profile.restaurantProfile.messagingAppError"));
       });
   };
 
@@ -408,7 +410,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
             <View style={styles.titleContainer}>
               <Text style={styles.title}>{establishmentData?.name}</Text>
               <Text style={styles.location}>
-                {establishmentData?.city}{" "}–{" "}<Text style={styles.distance}>{distanceText} away</Text>
+                {establishmentData?.city}{" "}–{" "}<Text style={styles.distance}>{distanceText} {t("profile.restaurantProfile.away")}</Text>
               </Text>
             </View>
             <View style={styles.ratingContainer}>
@@ -428,7 +430,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
                 activeOpacity={1}
               >
                 <MessageCircle size={20} color={Colors.text} />
-                <Text style={styles.actionButtonText}>Invite</Text>
+                <Text style={styles.actionButtonText}>{t("profile.restaurantProfile.invite")}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionButton}
@@ -436,14 +438,14 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
                 activeOpacity={1}
               >
                 <MapPin size={20} color={Colors.text} />
-                <Text style={styles.actionButtonText}>Let's Go</Text>
+                <Text style={styles.actionButtonText}>{t("profile.restaurantProfile.letsGo")}</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
         <View style={styles.featuredGalleryContainer}>
-          <Text style={styles.featuredGalleryText}>Featured Gallery</Text>
+          <Text style={styles.featuredGalleryText}>{t("profile.restaurantProfile.featured")}</Text>
           {establishmentData?.gallery &&
             establishmentData?.gallery.length > 0 && (
               <FlatList
@@ -489,7 +491,7 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
 
         <View style={styles.remainingReviewsContainer}>
           <Text style={styles.remainingReviewsText}>
-            {establishmentData?.postCount || 0} Reviews
+            {establishmentData?.postCount || 0} {t("profile.restaurantProfile.reviews")}
           </Text>
 
           <View style={styles.gridGallery}>

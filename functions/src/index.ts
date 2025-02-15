@@ -325,7 +325,7 @@ export const sendFollowedUserPostNotification = onDocumentCreated(
           data: {
             id: uuidv4(),
             screen: "ExpandedPost",
-            postId: postData.id,
+            postId: postId,
             profilePicture: userData.profilePicture,
           },
         };

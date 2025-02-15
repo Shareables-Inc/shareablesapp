@@ -39,6 +39,7 @@ import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
 import { sendReportToJira } from '../../helpers/userReport';
 import { useIsUserBlocked, useBlockActions } from "../../hooks/useUserBlocks";
+import { useTranslation } from "react-i18next";
 
 
 
@@ -47,6 +48,7 @@ const HEADER_HEIGHT = 100;
 
 const UserProfileScreen = () => {
   const { user } = useAuth();
+  const {t} = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, "UserProfile">>();
   const { userId: postUserId } = route.params;
   const posts = usePostsByUser(postUserId);
@@ -68,16 +70,16 @@ const UserProfileScreen = () => {
 
 
   const reportOptions = [
-    "Inappropriate content",
-    "They are pretending to be someone else",
-    "They may be under the age of 19",
-    "Spam or advertising",
-    "Hate speech or discrimination",
-    "Harassment or bullying",
-    "Sharing false information",
-    "Violence or threats",
-    "Privacy violation",
-    "Scam or fraud",
+    t("profile.userProfile.inappropriate"),
+    t("profile.userProfile.pretending"),
+    t("profile.userProfile.underage"),
+    t("profile.userProfile.spam"),
+    t("profile.userProfile.hate"),
+    t("profile.userProfile.bullying"),
+    t("profile.userProfile.false"),
+    t("profile.userProfile.violence"),
+    t("profile.userProfile.privacy"),
+    t("profile.userProfile.scam"),
   ];
   
 
@@ -141,14 +143,14 @@ const UserProfileScreen = () => {
   const handleBlockUser = async () => {
     setBottomSheetVisible(false);
     Alert.alert(
-      "Block User",
+      t("profile.userProfile.blockUser"),
       isBlocked
-        ? "Are you sure you want to unblock this user?"
-        : "Are you sure you want to block this user?",
+        ? t("profile.userProfile.unblockMessage")
+        : t("profile.userProfile.blockMessage"),
       [
-        { text: "Cancel", style: "cancel" },
+        { text: t("general.cancel"), style: "cancel" },
         {
-          text: isBlocked ? "Unblock" : "Block",
+          text: isBlocked ? t("profile.userProfile.unblock") : t("profile.userProfile.block"),
           onPress: async () => {
             try {
               if (!isBlocked) {
@@ -159,14 +161,14 @@ const UserProfileScreen = () => {
               }
               await toggleBlock(); // Block or unblock the user
               Alert.alert(
-                isBlocked ? "User Unblocked" : "User Blocked",
-                `You have successfully ${
-                  isBlocked ? "unblocked" : "blocked"
-                } this user.`
+                isBlocked ? t("profile.userProfile.userUnblocked") : t("profile.userProfile.userBlocked"),
+                `${t("profile.userProfile.successfully")} ${
+                  isBlocked ? t("profile.userProfile.unblocked") : t("profile.userProfile.blocked")
+                } ${t("profile.userProfile.user")}`
               );
             } catch (error) {
               console.error("Error toggling block state:", error);
-              Alert.alert("Error", "Failed to update block state. Please try again.");
+              Alert.alert(t("general.error"), t("profile.userProfile.blockFail"));
             }
           },
         },
@@ -188,15 +190,15 @@ const UserProfileScreen = () => {
   
       try {
         await sendReportToJira(reportTitle, reportDescription);
-        Alert.alert("Report Sent", "Thank you for your report. We will review it shortly.");
+        Alert.alert(t("profile.userProfile.reportSent"), t("profile.userProfile.reportSentMessage"));
         setReportModalVisible(false);
         setSelectedReason(null); // Reset selection
       } catch (error) {
         console.error("Error sending report:", error);
-        Alert.alert("Error", "Failed to send report. Please try again later.");
+        Alert.alert(t("general.error"), t("profile.userProfile.reportFail"));
       }
     } else {
-      Alert.alert("Error", "Please select a reason for reporting.");
+      Alert.alert(t("general.error"), t("profile.userProfile.reasonError"));
     }
   };
   
@@ -280,7 +282,7 @@ const UserProfileScreen = () => {
       {isHeaderVisible && (
         <View style={styles.stickyHeader}>
           <Text style={styles.stickyHeaderText}>
-            {`@${userData!.username}`}'s Profile
+            {`@${userData!.username}`}'s {t("profile.userProfile.profile")}
           </Text>
         </View>
       )}
@@ -333,12 +335,12 @@ const UserProfileScreen = () => {
                   }
                 >
                   <Text style={styles.ovalText}>
-                    {userCounts?.followerCount} Followers
+                    {userCounts?.followerCount}{t("profile.userProfile.followers")}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.followerOval}>
-                <Text style={styles.ovalText}>{reviewCount} Reviews</Text>
+                <Text style={styles.ovalText}>{reviewCount} {t("profile.userProfile.reviews")}</Text>
               </View>
             </View>
           </View>
@@ -365,7 +367,7 @@ const UserProfileScreen = () => {
                 ) : isFollowing ? (
                   <CircleCheck color={Colors.background} size={22} />
                 ) : (
-                  <Text style={styles.followButtonText}>Follow</Text>
+                  <Text style={styles.followButtonText}>{t("profile.userProfile.follow")}</Text>
                 )}
               </TouchableOpacity>
             )}
@@ -386,7 +388,7 @@ const UserProfileScreen = () => {
             <View style={styles.iconContainer}>
               <UserX color={Colors.background} size={width * 0.08} />
             </View>
-            <Text style={styles.noReviewText}>This account is blocked</Text>
+            <Text style={styles.noReviewText}>{t("profile.userProfile.blockedMessage")}</Text>
           </View>
         ) : (
           // Unblocked State
@@ -395,7 +397,7 @@ const UserProfileScreen = () => {
               <>
                 {/* Top Picks */}
                 <View style={styles.featuredGalleryContainer}>
-                  <Text style={styles.featuredGalleryText}>Top Picks</Text>
+                  <Text style={styles.featuredGalleryText}>{t("profile.userProfile.topPicks")}</Text>
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -439,7 +441,7 @@ const UserProfileScreen = () => {
   
                 {/* All Reviews */}
                 <View style={styles.remainingReviewsContainer}>
-                  <Text style={styles.remainingReviewsText}>All Reviews</Text>
+                  <Text style={styles.remainingReviewsText}>{t("profile.userProfile.allReviews")}</Text>
                 </View>
   
                 {/* Posts Grid */}
@@ -457,7 +459,7 @@ const UserProfileScreen = () => {
                 <View style={styles.iconContainer}>
                   <NotepadText color={Colors.noReviews} size={width * 0.08} />
                 </View>
-                <Text style={styles.noReviewText}>No reviews yet</Text>
+                <Text style={styles.noReviewText}>{t("profile.userProfile.noReviews")}</Text>
               </View>
             )}
           </>
@@ -483,7 +485,7 @@ const UserProfileScreen = () => {
             >
               <UserX color={Colors.text} size={20} />
               <Text style={styles.optionText}>
-                {isBlocked ? "Unblock User" : "Block User"}
+                {isBlocked ? t("profile.userProfile.unblockUser") : t("profile.userProfile.blockUser")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -491,7 +493,7 @@ const UserProfileScreen = () => {
               onPress={handleReportUser}
             >
               <CircleAlert color={Colors.text} size={20} />
-              <Text style={styles.optionText}>Report User</Text>
+              <Text style={styles.optionText}>{t("profile.userProfile.reportUser")}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -514,12 +516,12 @@ const UserProfileScreen = () => {
           {/* Prevent closing when interacting with modal content */}
           <TouchableWithoutFeedback>
             <View style={styles.reportModal}>
-              <Text style={styles.reportTitle}>Report</Text>
+              <Text style={styles.reportTitle}>{t("profile.userProfile.report")}</Text>
               <Text style={styles.reportDescription}>
-                What do you want to report? (Select 1 below)
+                {t("profile.userProfile.title")}
               </Text>
               <Text style={styles.reportInstruction}>
-                Your report will remain anonymous. If there’s an immediate threat, please contact your local emergency services right away.
+                {t("profile.userProfile.description")}
               </Text>
               {renderReportOptions()}
               <TouchableOpacity
@@ -528,7 +530,7 @@ const UserProfileScreen = () => {
                 activeOpacity={1}
               >
                 <Send color={Colors.text} size={20} />
-                <Text style={styles.sendReportButtonText}>Send Report</Text>
+                <Text style={styles.sendReportButtonText}>{t("profile.userProfile.sendReport")}</Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>

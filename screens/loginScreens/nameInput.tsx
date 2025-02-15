@@ -21,15 +21,17 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { ChevronDown } from "lucide-react-native";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 export default function NameInputScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<string>("Nearest City");
+  const [selectedLocation, setSelectedLocation] = useState<string>(t("login.nameInput.nearestCity"));
   const [dropdownLayout, setDropdownLayout] = useState({ width: 0, x: 0, y: 0 });
   const [showLocationDropdown, setShowLocationDropdown] = useState<boolean>(false);
   const locationTabRef = useRef(null);
@@ -72,18 +74,18 @@ export default function NameInputScreen() {
 
   const handleNextStep = async () => {
     if (firstName.trim() === "") {
-      Alert.alert("Required", "Please enter your first name.");
+      Alert.alert(t("general.required"), t("login.nameInput.firstNameError"));
       return;
     }
   
     if (phoneNumber && !/^\d+$/.test(phoneNumber)) {
-      Alert.alert("Invalid Input", "Please enter a valid phone number with digits only.");
+      Alert.alert(t("general.invalid"), t("login.nameInput.phoneError"));
       return;
     }
   
     const userId = auth.currentUser?.uid;
     if (!userId) {
-      Alert.alert("Error", "No user found. Please login again.");
+      Alert.alert(t("general.error"), t("login.nameInput.noUserError"));
       return;
     }
   
@@ -110,7 +112,7 @@ export default function NameInputScreen() {
           firstName: firstName.trim(),
           lastName: lastName.trim() || null,
           phoneNumber: phoneNumber.trim() || null,
-          location: selectedLocation !== "Nearest City" ? selectedLocation : null,
+          location: selectedLocation !== t("login.nameInput.nearestCity") ? selectedLocation : null,
           profilePicture: downloadURL, // Use the uploaded image's URL
           createdAt: serverTimestamp(),
           onboardingComplete: false,
@@ -127,7 +129,7 @@ export default function NameInputScreen() {
       navigation.navigate("UsernameInput");
     } catch (error) {
       console.error("Firestore Error:", error);
-      Alert.alert("Update Failed", "Failed to save your details. Please try again.");
+      Alert.alert(t("general.updateFail"), t("login.nameInput.saveFail"));
     }
   };
 
@@ -139,42 +141,42 @@ export default function NameInputScreen() {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.contentContainer}>
           <Text style={styles.title}>
-            <Text style={styles.heyThereText}>Hey there!</Text> Let's set up your profile.
+            <Text style={styles.heyThereText}>{t("login.nameInput.heyThere")}</Text> {t("login.nameInput.setUp")}
           </Text>
 
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="First Name"
+              placeholder={t("login.nameInput.firstName")}
               placeholderTextColor={Colors.placeholderText}
               value={firstName}
               onChangeText={setFirstName}
             />
           </View>
-          <Text style={styles.requiredText}>Required</Text>
+          <Text style={styles.requiredText}>{t("general.required")}</Text>
 
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Last Name"
+              placeholder={t("login.nameInput.lastName")}
               placeholderTextColor={Colors.placeholderText}
               value={lastName}
               onChangeText={setLastName}
             />
           </View>
-          <Text style={styles.infoText}>Shown on your profile</Text>
+          <Text style={styles.infoText}>{t("login.nameInput.shown")}</Text>
 
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Phone Number"
+              placeholder={t("login.nameInput.phoneNumber")}
               placeholderTextColor={Colors.placeholderText}
               value={phoneNumber}
               onChangeText={setPhoneNumber}
               keyboardType="number-pad"
             />
           </View>
-          <Text style={styles.infoText}>Used to find your friends</Text>
+          <Text style={styles.infoText}>{t("login.nameInput.find")}</Text>
 
         </View>
       </TouchableWithoutFeedback>
@@ -218,11 +220,11 @@ export default function NameInputScreen() {
           </ScrollView>
         </View>
       )}
-      <Text style={styles.requiredTextCity}>Required</Text>
+      <Text style={styles.requiredTextCity}>{t("general.required")}</Text>
 
       <View style={styles.nextButtonContainer}>
         <TouchableOpacity style={styles.nextButton} onPress={handleNextStep} activeOpacity={1}>
-          <Text style={styles.nextButtonText}>Next Step</Text>
+          <Text style={styles.nextButtonText}>{t("general.nextStep")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

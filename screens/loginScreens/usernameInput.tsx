@@ -19,11 +19,13 @@ import { doc, setDoc, getDoc, collection, query, where, getDocs } from "firebase
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { CircleArrowLeft, CircleCheck, CircleAlert } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 export default function UserNameInputScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [userName, setUserName] = useState("");
   const [firstName, setFirstName] = useState("there");
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
@@ -41,7 +43,7 @@ export default function UserNameInputScreen() {
         const userDocRef = doc(db, "users", userId);
         const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-          setFirstName(userDoc.data().firstName || "there");
+          setFirstName(userDoc.data().firstName || t("login.usernameInput.there"));
         }
       }
     };
@@ -52,20 +54,20 @@ export default function UserNameInputScreen() {
   // Helper function for validation
   const validateUsername = (username: string) => {
     // Rule 1: No spaces in the middle or end
-    if (/\s/.test(username)) return "Username must not contain any spaces";
+    if (/\s/.test(username)) return t("login.usernameInput.spaces");
 
     // Rule 2: Disallowed characters
-    const disallowedChars = /[@:'"(){}[\]=~•&^%#!+;"<>\/?,]/;
-    if (disallowedChars.test(username)) return "Username contains invalid symbols";
+    const disallowedChars = /[@:'"(){}[\]=~•^%#!+;"<>\/?,]/;
+    if (disallowedChars.test(username)) return t("login.usernameInput.symbols");
 
     // Rule 3: Allowed special characters 
-    if (/(\.\.|__|--|\$\$)/.test(username)) return "Username must not have three symbols in a row";
+    if (/(\.\.\.|___|---|\$\$\$|\&\&\&)/.test(username)) return t("login.usernameInput.symbolsRow");
 
     // Rule 4: Minimum length of 3 characters
-    if (username.length < 3) return "Username must be at least 3 characters long";
+    if (username.length < 3) return t("login.usernameInput.characterMin");
 
     // Rule 5: Username must not be more than 25 characters
-    if (username.length > 25) return "Username must not be more than 25 characters";
+    if (username.length > 25) return t("login.usernameInput.characterMax");
 
     return null; // No validation errors
   };
@@ -95,7 +97,7 @@ export default function UserNameInputScreen() {
           setUsernameAvailable(true);
         } else {
           setUsernameAvailable(false);
-          setValidationMessage("Username is not available");
+          setValidationMessage(t("login.usernameInput.notAvailable"));
         }
       } catch (error) {
         console.error("Firestore Error:", error);
@@ -109,13 +111,13 @@ export default function UserNameInputScreen() {
 
   const handleNextStep = async () => {
     if (!usernameAvailable) {
-      Alert.alert("Username Unavailable", validationMessage || "Please choose a different username.");
+      Alert.alert(t("login.usernameInput.unavailable"), validationMessage || t("login.usernameInput.unavailableMessage"));
       return;
     }
 
     const userId = auth.currentUser?.uid;
     if (!userId) {
-      Alert.alert("Error", "No user found. Please login again.");
+      Alert.alert(t("general.error"), t("login.usernameInput.noUserError"));
       return;
     }
 
@@ -125,7 +127,7 @@ export default function UserNameInputScreen() {
       navigation.navigate("TopCuisines");
     } catch (error) {
       console.error("Firestore Error:", error);
-      Alert.alert("Update Failed", "Failed to save your username. Please try again.");
+      Alert.alert(t("general.updateFail"), t("login.usernameInput.saveFail"));
     }
   };
 
@@ -140,13 +142,13 @@ export default function UserNameInputScreen() {
         </View>
 
         <Text style={styles.title}>
-          <Text style={styles.heyThereText}>We hope you're doing well, {firstName}.</Text> Let's create your username.
+          <Text style={styles.heyThereText}>{t("login.usernameInput.doingWell")} {firstName}.</Text> {t("login.usernameInput.create")}
         </Text>
 
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Username"
+            placeholder={t("login.usernameInput.username")}
             placeholderTextColor={Colors.placeholderText}
             value={userName}
             onChangeText={handleUsernameChange}
@@ -157,7 +159,7 @@ export default function UserNameInputScreen() {
               <Text style={styles.errorText}>{validationMessage}</Text>
             ) : usernameAvailable !== null && (
               <Text style={usernameAvailable ? styles.successText : styles.errorText}>
-                {usernameAvailable ? "Username is available!" : "Username is unavailable."}
+                {usernameAvailable ? t("login.usernameInput.available") : t("login.usernameInput.notAvailable")}
               </Text>
             )}
           </View>

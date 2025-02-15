@@ -17,11 +17,13 @@ import { Fonts } from "../../utils/fonts";
 import { CircleArrowLeft } from "lucide-react-native";
 import { FollowingService } from "../../services/following.service";
 import { UserService } from "../../services/user.service";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const FollowerListScreen = ({ route }: any) => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();  
   const { user } = useAuth();
   const { userId: profileUserId } = route.params || {};
   const [activeTab, setActiveTab] = useState<"followers" | "following">("followers");
@@ -124,7 +126,7 @@ const FollowerListScreen = ({ route }: any) => {
           onPress={() => setActiveTab("followers")}
         >
           <Text style={[styles.tabText, activeTab === "followers" && styles.activeTabText]}>
-            Followers ({followerCount})
+            {t("profile.followerList.followers")} ({followerCount})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -132,7 +134,7 @@ const FollowerListScreen = ({ route }: any) => {
           onPress={() => setActiveTab("following")}
         >
           <Text style={[styles.tabText, activeTab === "following" && styles.activeTabText]}>
-            Following ({followingCount})
+            {t("profile.followerList.following")} ({followingCount})
           </Text>
         </TouchableOpacity>
       </View>

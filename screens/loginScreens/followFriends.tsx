@@ -25,6 +25,7 @@ import { CircleArrowLeft, CircleCheck } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import { UserProfile } from "../../models/userProfile"; // Import UserProfile model
 import { FollowingService } from "../../services/following.service";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
@@ -38,6 +39,7 @@ const FollowFriendsScreen = ({
   route: RouteProp<RootStackParamList, "FollowFriends">;
 }) => {
   const { user, refreshUserProfile } = useAuth();
+  const {t} = useTranslation();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [friends, setFriends] = useState<UserProfile[]>([]);
   const [visibleFriends, setVisibleFriends] = useState<UserProfile[]>([]);
@@ -102,7 +104,7 @@ const FollowFriendsScreen = ({
       setFadeAnims(matchingUsers.slice(0, 4).map(() => new Animated.Value(1)));
     } catch (error) {
       console.error("Error fetching users:", error);
-      Alert.alert("Error", "Unable to fetch user data. Please try again.");
+      Alert.alert(t("general.error"), t("login.followFriends.fetchError"));
     }
   };
   
@@ -122,7 +124,7 @@ const FollowFriendsScreen = ({
     const userToFollow = visibleFriends[index];
     if (!userToFollow || !userToFollow.id) {
       console.error("User to follow has no ID:", userToFollow);
-      Alert.alert("Error", "Unable to follow this user.");
+      Alert.alert(t("general.error"), t("login.followFriends.followError"));
       return;
     }
   
@@ -156,7 +158,7 @@ const FollowFriendsScreen = ({
       console.log(`User ${userToFollow.username} successfully followed.`);
     } catch (error) {
       console.error("Error following user:", error);
-      Alert.alert("Error", "Failed to follow the user. Please try again.");
+      Alert.alert(t("general.error"), t("login.followFriends.followError"));
     }
   };
   
@@ -172,9 +174,9 @@ const FollowFriendsScreen = ({
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.title}>Look who's already on Shareables!</Text>
+      <Text style={styles.title}>{t("login.followFriends.title")}</Text>
       <Text style={styles.description}>
-        Follow them to start receiving recommendations.
+        {t("login.followFriends.description")}
       </Text>
 
       {visibleFriends.length > 0 ? (
@@ -200,7 +202,7 @@ const FollowFriendsScreen = ({
               {followedUsers[friend.id] ? (
                 <CircleCheck color={Colors.background} size={20} />
               ) : (
-                <Text style={styles.inviteButtonText}>Follow</Text>
+                <Text style={styles.inviteButtonText}>{t("login.followFriends.follow")}</Text>
               )}
             </TouchableOpacity>
               <Text style={styles.contactName}>@{friend.username}</Text>
@@ -213,7 +215,7 @@ const FollowFriendsScreen = ({
       ) : (
         <View style={styles.noFriendsContainer}>
           <Text style={styles.noFriendsText}>
-            Searching for your friends...
+            {t("login.followFriends.searching")}
           </Text>
         </View>
       )}
@@ -224,7 +226,7 @@ const FollowFriendsScreen = ({
           onPress={handleNext}
           activeOpacity={1}
         >
-          <Text style={styles.nextButtonText}>Let's Go!</Text>
+          <Text style={styles.nextButtonText}>{t("login.followFriends.letsGo")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

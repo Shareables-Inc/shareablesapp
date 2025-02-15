@@ -1,25 +1,62 @@
 {
-    "general": {
-      "next": "Suivant",
-      "nextStep": "Étape suivante",
-      "cancel": "Annuler",
-      "delete": "Supprimer",
-      "error": "Erreur"
-    },
-    "tabNavigator": {
-      "home": "Accueil",
-      "post": "Publier",
-      "explore": "Explorer",
-      "profile": "Profil"
-    },
+  "general": {
+    "next": "Suivant",
+    "nextStep": "Suivant",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "error": "Erreur",
+    "confirm": "Confirmer",
+    "deactivate": "Désactiver",
+    "invalid": "Entrée invalide",
+    "updateFail": "Mise à jour échouée",
+    "success": "Succès",
+    "required": "Requis"
+  },
+  "tabNavigator": {
+    "home": "Accueil",
+    "post": "Publier",
+    "explore": "Explorer",
+    "profile": "Profil"
+  },
+  "feed": {
     "feed": {
-      "feed": "Paître",
-      "map": "Carte",
-      "reviewed": "examiné"
+      "noPosts": "Il semble qu'il n'y ait encore aucune publication. Soyez le premier à partager votre aventure culinaire !",
+      "reviewed": "a évalué"
     },
+    "tabSelector": {
+      "feed": "Flux",
+      "map": "Carte"
+    },
+    "restaurantList": {
+      "saved": "Restaurants enregistrés",
+      "your": "Vos restaurants",
+      "friend": "Restaurants d'amis",
+      "all": "Tous les restaurants"
+    },
+    "restaurantCard": {
+      "messageAppError": "L'application de messagerie n'est pas disponible.",
+      "failedOpen": "Impossible d'ouvrir l'application de messagerie.",
+      "invite": "Inviter",
+      "letsGo": "C'est parti !",
+      "featured": "Galerie à la une",
+      "reviews": "Avis"
+    },
+    "notifications": {
+      "notifications": "Notifications",
+      "noNotifications": "Aucune notification pour l'instant!"
+    }
+  },
+  "discover": {
+    "locationMessage": {
+      "access": "Accès à la localisation requis",
+      "description": "Veuillez activer les services de localisation pour utiliser la carte Découvrir",
+      "settings": "Ouvrir les paramètres"
+    }
+  },
+  "post": {
     "post": {
-      "upload": "Téléchargez des photos de votre dernière visite au restaurant",
-      "uploadDescription": "Que ce soit votre repas, l'ambiance unique du restaurant ou les souvenirs créés à table, nous voulons tout voir.",
+      "upload": "Téléchargez des photos de votre récente visite au restaurant",
+      "uploadDescription": "Que ce soit votre plat, l'ambiance unique du restaurant ou des souvenirs autour de la table, nous voulons tout voir.",
       "selectImages": "Sélectionner des images",
       "uploadingImages": "Téléchargement des images...",
       "objectionableContent": "Contenu inapproprié détecté",
@@ -28,18 +65,364 @@
       "imageUploadIssue": "Un problème est survenu lors du téléchargement des images.",
       "atLeastOneImage": "Veuillez télécharger au moins une image avant de continuer.",
       "postCreationError": "Erreur de création de publication",
-      "postCreationIssue": "Une erreur s'est produite lors de la création de votre message. Veuillez réessayer."
+      "postCreationIssue": "Une erreur est survenue lors de la création de votre publication. Veuillez réessayer."
     },
-    "explore": {
-      "explore": "Explorer",
-      "exploreDescription": "Essayez les favoris locaux",
-      "topRestaurants": "Meilleurs restaurants",
-      "localFoodies": "Gastronomes locaux",
-      "followersExplore": "abonnés",
-      "searchUsername": "Rechercher un nom d'utilisateur...",
-      "searchTip": "Veuillez orthographier correctement le nom d'utilisateur pour des résultats précis.",
-      "notableFoodies": "Gastronomes notables à ",
-      "viewProfile": "Voir le profil"
-}
+    "expandedPost": {
+      "justNow": "À l'instant",
+      "now": "maintenant",
+      "today": "aujourd'hui",
+      "editError": "Impossible de modifier la publication. Certains détails manquent.",
+      "delete": "Supprimer la publication",
+      "deleteMessage": "Êtes-vous sûr de vouloir supprimer cette publication ?",
+      "deleteFail": "Échec de la suppression de la publication.",
+      "review": "Avis",
+      "overall": "Note globale:",
+      "comments": "Commentaires",
+      "addComment": "ajouter un commentaire...",
+      "editPost": "Modifier la publication",
+      "deletePost": "Supprimer la publication"
+    },
+    "postReview": {
+      "incompleteReview": "Avis incomplet",
+      "incompleteReviewMessage": "Veuillez rédiger un avis avant de publier.",
+      "incompleteRatings": "Notes incomplètes",
+      "incompleteRatingsMessage": "Veuillez donner une note pour l'ambiance, la qualité de la nourriture et le service.",
+      "postError": "Erreur de publication",
+      "postErrorMessage": "Une erreur est survenue lors de la création de votre publication.",
+      "discardPost": "Annuler la publication",
+      "discardPostMessage": "Êtes-vous sûr de vouloir annuler cette publication ?",
+      "discard": "Annuler",
+      "discardError": "Échec de l'annulation de la publication. Veuillez réessayer.",
+      "update": "Mettre à jour",
+      "post": "Publier",
+      "review": "Écrivez votre avis ici...",
+      "scores": "Notes",
+      "overall": "Global",
+      "icons": "Que signifient ces icônes ?",
+      "ambiance": "Ambiance",
+      "food": "Qualité de la nourriture",
+      "service": "Qualité du service",
+      "gotIt": "Compris!",
+      "halal": "Halal",
+      "gluten": "Sans gluten",
+      "vegan": "Végétarien & Végan"
+    },
+    "restaurantSelect": {
+      "detailsError": "Échec de la récupération des détails du restaurant. Veuillez réessayer.",
+      "missingIdError": "postId ou establishmentId manquant.",
+      "updateError": "Erreur de mise à jour de la publication",
+      "updateErrorMessage": "Une erreur est survenue lors de la mise à jour de votre publication.",
+      "restaurantSelectError": "Veuillez sélectionner un restaurant avant de continuer.",
+      "tagSelectError": "Veuillez sélectionner au moins un tag avant de continuer.",
+      "establishmentError": "L'ID de l'établissement est invalide. Veuillez réessayer.",
+      "unexpectedError": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+      "discardPost": "Annuler la publication",
+      "discardPostMessage": "Êtes-vous sûr de vouloir annuler cette publication ?",
+      "discard": "Annuler",
+      "discardError": "Échec de l'annulation de la publication. Veuillez réessayer.",
+      "where": "Où êtes-vous allé manger?",
+      "search": "rechercher un restaurant",
+      "tags": "Sélectionnez jusqu'à 4 tags",
+      "cuisine": "Cuisine",
+      "occasion": "Occasion",
+      "atmosphere": "Ambiance"
+    }
+  },
+  "explore": {
+    "explore": "Explorer",
+    "exploreDescription": "Essayez les favoris locaux",
+    "topRestaurants": "Meilleurs restaurants",
+    "localFoodies": "Foodies locaux",
+    "followersExplore": "abonnés",
+    "searchUsername": "rechercher un nom d'utilisateur...",
+    "searchTip": "Épelez correctement le nom d'utilisateur pour des résultats précis.",
+    "notableFoodies": "Foodies remarquables à ",
+    "viewProfile": "Voir le profil",
+    "ownProfileSearch": "Vous ne pouvez pas rechercher votre propre profil.",
+    "noResults": "Aucun résultat trouvé.",
+    "searchError": "Une erreur s'est produite lors de la recherche.",
+    "follow": "Suivre",
+    "following": "Suivi",
+    "findingLocals": "Recherche des locaux...",
+    "noFoodies": "Aucun foodie dans la région pour l'instant"
+  },
+  "profile": {
+    "profile": {
+      "refreshError": "Impossible d'actualiser le profil. Veuillez réessayer.",
+      "notAuthenticated": "Utilisateur non authentifié",
+      "imageError": "Échec du téléchargement de l'image. Veuillez réessayer.",
+      "cameraPermission": "Désolé, nous avons besoin des autorisations d'accès à la pellicule pour que cela fonctionne!",
+      "profile": "Profil",
+      "follower": " Abonné",
+      "followers": " Abonnés",
+      "reviews": "Avis",
+      "editProfile": "Modifier le profil",
+      "topPicks": "Meilleurs choix",
+      "allReviews": "Tous les avis",
+      "noReviews": "Aucun avis pour l'instant"
+    },
+    "userProfile": {
+      "inappropriate": "Contenu inapproprié",
+      "pretending": "Ils font semblant d'être quelqu'un d'autre",
+      "underage": "Ils pourraient être âgés de moins de 15 ans",
+      "spam": "Spam ou publicité",
+      "hate": "Discours haineux ou discrimination",
+      "bullying": "Harcèlement ou intimidation",
+      "false": "Diffusion d'informations fausses",
+      "violence": "Violence ou menaces",
+      "privacy": "Atteinte à la vie privée",
+      "scam": "Escroquerie ou fraude",
+      "unblockMessage": "Êtes-vous sûr de vouloir débloquer cet utilisateur ?",
+      "blockMessage": "Êtes-vous sûr de vouloir bloquer cet utilisateur ?",
+      "unblock": "Débloquer",
+      "block": "Bloquer",
+      "userUnblocked": "Utilisateur débloqué",
+      "userBlocked": "Utilisateur bloqué",
+      "successfully": "Vous avez réussi à",
+      "unblocked": "débloquer",
+      "blocked": "bloquer",
+      "user": "cet utilisateur.",
+      "blockFail": "Échec de la mise à jour de l'état de blocage. Veuillez réessayer.",
+      "reportSent": "Signalement envoyé",
+      "reportSentMessage": "Merci pour votre signalement. Nous l'examinerons sous peu.",
+      "reportFail": "Échec de l'envoi du signalement. Veuillez réessayer plus tard.",
+      "reasonError": "Veuillez sélectionner une raison pour le signalement.",
+      "profile": "Profil",
+      "follower": " Abonné",
+      "followers": " Abonnés",
+      "reviews": "Avis",
+      "follow": "Suivre",
+      "blockedMessage": "Ce compte est bloqué",
+      "topPicks": "Meilleurs choix",
+      "allReviews": "Tous les avis",
+      "noReviews": "Aucun avis pour l'instant",
+      "reportUser": "Signaler l'utilisateur",
+      "blockUser": "Bloquer l'utilisateur",
+      "unblockUser": "Débloquer l'utilisateur",
+      "report": "Signaler",
+      "title": "Que souhaitez-vous signaler ? (Sélectionnez-en un ci-dessous)",
+      "description": "Votre signalement restera anonyme. En cas de menace immédiate, veuillez contacter les services d'urgence locaux immédiatement.",
+      "sendReport": "Envoyer le signalement"
+    },
+    "followerList": {
+      "followers": "Abonnés",
+      "following": "Abonnements"
+    },
+    "restaurantProfile": {
+      "message1": "Je viens de découvrir ce restaurant appelé",
+      "message2": "sur Shareables. On devrait aller le découvrir!",
+      "messagingAppError": "Impossible d'ouvrir l'application de messagerie.",
+      "away": "",
+      "invite": "Inviter",
+      "letsGo": "C'est parti!",
+      "featured": "Galerie à la une",
+      "reviews": "Avis"
+    }
+  },
+  "login": {
+    "login": {
+      "loginFail": "Échec de la connexion",
+      "loginFailMessage": "Veuillez saisir l'email et le mot de passe corrects.",
+      "emailError": "Email non vérifié",
+      "emailErrorMessage": "Votre email n'est pas vérifié. Voulez-vous que nous renvoyions l'email de vérification?",
+      "resend": "Renvoyer",
+      "emailSent": "Email de vérification envoyé",
+      "emailSentMessage": "Veuillez vérifier votre boîte de réception pour vérifier votre email.",
+      "loginError": "Échec de la connexion. Veuillez réessayer.",
+      "passwordError": "Mot de passe incorrect. Veuillez réessayer.",
+      "noUserError": "Aucun utilisateur trouvé avec cet email.",
+      "validEmail": "Veuillez saisir une adresse email valide.",
+      "forgotPassword": "Mot de passe oublié",
+      "forgotPasswordMessage": "Veuillez saisir votre adresse email.",
+      "passwordReset": "Email de réinitialisation du mot de passe envoyé",
+      "passwordResetMessage": "Veuillez consulter votre boîte de réception pour plus d'instructions",
+      "passwordResetFail": "Échec de l'envoi de l'email de réinitialisation du mot de passe. Veuillez réessayer.",
+      "email": "Email",
+      "password": "Mot de passe",
+      "signIn": "Se connecter",
+      "new": "Nouveau sur Shareables?",
+      "signUp": "Inscrivez-vous!",
+      "forgotPasswordButton": "Mot de passe oublié?"
+    },
+    "signUp": {
+      "passwordMatch": "Les mots de passe ne correspondent pas",
+      "passwordMatchMessage": "Veuillez vous assurer que vos mots de passe correspondent.",
+      "signUpFail": "Échec de l'inscription",
+      "create": "Créez votre compte",
+      "email": "Email",
+      "password": "Mot de passe",
+      "confirm": "Confirmer le mot de passe"
+    },
+    "verifyEmail": {
+      "emailSent": "Email envoyé",
+      "emailSentMessage": "Un email de vérification a été renvoyé.",
+      "noUserError": "Aucun utilisateur n'est actuellement connecté.",
+      "verify": "Vérifiez votre email",
+      "description": "Nous vous avons envoyé un email de vérification pour confirmer vos informations.",
+      "sending": "Envoi en cours...",
+      "resend": "Renvoyer l'email",
+      "login": "Aller à la connexion"
+    },
+    "nameInput": {
+      "firstNameError": "Veuillez saisir votre prénom",
+      "phoneError": "Veuillez saisir un numéro de téléphone valide (chiffres uniquement).",
+      "noUserError": "Aucun utilisateur n'est actuellement connecté.",
+      "nearestCity": "Ville la plus proche",
+      "saveFail": "Échec de la sauvegarde de vos informations. Veuillez réessayer.",
+      "heyThere": "Salut!",
+      "setUp": "Configurons votre profil.",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "shown": "Affiché sur votre profil",
+      "phoneNumber": "Numéro de téléphone",
+      "find": "Utilisé pour trouver vos amis"
+    },
+    "usernameInput": {
+      "there": "là",
+      "spaces": "Le nom d'utilisateur ne doit pas contenir d'espaces",
+      "symbols": "Le nom d'utilisateur contient des symboles invalides",
+      "symbolsRow": "Le nom d'utilisateur ne doit pas contenir trois symboles consécutifs",
+      "characterMin": "Le nom d'utilisateur doit comporter au moins 3 caractères",
+      "characterMax": "Le nom d'utilisateur ne doit pas dépasser 25 caractères",
+      "notAvailable": "Nom d'utilisateur non disponible",
+      "unavailable": "Nom d'utilisateur indisponible",
+      "unavailableMessage": "Veuillez choisir un nom d'utilisateur différent",
+      "noUserError": "Aucun utilisateur trouvé. Veuillez vous reconnecter.",
+      "saveFail": "Échec de la sauvegarde de votre nom d'utilisateur. Veuillez réessayer.",
+      "doingWell": "Nous espérons que vous allez bien, ",
+      "create": "Créons votre nom d'utilisateur.",
+      "username": "Nom d'utilisateur",
+      "available": "Nom d'utilisateur disponible!"
+    },
+    "topCuisines": {
+      "selectionError": "Erreur de sélection",
+      "selectionErrorMessage": "Veuillez sélectionner au moins 5 tags",
+      "saveFail": "Échec de la sauvegarde de vos cuisines préférées.",
+      "title": "notre objectif est de vous aider à trouver des lieux uniques et incroyables pour manger.",
+      "choose": "Choisissez entre 5 et 10 de vos tags favoris.",
+      "cuisine": "Cuisine",
+      "occasion": "Événement",
+      "atmosphere": "Ambiance"
+    },
+    "inviteContacts": {
+      "textMessage": "Salut! Rejoins-moi sur cette application incroyable et découvre de super endroits pour manger. Voici le lien pour télécharger l'app: [lien de l'app]",
+      "messagingAppError": "Impossible d'ouvrir l'application de messagerie.",
+      "research": "Des études montrent que ",
+      "stat": "85% des personnes ",
+      "share": "aiment partager des restaurants avec leur famille et leurs amis.",
+      "invite": "Invite 3 amis pour qu'ils ne se sentent pas exclus.",
+      "inviteButton": "Inviter"
+    },
+    "followFriends": {
+      "fetchError": "Impossible de récupérer les données utilisateur. Veuillez réessayer.",
+      "followError": "Impossible de suivre cet utilisateur.",
+      "title": "Regardez qui est déjà sur Shareables!",
+      "description": "Suivez-les pour commencer à recevoir des recommandations.",
+      "follow": "Suivre",
+      "searching": "Recherche de vos amis...",
+      "letsGo": "C'est parti!"
+    },
+    "letsGo": {
+      "startSharing": "Commencez à partager"
+    }
+  },
+  "settings": {
+    "mainSettings": {
+      "settings": "Paramètres",
+      "preferences": "Préférences",
+      "accountCenter": "Centre de compte",
+      "notifications": "Notifications",
+      "permissions": "Autorisations et confidentialité",
+      "feedback": "Retour",
+      "report": "Signaler des bugs",
+      "request": "Demander des fonctionnalités"
+    },
+    "accountSettings": {
+      "account": "Compte",
+      "personal": "Informations personnelles",
+      "edit": "Modifier le profil",
+      "login": "Connexion et sécurité",
+      "logout": "Se déconnecter",
+      "deactivate": "Désactiver le compte",
+      "logoutAlert": "Êtes-vous sûr de vouloir vous déconnecter?",
+      "logoutConfirm": "Oui, me déconnecter",
+      "logoutError": "Erreur de déconnexion",
+      "logoutErrorMessage": "Une erreur est survenue lors de la déconnexion. Veuillez réessayer.",
+      "deactivateError": "Aucun utilisateur n'est connecté ou email indisponible.",
+      "password": "Confirmation du mot de passe",
+      "passwordConfirm": "Veuillez saisir votre mot de passe pour confirmer la suppression du compte.",
+      "passwordError": "Le mot de passe est requis.",
+      "deactivateAccount": "Désactiver le compte",
+      "deactivateMessage": "Votre compte, vos publications, commentaires, likes et abonnements seront définitivement supprimés. Cette action est irréversible.",
+      "deactivateFail": "Échec de la suppression de votre compte. Veuillez réessayer.",
+      "reauthError": "Erreur de réauthentification",
+      "reauthMessage": "Mot de passe incorrect. Veuillez réessayer."
+    },
+    "editProfile": {
+      "noUser": "Aucun utilisateur trouvé. Veuillez vous reconnecter.",
+      "nearestCity": "Ville la plus proche",
+      "noData": "Données utilisateur introuvables.",
+      "firstNameError": "Le prénom est requis et ne peut contenir que des lettres.",
+      "citySelectError": "Vous devez sélectionner une ville.",
+      "phoneError": "Veuillez saisir un numéro de téléphone valide (chiffres uniquement).",
+      "bioError": "Votre bio contient un langage inapproprié.",
+      "updateError": "Échec de la sauvegarde de vos informations. Veuillez réessayer.",
+      "profileDetails": "Détails du profil",
+      "description": "Votre nom et votre bio seront visibles par les autres. Choisir une localisation personnalise votre fil d'actualité. Votre numéro de téléphone sera utilisé uniquement pour la vérification de compte ultérieure.",
+      "personalInfo": "Informations personnelles",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "phone": "Numéro de téléphone",
+      "profileInfo": "Informations du profil",
+      "bio": "Écrivez votre bio ici...",
+      "unsaved": "Vous avez des modifications non enregistrées",
+      "save": "Enregistrer"
+    },
+    "notificationSettings": {
+      "notifications": "Notifications",
+      "description": "Notre application envoie des notifications pour vous tenir informé des recommandations de vos amis et du statut de vos publications, afin que vous ne manquiez rien d'important.",
+      "allow": "Autoriser les notifications",
+      "preferences": "Préférences",
+      "reminders": "Rappels d'avis",
+      "followers": "Nouveaux abonnés",
+      "likes": "Likes sur vos publications",
+      "comments": "Commentaires sur vos publications",
+      "friend": "Publications d'amis",
+      "unsaved": "Vous avez des modifications non enregistrées",
+      "save": "Enregistrer"
+    },
+    "privacySettings": {
+      "privacy": "Confidentialité",
+      "description": "Notre application utilise votre localisation pour fournir des recommandations personnalisées et améliorer votre expérience en vous montrant un contenu pertinent. Nous utilisons vos photos pour créer une photo de profil et vous aider à partager vos expériences avec la communauté.",
+      "devicePermissions": "Autorisations de l'appareil",
+      "location": "Autoriser les services de localisation",
+      "photo": "Accès aux photos"
+    },
+    "reportBug": {
+      "fillError": "Veuillez remplir à la fois le titre et la description.",
+      "success": "Merci d'améliorer l'application!",
+      "failed": "Échec du signalement du bug.",
+      "bugReport": "Signalement de bug",
+      "description": "Signaler un bug nous aide à corriger rapidement les problèmes et à améliorer les performances de l'application pour une expérience plus fluide. Vos retours font une grande différence pour maintenir une bonne expérience pour vous et les autres!",
+      "title": "Titre",
+      "titleMessage": "ajoutez un titre",
+      "bugDescription": "Description",
+      "bugMessage": "expliquez-nous comment le problème s'est produit",
+      "unsaved": "Vous avez des modifications non enregistrées",
+      "report": "Signaler le bug"
+    },
+    "requestFeature": {
+      "fillError": "Veuillez remplir à la fois le nom et la raison",
+      "success": "Merci pour votre demande!",
+      "failed": "Échec de l'envoi de la demande",
+      "featureRequest": "Suggestion",
+      "description": "Vous avez une idée pour améliorer l'application? Faites-le nous savoir! Vos suggestions aident à façonner les futures mises à jour, en apportant des fonctionnalités qui vous importent et en améliorant l'expérience globale pour tous.",
+      "featureName": "Nom de la fonctionnalité",
+      "nameMessage": "ajoutez un nom pour la fonctionnalité",
+      "reason": "Raison",
+      "reasonMessage": "expliquez-nous comment cette fonctionnalité améliorerait votre expérience",
+      "unsaved": "Vous avez des modifications non enregistrées",
+      "request": "Soumettre"
+    }
   }
-  
+}

@@ -17,11 +17,13 @@ import { updateDoc, doc } from "firebase/firestore";
 import { useAuth } from "../../context/auth.context";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const LetsGoScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const { user, refreshUserProfile } = useAuth();
 
   const handleNext = async () => {
@@ -47,7 +49,7 @@ const LetsGoScreen = () => {
         onPress={handleNext}
         style={styles.letsGoButton}
       >
-        <Text style={styles.letsGoText}>Start Sharing</Text>
+        <Text style={styles.letsGoText}>{t("login.letsGo.startSharing")}</Text>
       </TouchableOpacity>
     </View>
   );

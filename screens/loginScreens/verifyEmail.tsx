@@ -18,12 +18,14 @@ import Colors from "../../utils/colors";
 import { MailWarning, RotateCw } from "lucide-react-native";
 import { auth } from "../../firebase/firebaseConfig";
 import { sendEmailVerification } from "firebase/auth";
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get("window");
 const { height } = Dimensions.get("window");
 
 export default function VerifyEmailScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [isSending, setIsSending] = useState(false); // State to track resend email process
 
   const navigateToLogin = () => {
@@ -39,13 +41,13 @@ export default function VerifyEmailScreen() {
       const user = auth.currentUser;
       if (user) {
         await sendEmailVerification(user);
-        Alert.alert("Email Sent", "A verification email has been resent.");
+        Alert.alert(t("login.verifyEmail.emailSent"), t("login.verifyEmail.emailSentMessage"));
       } else {
-        Alert.alert("Error", "No user is currently signed in.");
+        Alert.alert(t("general.error"), t("general.noUserError"));
       }
     } catch (error: any) {
       console.error("Resend email error:", error);
-      Alert.alert("Error", error.message);
+      Alert.alert(t("general.error"), error.message);
     }
     setIsSending(false); // Re-enable button after sending
   };
@@ -58,10 +60,8 @@ export default function VerifyEmailScreen() {
       <View style={styles.iconContainer}>
         <MailWarning size={width * 0.15} color={Colors.text} />
       </View>
-      <Text style={styles.title}>Verify Your Email</Text>
-      <Text style={styles.description}>
-        We have sent you a verification email to confirm your information.
-      </Text>
+      <Text style={styles.title}>{t("login.verifyEmail.verify")}</Text>
+      <Text style={styles.description}>{t("login.verifyEmail.description")}</Text>
 
       {/* Resend Verification Email Button */}
       <View style={styles.resendButtonContainer}>
@@ -71,10 +71,10 @@ export default function VerifyEmailScreen() {
           disabled={isSending} // Disable button while sending
         >
           <Text style={styles.resendButtonText}>
-            {isSending ? "Sending..." : (
+            {isSending ? t("login.verifyEmail.sending") : (
               <>
                 <RotateCw size={width * 0.04} color={Colors.text} style={{marginRight: width * 0.01}} />
-                {"Resend Email"}
+                {t("login.verifyEmail.resend")}
               </>
             )}
           </Text>
@@ -88,7 +88,7 @@ export default function VerifyEmailScreen() {
           onPress={navigateToLogin}
           activeOpacity={1}
         >
-          <Text style={styles.nextButtonText}>Go to Login</Text>
+          <Text style={styles.nextButtonText}>{t("login.verifyEmail.login")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

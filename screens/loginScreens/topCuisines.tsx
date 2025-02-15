@@ -19,11 +19,13 @@ import { doc, setDoc, getDoc } from "firebase/firestore";
 import { CircleArrowLeft } from "lucide-react-native";
 import { useAuth } from "../../context/auth.context";
 import { tagsData } from "../../config/constants";
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const TopCuisinesScreen = () => {
   const { user, refreshUserProfile } = useAuth();
+  const {t} = useTranslation();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [firstName, setFirstName] = useState("there");
@@ -81,7 +83,7 @@ const TopCuisinesScreen = () => {
 
   const handleNextStep = async () => {
     if (selectedTags.length < 5) {
-      Alert.alert("Selection Error", "Please select at least 5 tags.");
+      Alert.alert(t("login.topCuisines.selectionError"), t("login.topCuisines.selectionErrorMessage"));
       return;
     }
 
@@ -95,7 +97,7 @@ const TopCuisinesScreen = () => {
       navigation.navigate("InviteContacts");
     } catch (error) {
       console.error("Firestore Error:", error);
-      Alert.alert("Update Failed", "Failed to save your favorite cuisines.");
+      Alert.alert(t("general.updateFail"), t("login.topCuisines.saveFail"));
     }
   };
   
@@ -117,9 +119,9 @@ const TopCuisinesScreen = () => {
 
       {/* Main Message */}
       <Text style={styles.title}>
-        <Text style={styles.nameText}>{firstName},</Text> our goal is to help you find amazing, unique places to eat.
+        <Text style={styles.nameText}>{firstName},</Text> {t("login.topCuisines.title")}
       </Text>
-      <Text style={styles.description}>Choose 5 to 10 of your favorite tags.</Text>
+      <Text style={styles.description}>{t("login.topCuisines.choose")}</Text>
 
       {/* Tag Category Buttons */}
       <View style={styles.tagContainer}>
@@ -128,21 +130,21 @@ const TopCuisinesScreen = () => {
           onPress={() => handleCategoryPress("cuisines")}
           activeOpacity={0.7}
         >
-          <Text style={styles.tagType}>Cuisine</Text>
+          <Text style={styles.tagType}>{t("login.topCuisines.cuisine")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tagTypeTitle, activeCategory === "foodOccasions" && styles.activeTagButton]}
           onPress={() => handleCategoryPress("foodOccasions")}
           activeOpacity={0.7}
         >
-          <Text style={styles.tagType}>Occasion</Text>
+          <Text style={styles.tagType}>{t("login.topCuisines.occasion")}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tagTypeTitle, activeCategory === "restaurantVibes" && styles.activeTagButton]}
           onPress={() => handleCategoryPress("restaurantVibes")}
           activeOpacity={0.7}
         >
-          <Text style={styles.tagType}>Atmosphere</Text>
+          <Text style={styles.tagType}>{t("login.topCuisines.atmosphere")}</Text>
         </TouchableOpacity>
       </View>
 
@@ -159,7 +161,7 @@ const TopCuisinesScreen = () => {
       {/* Next Step Button */}
       <View style={styles.nextButtonContainer}>
         <TouchableOpacity style={styles.nextButton} onPress={handleNextStep} activeOpacity={1}>
-          <Text style={styles.nextButtonText}>Next Step</Text>
+          <Text style={styles.nextButtonText}>{t("general.nextStep")}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -20,12 +20,14 @@ import Colors from "../../utils/colors";
 import { auth } from "../../firebase/firebaseConfig";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { Fonts } from "../../utils/fonts";
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get("window");
 const { height } = Dimensions.get("window");
 
 export default function SignUpScreen() {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const {t} = useTranslation();
   const [email, setEmail] = useState(""); // Only email input now
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -35,7 +37,7 @@ export default function SignUpScreen() {
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
-      Alert.alert("Passwords do not match", "Please make sure your passwords match.");
+      Alert.alert(t("login.signUp.passwordMatch"), t("login.signUp.passwordMatchMessage"));
       return;
     }
 
@@ -46,7 +48,7 @@ export default function SignUpScreen() {
       navigation.navigate("VerifyEmail");
     } catch (error: any) {
       console.error(error);
-      Alert.alert("Sign Up Failed", error.message);
+      Alert.alert(t("login.signUp.signUpFail"), error.message);
     }
   };
 
@@ -57,7 +59,7 @@ export default function SignUpScreen() {
 
         {/* Cancel Button */}
         <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.navigate("Login")}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
+          <Text style={styles.cancelButtonText}>{t("general.cancel")}</Text>
         </TouchableOpacity>
 
         <View style={styles.logoContainer}>
@@ -68,14 +70,14 @@ export default function SignUpScreen() {
           />
         </View>
 
-        <Text style={styles.title}>Create Your Account</Text>
+        <Text style={styles.title}>{t("login.signUp.create")}</Text>
 
         <View style={styles.contentContainer}>
           {/* Email Input */}
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Email"
+              placeholder={t("login.signUp.email")}
               placeholderTextColor={Colors.placeholderText}
               selectionColor={Colors.placeholderText}
               onChangeText={setEmail}
@@ -89,7 +91,7 @@ export default function SignUpScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={[styles.input, styles.passwordInput]}
-              placeholder="Password"
+              placeholder={t("login.signUp.password")}
               secureTextEntry={!passwordIsVisible}
               placeholderTextColor={Colors.placeholderText}
               selectionColor={Colors.placeholderText}
@@ -112,7 +114,7 @@ export default function SignUpScreen() {
           <View style={styles.inputContainer}>
             <TextInput
               style={[styles.input, styles.passwordInput]}
-              placeholder="Confirm Password"
+              placeholder={t("login.signUp.confirm")}
               secureTextEntry={!confirmPasswordIsVisible}
               placeholderTextColor={Colors.placeholderText}
               selectionColor={Colors.placeholderText}
@@ -142,7 +144,7 @@ export default function SignUpScreen() {
               onPress={handleSignUp}
               activeOpacity={1}
             >
-              <Text style={styles.nextButtonText}>Next Step</Text>
+              <Text style={styles.nextButtonText}>{t("general.nextStep")}</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -147,34 +147,37 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   const handleLike = async () => {
     const newIsLiked = !optimisticIsLiked;
-
-    // Optimistically update UI
+    // Optimistically update the like state and count immediately
     setOptimisticIsLiked(newIsLiked);
-
+    setRealTimeLikeCount((prev) => (newIsLiked ? prev + 1 : prev - 1));
+  
     if (user) {
       if (newIsLiked) {
         toggleLike(
-          { postId: postId, userId: user.uid },
+          { postId, userId: user.uid },
           {
             onError: () => {
               // Revert optimistic update on error
               setOptimisticIsLiked(!newIsLiked);
+              setRealTimeLikeCount((prev) => prev - 1);
             },
           }
         );
       } else {
         removeLike(
-          { postId: postId, userId: user.uid },
+          { postId, userId: user.uid },
           {
             onError: () => {
               // Revert optimistic update on error
               setOptimisticIsLiked(!newIsLiked);
+              setRealTimeLikeCount((prev) => prev + 1);
             },
           }
         );
       }
     }
   };
+  
 
   const handleScroll = (event: {
     nativeEvent: { contentOffset: { x: any } };
