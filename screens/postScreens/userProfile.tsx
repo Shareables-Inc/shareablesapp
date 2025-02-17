@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -25,38 +25,76 @@ import { RootStackParamList } from "../../types/navigation.types";
 import Colors from "../../utils/colors";
 import { StatusBar } from "expo-status-bar";
 import { Fonts } from "../../utils/fonts";
-import { CircleArrowLeft, CircleCheck, NotepadText, Ellipsis, UserX, CircleAlert, Send } from "lucide-react-native";
+import {
+  CircleArrowLeft,
+  CircleCheck,
+  NotepadText,
+  Ellipsis,
+  UserX,
+  CircleAlert,
+  Send,
+} from "lucide-react-native";
 import {
   useFollowingActions,
   useUserCounts,
 } from "../../hooks/useUserFollowing";
 import { useUserGetByUid } from "../../hooks/useUser";
-import { usePostsByUser } from "../../hooks/usePost";
+// Updated hook for infinite paginated posts:
+import { usePostsByUser, useNumberOfPosts } from "../../hooks/usePost";
 import { Post } from "../../models/post";
 import { Timestamp } from "firebase/firestore";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
 import { useAuth } from "../../context/auth.context";
-import { sendReportToJira } from '../../helpers/userReport';
+import { sendReportToJira } from "../../helpers/userReport";
 import { useIsUserBlocked, useBlockActions } from "../../hooks/useUserBlocks";
 import { useTranslation } from "react-i18next";
-
-
 
 const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = 100;
 
 const UserProfileScreen = () => {
   const { user } = useAuth();
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const route = useRoute<RouteProp<RootStackParamList, "UserProfile">>();
   const { userId: postUserId } = route.params;
-  const posts = usePostsByUser(postUserId);
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
 
-  const { data: userData, isLoading: userDataLoading } = useUserGetByUid(postUserId);
-  const { data: userCounts, isLoading: countsLoading, refetch: refetchUserCounts } = useUserCounts(postUserId);
-  const { isFollowing, isToggling, toggleFollow } = useFollowingActions(postUserId, user!.uid);
+  // Use the infinite paginated posts hook
+  const {
+    data: postsData,
+    isLoading: postsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchPosts,
+  } = usePostsByUser(postUserId);
+
+  // Combine pages into a single array for display (top picks, grid, etc.)
+  const postsArray = useMemo(
+    () => postsData?.pages.flatMap((page) => page.posts) ?? [],
+    [postsData]
+  );
+
+  // Use a separate hook to fetch the total number of reviews for the user
+  const {
+    data: totalReviewCount,
+    isLoading: numberLoading,
+    refetch: refetchNumber,
+  } = useNumberOfPosts(postUserId);
+
+  const { data: userData, isLoading: userDataLoading } = useUserGetByUid(
+    postUserId
+  );
+  const {
+    data: userCounts,
+    isLoading: countsLoading,
+    refetch: refetchUserCounts,
+  } = useUserCounts(postUserId);
+  const { isFollowing, isToggling, toggleFollow } = useFollowingActions(
+    postUserId,
+    user!.uid
+  );
 
   const [isHeaderVisible, setHeaderVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,10 +102,11 @@ const UserProfileScreen = () => {
   const [isBottomSheetVisible, setBottomSheetVisible] = useState(false);
   const [isReportModalVisible, setReportModalVisible] = useState(false);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
-  const { data: isBlocked, isLoading: isBlockedLoading } = useIsUserBlocked(user!.uid, postUserId);
+  const { data: isBlocked, isLoading: isBlockedLoading } = useIsUserBlocked(
+    user!.uid,
+    postUserId
+  );
   const { toggleBlock, isBlocking } = useBlockActions(user!.uid, postUserId);
-
-
 
   const reportOptions = [
     t("profile.userProfile.inappropriate"),
@@ -81,23 +120,36 @@ const UserProfileScreen = () => {
     t("profile.userProfile.privacy"),
     t("profile.userProfile.scam"),
   ];
-  
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    {
-      useNativeDriver: false,
-      listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        setHeaderVisible(offsetY > HEADER_HEIGHT);
-      },
-    }
+  // Combined scroll handler to update header visibility and trigger infinite scroll
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      setHeaderVisible(offsetY > HEADER_HEIGHT);
+
+      const { layoutMeasurement, contentOffset, contentSize } =
+        event.nativeEvent;
+      const paddingToBottom = 20;
+      if (
+        layoutMeasurement.height + contentOffset.y >=
+          contentSize.height - paddingToBottom &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
   );
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchUserCounts(), posts.refetch()]);
+      await Promise.all([
+        refetchUserCounts(),
+        refetchPosts(),
+        refetchNumber(),
+      ]);
     } catch (error) {
       console.error("Error refreshing profile:", error);
     } finally {
@@ -108,19 +160,20 @@ const UserProfileScreen = () => {
   const handleToggleFollow = async () => {
     try {
       await toggleFollow();
-      refetchUserCounts(); 
+      refetchUserCounts();
     } catch (error) {
       console.error("Error toggling follow state:", error);
     }
   };
 
-  const { topPosts, recentPosts, reviewCount } = useMemo(() => {
-    if (!posts.data) return { topPosts: [], recentPosts: [], reviewCount: 0 };
-    const sortedByRating = [...posts.data].sort(
+  // Compute top and recent posts from the loaded posts
+  const { topPosts, recentPosts } = useMemo(() => {
+    if (postsArray.length === 0) return { topPosts: [], recentPosts: [] };
+    const sortedByRating = [...postsArray].sort(
       (a, b) =>
         Number(b.ratings?.overall || 0) - Number(a.ratings?.overall || 0)
     );
-    const sortedByDate = [...posts.data].sort((a, b) => {
+    const sortedByDate = [...postsArray].sort((a, b) => {
       const aTime =
         a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
       const bTime =
@@ -130,9 +183,8 @@ const UserProfileScreen = () => {
     return {
       topPosts: sortedByRating.slice(0, 5),
       recentPosts: sortedByDate,
-      reviewCount: posts.data.length,
     };
-  }, [posts]);
+  }, [postsArray]);
 
   const navigateToExpandedPost = (post: Post) => {
     navigation.navigate("ExpandedPost", {
@@ -153,17 +205,18 @@ const UserProfileScreen = () => {
           text: isBlocked ? t("profile.userProfile.unblock") : t("profile.userProfile.block"),
           onPress: async () => {
             try {
-              if (!isBlocked) {
-                // If blocking, also unfollow the user
-                if (isFollowing) {
-                  await toggleFollow(); // Unfollow the user
-                }
+              if (!isBlocked && isFollowing) {
+                await toggleFollow();
               }
-              await toggleBlock(); // Block or unblock the user
+              await toggleBlock();
               Alert.alert(
-                isBlocked ? t("profile.userProfile.userUnblocked") : t("profile.userProfile.userBlocked"),
+                isBlocked
+                  ? t("profile.userProfile.userUnblocked")
+                  : t("profile.userProfile.userBlocked"),
                 `${t("profile.userProfile.successfully")} ${
-                  isBlocked ? t("profile.userProfile.unblocked") : t("profile.userProfile.blocked")
+                  isBlocked
+                    ? t("profile.userProfile.unblocked")
+                    : t("profile.userProfile.blocked")
                 } ${t("profile.userProfile.user")}`
               );
             } catch (error) {
@@ -175,8 +228,6 @@ const UserProfileScreen = () => {
       ]
     );
   };
-  
-  
 
   const handleReportUser = () => {
     setBottomSheetVisible(false);
@@ -187,12 +238,15 @@ const UserProfileScreen = () => {
     if (selectedReason) {
       const reportTitle = `User Report: ${userData?.username || "Unknown User"}`;
       const reportDescription = `Report Reason: ${selectedReason}\nReported User: @${userData?.username}`;
-  
+
       try {
         await sendReportToJira(reportTitle, reportDescription);
-        Alert.alert(t("profile.userProfile.reportSent"), t("profile.userProfile.reportSentMessage"));
+        Alert.alert(
+          t("profile.userProfile.reportSent"),
+          t("profile.userProfile.reportSentMessage")
+        );
         setReportModalVisible(false);
-        setSelectedReason(null); // Reset selection
+        setSelectedReason(null);
       } catch (error) {
         console.error("Error sending report:", error);
         Alert.alert(t("general.error"), t("profile.userProfile.reportFail"));
@@ -201,10 +255,8 @@ const UserProfileScreen = () => {
       Alert.alert(t("general.error"), t("profile.userProfile.reasonError"));
     }
   };
-  
-  
 
-  const renderReportOptions = () => (
+  const renderReportOptions = () =>
     reportOptions.map((option, index) => (
       <TouchableOpacity
         key={index}
@@ -212,71 +264,88 @@ const UserProfileScreen = () => {
         onPress={() => setSelectedReason(option)}
         activeOpacity={1}
       >
-        <View style={[styles.radioCircle, selectedReason === option && styles.selectedRadio]}>
-          {selectedReason === option && <View style={styles.radioInnerCircle} />}
+        <View
+          style={[
+            styles.radioCircle,
+            selectedReason === option && styles.selectedRadio,
+          ]}
+        >
+          {selectedReason === option && (
+            <View style={styles.radioInnerCircle} />
+          )}
         </View>
         <Text style={styles.reportOptionText}>{option}</Text>
       </TouchableOpacity>
-    ))
+    ));
+
+  // Masonry Grid Layout for reviews
+  const columnCount = 2;
+  const columnWidth = (width * 0.89) / columnCount;
+  const columnItems = Array.from({ length: columnCount }, () => []);
+
+  recentPosts.forEach((post, index) => {
+    columnItems[index % columnCount].push(post);
+  });
+
+  const renderColumn = (items, columnIndex) => (
+    <View style={{ flex: 1, marginHorizontal: 5 }}>
+      {items.map((post, index) => {
+        const isOddColumn = columnIndex % 2 !== 0;
+        const imageHeight = isOddColumn
+          ? index % 3 === 0
+            ? 150
+            : index % 3 === 1
+            ? 200
+            : 250
+          : index % 3 === 0
+          ? 250
+          : index % 3 === 1
+          ? 200
+          : 150;
+        return (
+          <TouchableOpacity
+            key={index}
+            style={{ marginBottom: 10 }}
+            onPress={() => navigateToExpandedPost(post)}
+            activeOpacity={1}
+          >
+            <FastImage
+              source={{ uri: post.imageUrls[0] }}
+              style={{
+                width: columnWidth,
+                height: imageHeight,
+                borderRadius: 10,
+                marginTop: 5,
+              }}
+            />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text
+                style={styles.restaurantNameReview}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {post.establishmentDetails.name}
+              </Text>
+              <Text style={styles.dash}> - </Text>
+              <Text style={styles.scoreReview}>{post.ratings.overall}</Text>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
-  
-    // Custom Masonry Grid layout
-    const columnCount = 2;
-    const columnWidth = (width * 0.89) / columnCount;
-    const columnItems = Array.from({ length: columnCount }, () => []);
-  
-    recentPosts.forEach((post, index) => {
-      columnItems[index % columnCount].push(post);
-    });
 
-  const renderColumn = (items, columnIndex) => {
-    return (
-      <View style={{ flex: 1, marginHorizontal: 5 }}>
-        {items.map((post, index) => {
-          const isOddColumn = columnIndex % 2 !== 0;
-          const imageHeight = isOddColumn
-            ? (index % 3 === 0 ? 150 : index % 3 === 1 ? 200 : 250)
-            : (index % 3 === 0 ? 250 : index % 3 === 1 ? 200 : 150);
-
-          return (
-            <TouchableOpacity
-              key={index}
-              style={{ marginBottom: 10 }}
-              onPress={() => navigateToExpandedPost(post)}
-              activeOpacity={1}
-            >
-              <FastImage
-                source={{ uri: post.imageUrls[0] }}
-                style={{
-                  width: columnWidth,
-                  height: imageHeight,
-                  borderRadius: 10,
-                  marginTop: 5,
-                }}
-              />
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text
-                  style={styles.restaurantNameReview}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {post.establishmentDetails.name}
-                </Text>
-                <Text style={styles.dash}> - </Text>
-                <Text style={styles.scoreReview}>{post.ratings.overall}</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
-  
-
-  if (userDataLoading || countsLoading) {
+  // Show the skeleton while any key data is still loading
+  if (
+    userDataLoading ||
+    countsLoading ||
+    postsLoading ||
+    numberLoading ||
+    isBlockedLoading
+  ) {
     return <SkeletonUserProfile />;
   }
-  
+
   return (
     <>
       {isHeaderVisible && (
@@ -301,7 +370,7 @@ const UserProfileScreen = () => {
         }
       >
         <StatusBar style="auto" />
-  
+
         {/* Top Bar */}
         <View style={styles.topBar}>
           <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={1}>
@@ -311,10 +380,14 @@ const UserProfileScreen = () => {
             onPress={() => setBottomSheetVisible(true)}
             activeOpacity={1}
           >
-            <Ellipsis color={Colors.text} size={28} style={{ marginLeft: width * 0.75 }} />
+            <Ellipsis
+              color={Colors.text}
+              size={28}
+              style={{ marginLeft: width * 0.75 }}
+            />
           </TouchableOpacity>
         </View>
-  
+
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.detailsSection}>
@@ -335,12 +408,15 @@ const UserProfileScreen = () => {
                   }
                 >
                   <Text style={styles.ovalText}>
-                    {userCounts?.followerCount}{t("profile.userProfile.followers")}
+                    {userCounts?.followerCount}
+                    {t("profile.userProfile.followers")}
                   </Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.followerOval}>
-                <Text style={styles.ovalText}>{reviewCount} {t("profile.userProfile.reviews")}</Text>
+                <Text style={styles.ovalText}>
+                  {totalReviewCount} {t("profile.userProfile.reviews")}
+                </Text>
               </View>
             </View>
           </View>
@@ -363,41 +439,45 @@ const UserProfileScreen = () => {
                 disabled={isToggling}
               >
                 {isToggling ? (
-                  <ActivityIndicator color={Colors.background} />
+                  <ActivityIndicator color={Colors.tags} />
                 ) : isFollowing ? (
                   <CircleCheck color={Colors.background} size={22} />
                 ) : (
-                  <Text style={styles.followButtonText}>{t("profile.userProfile.follow")}</Text>
+                  <Text style={styles.followButtonText}>
+                    {t("profile.userProfile.follow")}
+                  </Text>
                 )}
               </TouchableOpacity>
             )}
           </View>
         </View>
-  
+
         {/* Bio Section */}
         <View style={styles.bioContainer}>
           <Text style={styles.bioText}>
             {userData?.bio ? userData.bio : ""}
           </Text>
         </View>
-  
+
         {/* Conditional Rendering for Blocked or Unblocked State */}
         {isBlocked ? (
-          // Blocked State
           <View style={styles.noReviewContainer}>
             <View style={styles.iconContainer}>
               <UserX color={Colors.background} size={width * 0.08} />
             </View>
-            <Text style={styles.noReviewText}>{t("profile.userProfile.blockedMessage")}</Text>
+            <Text style={styles.noReviewText}>
+              {t("profile.userProfile.blockedMessage")}
+            </Text>
           </View>
         ) : (
-          // Unblocked State
           <>
-            {reviewCount > 0 ? (
+            {totalReviewCount > 0 ? (
               <>
                 {/* Top Picks */}
                 <View style={styles.featuredGalleryContainer}>
-                  <Text style={styles.featuredGalleryText}>{t("profile.userProfile.topPicks")}</Text>
+                  <Text style={styles.featuredGalleryText}>
+                    {t("profile.userProfile.topPicks")}
+                  </Text>
                   <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -438,12 +518,14 @@ const UserProfileScreen = () => {
                   </ScrollView>
                   <View style={styles.separator} />
                 </View>
-  
+
                 {/* All Reviews */}
                 <View style={styles.remainingReviewsContainer}>
-                  <Text style={styles.remainingReviewsText}>{t("profile.userProfile.allReviews")}</Text>
+                  <Text style={styles.remainingReviewsText}>
+                    {t("profile.userProfile.allReviews")}
+                  </Text>
                 </View>
-  
+
                 {/* Posts Grid */}
                 <View style={styles.gridGallery}>
                   {columnItems.map((items, index) => (
@@ -454,15 +536,23 @@ const UserProfileScreen = () => {
                 </View>
               </>
             ) : (
-              // No Reviews State
               <View style={styles.noReviewContainer}>
                 <View style={styles.iconContainer}>
                   <NotepadText color={Colors.noReviews} size={width * 0.08} />
                 </View>
-                <Text style={styles.noReviewText}>{t("profile.userProfile.noReviews")}</Text>
+                <Text style={styles.noReviewText}>
+                  {t("profile.userProfile.noReviews")}
+                </Text>
               </View>
             )}
           </>
+        )}
+        {isFetchingNextPage && (
+          <ActivityIndicator
+            size="large"
+            color={Colors.tags}
+            style={{ margin: 20 }}
+          />
         )}
       </ScrollView>
 
@@ -485,7 +575,9 @@ const UserProfileScreen = () => {
             >
               <UserX color={Colors.text} size={20} />
               <Text style={styles.optionText}>
-                {isBlocked ? t("profile.userProfile.unblockUser") : t("profile.userProfile.blockUser")}
+                {isBlocked
+                  ? t("profile.userProfile.unblockUser")
+                  : t("profile.userProfile.blockUser")}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -493,30 +585,31 @@ const UserProfileScreen = () => {
               onPress={handleReportUser}
             >
               <CircleAlert color={Colors.text} size={20} />
-              <Text style={styles.optionText}>{t("profile.userProfile.reportUser")}</Text>
+              <Text style={styles.optionText}>
+                {t("profile.userProfile.reportUser")}
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
       </Modal>
-
 
       {/* Report Reasons Modal */}
       <Modal
         transparent
         visible={isReportModalVisible}
         animationType="slide"
-        onRequestClose={() => setReportModalVisible(false)} // Handles back button behavior on Android
+        onRequestClose={() => setReportModalVisible(false)}
       >
-        {/* Overlay for clicking outside to dismiss */}
         <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
-          onPress={() => setReportModalVisible(false)} // Closes modal on outside click
+          onPress={() => setReportModalVisible(false)}
         >
-          {/* Prevent closing when interacting with modal content */}
           <TouchableWithoutFeedback>
             <View style={styles.reportModal}>
-              <Text style={styles.reportTitle}>{t("profile.userProfile.report")}</Text>
+              <Text style={styles.reportTitle}>
+                {t("profile.userProfile.report")}
+              </Text>
               <Text style={styles.reportDescription}>
                 {t("profile.userProfile.title")}
               </Text>
@@ -530,13 +623,14 @@ const UserProfileScreen = () => {
                 activeOpacity={1}
               >
                 <Send color={Colors.text} size={20} />
-                <Text style={styles.sendReportButtonText}>{t("profile.userProfile.sendReport")}</Text>
+                <Text style={styles.sendReportButtonText}>
+                  {t("profile.userProfile.sendReport")}
+                </Text>
               </TouchableOpacity>
             </View>
           </TouchableWithoutFeedback>
         </TouchableOpacity>
       </Modal>
-
     </>
   );
 };

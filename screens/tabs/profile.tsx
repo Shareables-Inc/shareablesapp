@@ -1,55 +1,106 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Animated,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
   Alert,
-  Platform,
   NativeSyntheticEvent,
   NativeScrollEvent,
-  RefreshControl,
+  StyleSheet,
+  Platform
 } from "react-native";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/stackParams.types";
 import Colors from "../../utils/colors";
 import { StatusBar } from "expo-status-bar";
-import { Fonts } from "../../utils/fonts";
-import { auth, db, storage } from "../../firebase/firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
-import * as ImagePicker from "expo-image-picker";
 import { Menu, NotepadText, SquarePen } from "lucide-react-native";
-import { useAuth } from "../../context/auth.context";
-import { usePostsByUser } from "../../hooks/usePost";
-import { useUserCounts } from "../../hooks/useUserFollowing";
+import { auth, db, storage } from "../../firebase/firebaseConfig";
 import { useUserGetByUid } from "../../hooks/useUser";
-import { Timestamp } from "firebase/firestore";
+import { usePostsByUser, useNumberOfPosts } from "../../hooks/usePost";
+import { useUserCounts } from "../../hooks/useUserFollowing";
 import SkeletonUserProfile from "../../components/skeleton/skeletonProfile";
 import FastImage from "react-native-fast-image";
-import * as ImageManipulator from "expo-image-manipulator";
+import { doc, setDoc, Timestamp } from "firebase/firestore";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "../../context/auth.context";
+import { Fonts } from "../../utils/fonts";
+import type {Post} from "../../models/post";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as ImagePicker from "expo-image-picker";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+
 
 const { width, height } = Dimensions.get("window");
-
 const HEADER_HEIGHT = height * 0.12;
 
 const ProfileScreen = () => {
-  const userId = auth.currentUser?.uid; // Retrieve the current user's UID
-  const { data: userProfile, isLoading: userLoading } = useUserGetByUid(userId!); // Fetch user profile with real-time updates
-  const posts = usePostsByUser(userId!);
-  const { data: userCounts, isLoading: countsLoading, refetch: refetchUserCounts } = useUserCounts(userId!);
+  // All hooks are called unconditionally at the top
+  const userId = auth.currentUser?.uid;
+  const { t } = useTranslation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const { data: userProfile, isLoading: userLoading } = useUserGetByUid(userId!);
+  const {
+    data: postsData,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    refetch: refetchPosts,
+  } = usePostsByUser(userId!);
+  const postsArray: Post[] = useMemo(
+    () => postsData?.pages.flatMap((page) => page.posts) ?? [],
+    [postsData]
+  );
+  const {
+    data: totalReviewCount,
+    isLoading: numberLoading,
+    refetch: refetchNumber,
+  } = useNumberOfPosts(userId!);
+  const {
+    data: userCounts,
+    isLoading: countsLoading,
+    refetch: refetchUserCounts,
+  } = useUserCounts(userId!);
+  const { isFollowing, isToggling, toggleFollow } = useAuth().user
+    ? { isFollowing: false, isToggling: false, toggleFollow: async () => {} }
+    : { isFollowing: false, isToggling: false, toggleFollow: async () => {} };
+
   const [refreshing, setRefreshing] = useState(false);
-  const {t} = useTranslation();
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const [isHeaderVisible, setHeaderVisible] = useState(false);
+  const [updatedProfilePicture, setUpdatedProfilePicture] = useState<string | null>(null);
+
+  // Define the scroll handler
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      setHeaderVisible(offsetY > HEADER_HEIGHT);
+      const { layoutMeasurement, contentOffset, contentSize } = event.nativeEvent;
+      const paddingToBottom = 20;
+      if (
+        layoutMeasurement.height + contentOffset.y >=
+          contentSize.height - paddingToBottom &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
+      }
+    },
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      // Refetch user profile data, user counts, and posts
-      await Promise.all([refetchUserCounts(), posts.refetch()]);
+      await Promise.all([
+        refetchUserCounts(),
+        refetchPosts(),
+        refetchNumber(),
+      ]);
     } catch (error) {
       console.error("Error refreshing profile:", error);
       Alert.alert(t("general.error"), t("profile.profile.refreshError"));
@@ -57,44 +108,81 @@ const ProfileScreen = () => {
       setRefreshing(false);
     }
   };
-   
 
-  const { topPosts, recentPosts, reviewCount } = useMemo(() => {
-    if (!posts.data) return { topPosts: [], recentPosts: [], reviewCount: 0 };
-    const sortedByRating = [...posts.data].sort(
+  const { topPosts, recentPosts } = useMemo(() => {
+    if (postsArray.length === 0) return { topPosts: [] as Post[], recentPosts: [] as Post[] };
+    const sortedByRating = [...postsArray].sort(
       (a, b) =>
         Number(b.ratings?.overall || 0) - Number(a.ratings?.overall || 0)
     );
-    const sortedByDate = [...posts.data].sort((a, b) => {
-      const aTime =
-        a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
-      const bTime =
-        b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
+    const sortedByDate = [...postsArray].sort((a, b) => {
+      const aTime = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : 0;
+      const bTime = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : 0;
       return bTime - aTime;
     });
     return {
       topPosts: sortedByRating.slice(0, 5),
       recentPosts: sortedByDate,
-      reviewCount: posts.data.length,
     };
-  }, [posts]);
+  }, [postsArray]);
 
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [isHeaderVisible, setHeaderVisible] = useState(false);
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const [updatedProfilePicture, setUpdatedProfilePicture] = useState<
-    string | null
-  >(null);
+  
 
-  const handleScroll = Animated.event(
-    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    {
-      useNativeDriver: false,
-      listener: (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const offsetY = event.nativeEvent.contentOffset.y;
-        setHeaderVisible(offsetY > HEADER_HEIGHT);
-      },
-    }
+  const navigateToExpandedPost = (post: Post) => {
+    navigation.navigate("ExpandedPost", { postId: post.id });
+  };
+
+  const columnCount = 2;
+  const columnWidth = (width * 0.89) / columnCount;
+  // Explicitly type columnItems as Post[][]
+  const columnItems: Post[][] = Array.from({ length: columnCount }, () => []);
+  recentPosts.forEach((post, index) => {
+    columnItems[index % columnCount].push(post);
+  });
+
+  const renderColumn = (items: Post[], columnIndex: number) => (
+    <View style={{ flex: 1, marginHorizontal: 5 }}>
+      {items.map((post, index) => {
+        const isOddColumn = columnIndex % 2 !== 0;
+        const imageHeight =
+          isOddColumn
+            ? index % 3 === 0
+              ? 150
+              : index % 3 === 1
+              ? 200
+              : 250
+            : index % 3 === 0
+            ? 250
+            : index % 3 === 1
+            ? 200
+            : 150;
+        return (
+          <TouchableOpacity
+            key={post.id}
+            style={{ marginBottom: 10 }}
+            onPress={() => navigateToExpandedPost(post)}
+            activeOpacity={1}
+          >
+            <FastImage
+              source={{ uri: post.imageUrls[0] }}
+              style={{
+                width: columnWidth,
+                height: imageHeight,
+                borderRadius: 10,
+                marginTop: 5,
+              }}
+            />
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={styles.restaurantNameReview} numberOfLines={1} ellipsizeMode="tail">
+                {post.establishmentDetails.name}
+              </Text>
+              <Text style={styles.dash}> - </Text>
+              <Text style={styles.scoreReview}>{post.ratings.overall}</Text>
+            </View>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
   );
 
   const uploadImage = async (uri: string) => {
@@ -194,91 +282,9 @@ const ProfileScreen = () => {
     })();
   }, []);
 
-  const navigateToExpandedPost = (post) => {
-    navigation.navigate("ExpandedPost", {
-      postId: post.id,
-    });
-  };
 
-  if (posts.isLoading || !userProfile) {
-    return <SkeletonUserProfile />;
-  }
-
-  // Custom Masonry Grid layout
-  const columnCount = 2;
-  const columnWidth = (width * 0.89) / columnCount;
-  const columnItems = Array.from({ length: columnCount }, () => []);
-
-  recentPosts.forEach((post, index) => {
-    // Alternate assigning posts to different columns
-    columnItems[index % columnCount].push(post as never);
-  });
-
-  const renderColumn = (items, columnIndex) => {
-    return (
-      <View style={{ flex: 1, marginHorizontal: 5 }}>
-        {items.map((post, index) => {
-          const isOddColumn = columnIndex % 2 !== 0;
-          const imageHeight = isOddColumn
-            ? index % 3 === 0
-              ? 150
-              : index % 3 === 1
-              ? 200
-              : 250
-            : index % 3 === 0
-            ? 250
-            : index % 3 === 1
-            ? 200
-            : 150;
-
-          return (
-            <TouchableOpacity
-              key={index}
-              style={{ marginBottom: 10 }}
-              onPress={() => navigateToExpandedPost(post)}
-              activeOpacity={1}
-            >
-              <FastImage
-                source={{ uri: post.imageUrls[0] }}
-                style={{
-                  width: columnWidth,
-                  height: imageHeight,
-                  borderRadius: 10,
-                  marginTop: 5,
-                }}
-              />
-              {/* Corrected View with flexDirection: 'row' */}
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Text
-                  style={[styles.restaurantNameReview]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {post.establishmentDetails.name}
-                </Text>
-                <Text style={styles.dash}> - </Text>
-                <Text style={styles.scoreReview}>{post.ratings!.overall}</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
-
-  if (posts.isLoading || !userProfile) {
-    return <SkeletonUserProfile />;
-  }
-
+  // Instead of an early return, conditionally render the content inside the same tree
   return (
-    <>
-      {isHeaderVisible && (
-        <View style={styles.stickyHeader}>
-          <Text style={styles.stickyHeaderText}>
-            {userProfile.firstName}'s {t("profile.profile.profile")}
-          </Text>
-        </View>
-      )}
     <ScrollView
       style={styles.container}
       showsVerticalScrollIndicator={false}
@@ -286,147 +292,172 @@ const ProfileScreen = () => {
       onScroll={handleScroll}
       scrollEventThrottle={16}
       refreshControl={
-        <RefreshControl 
-          refreshing={refreshing} 
-          onRefresh={onRefresh} 
-          tintColor={Colors.tags}
-          colors={[Colors.tags]}
-          />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.tags} />
       }
     >
       <StatusBar style="auto" />
-
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => navigation.navigate("MainSettings")}>
-          <Menu color={Colors.text} size={28} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.profileSection}>
-        <View style={styles.detailsSection}>
-          <Text style={styles.name}>
-            {userProfile.firstName} {userProfile.lastName ? userProfile.lastName : ""}
-          </Text>
-          <Text style={styles.username}>@{userProfile.username}</Text>
-          <View style={styles.ovalsContainer}>
-            <View style={styles.followerOval}>
-              <TouchableOpacity
-                activeOpacity={1}
-                onPress={() => navigation.navigate("FollowerList")}
-              >
-              <Text style={styles.ovalText}>
-                {userCounts?.followerCount}
-                {userCounts?.followerCount === 1 ? t("profile.profile.follower") : t("profile.profile.followers")}
-              </Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.followerOval}>
-              <Text style={styles.ovalText}>{reviewCount} {t("profile.profile.reviews")}</Text>
-            </View>
-          </View>
-        </View>
-        <TouchableOpacity onPress={pickImage}>
-          <FastImage
-            source={{
-              uri: updatedProfilePicture || userProfile.profilePicture,
-              priority: FastImage.priority.normal,
-              cache: FastImage.cacheControl.web,
-            }}
-            style={styles.profilePic}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.bioContainer}>
-        <Text style={styles.bioText}>
-          {userProfile.bio ? userProfile.bio : ""}
-        </Text>
-        <TouchableOpacity
-          style={styles.editProfileContainer}
-          onPress={() => navigation.navigate("EditProfile")}
-        >
-          <View style={styles.iconCircle}>
-            <SquarePen size={18} color={Colors.background} />
-          </View>
-          <Text style={styles.editProfileText}>{t("profile.profile.editProfile")}</Text>
-        </TouchableOpacity>
-      </View>
-
-
-
-      {reviewCount > 0 ? (
-        <>
-          <View style={styles.featuredGalleryContainer}>
-            <Text style={styles.featuredGalleryText}>{t("profile.profile.topPicks")}</Text>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.galleryScrollView}
-              bounces={true}
-            >
-              {topPosts.map((post, index) => (
-                <View style={styles.imageGalleryContainer} key={index}>
-                  <TouchableOpacity
-                    onPress={() => navigateToExpandedPost(post)}
-                    key={index}
-                    activeOpacity={1}
-                  >
-                    <FastImage
-                      source={{
-                        uri: post.imageUrls[0],
-                        priority: FastImage.priority.normal,
-                        cache: FastImage.cacheControl.immutable,
-                      }}
-                      style={styles.galleryImage}
-                    />
-                    <View style={styles.scoreContainer}>
-                      <Text style={styles.scoreText}>
-                        {post.ratings!.overall}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                  <View style={styles.profileDetails}>
-                    <Text
-                      style={styles.restaurantTopPicks}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {post.establishmentDetails.name}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-
-            <View style={styles.separator} />
-          </View>
-
-          <View style={styles.remainingReviewsContainer}>
-            <Text style={styles.remainingReviewsText}>{t("profile.profile.allReviews")}</Text>
-          </View>
-
-          <View style={styles.gridGallery}>
-            {columnItems.map((items, index) => (
-              <View key={index} style={styles.gridColumn}>
-                {renderColumn(items, index)}
-              </View>
-            ))}
-          </View>
-        </>
+      {/* If data is still loading, show the skeleton */}
+      {(userLoading || countsLoading || numberLoading) ? (
+        <SkeletonUserProfile />
       ) : (
-        <View style={styles.noReviewContainer}>
-
-          <View style={styles.iconContainer}>
-            <NotepadText color={Colors.noReviews} size={width * 0.08}/>
+        <>
+          {isHeaderVisible && (
+            <View style={styles.stickyHeader}>
+              <Text style={styles.stickyHeaderText}>
+                {`@${userProfile?.username}`}'s {t("profile.profile.profile")}
+              </Text>
+            </View>
+          )}
+          {/* Top Bar */}
+          <View style={styles.topBar}>
+            <TouchableOpacity onPress={() => navigation.navigate("MainSettings")}>
+              <Menu color={Colors.text} size={28} />
+            </TouchableOpacity>
           </View>
-
-          <Text style={styles.noReviewText}>{t("profile.profile.noReviews")}</Text>
-        </View>
+          {/* Profile Section */}
+          <View style={styles.profileSection}>
+            <View style={styles.detailsSection}>
+              <Text style={styles.name}>
+                {userProfile?.firstName} {userProfile?.lastName || ""}
+              </Text>
+              <Text style={styles.username}>@{userProfile?.username}</Text>
+              <View style={styles.ovalsContainer}>
+                <View style={styles.followerOval}>
+                  <TouchableOpacity activeOpacity={1} onPress={() => navigation.navigate("FollowerList")}>
+                    <Text style={styles.ovalText}>
+                      {userCounts?.followerCount}{" "}
+                      {userCounts?.followerCount === 1
+                        ? t("profile.profile.follower")
+                        : t("profile.profile.followers")}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.followerOval}>
+                  <Text style={styles.ovalText}>
+                    {totalReviewCount ?? 0} {t("profile.profile.reviews")}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <TouchableOpacity
+              activeOpacity={1}
+              onPress={pickImage}
+            >
+              <FastImage
+                source={{
+                  uri: updatedProfilePicture || userProfile?.profilePicture,
+                  priority: FastImage.priority.normal,
+                  cache: FastImage.cacheControl.immutable,
+                }}
+                style={styles.profilePic}
+              />
+            </TouchableOpacity>
+          </View>
+          {/* Bio Section */}
+          <View style={styles.bioContainer}>
+            <Text style={styles.bioText}>{userProfile?.bio || ""}</Text>
+            <TouchableOpacity
+              style={styles.editProfileContainer}
+              onPress={() => navigation.navigate("EditProfile")}
+            >
+              <View style={styles.iconCircle}>
+                <SquarePen size={18} color={Colors.background} />
+              </View>
+              <Text style={styles.editProfileText}>{t("profile.profile.editProfile")}</Text>
+            </TouchableOpacity>
+          </View>
+          {/* Posts Section */}
+          {totalReviewCount && totalReviewCount > 0 ? (
+            <>
+              {/* Top Picks */}
+              <View style={styles.featuredGalleryContainer}>
+                <Text style={styles.featuredGalleryText}>
+                  {t("profile.profile.topPicks")}
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.galleryScrollView}
+                  bounces={true}
+                >
+                  {topPosts.map((post) => (
+                    <View style={styles.imageGalleryContainer} key={post.id}>
+                      <TouchableOpacity
+                        onPress={() => navigateToExpandedPost(post)}
+                        activeOpacity={1}
+                      >
+                        <FastImage
+                          source={{
+                            uri: post.imageUrls[0],
+                            priority: FastImage.priority.normal,
+                            cache: FastImage.cacheControl.immutable,
+                          }}
+                          style={styles.galleryImage}
+                        />
+                        <View style={styles.scoreContainer}>
+                          <Text style={styles.scoreText}>{post.ratings.overall}</Text>
+                        </View>
+                      </TouchableOpacity>
+                      <View style={styles.profileDetails}>
+                        <Text
+                          style={styles.restaurantTopPicks}
+                          numberOfLines={1}
+                          ellipsizeMode="tail"
+                        >
+                          {post.establishmentDetails.name}
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </ScrollView>
+                <View style={styles.separator} />
+              </View>
+              {/* All Reviews */}
+              <View style={styles.remainingReviewsContainer}>
+                <Text style={styles.remainingReviewsText}>
+                  {t("profile.profile.allReviews")}
+                </Text>
+              </View>
+              {postsArray.length > 0 ? (
+                <View style={styles.gridGallery}>
+                  {columnItems.map((items, columnIndex) => (
+                    <View key={columnIndex} style={styles.gridColumn}>
+                      {renderColumn(items, columnIndex)}
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <ActivityIndicator
+                  size="large"
+                  color={Colors.tags}
+                  style={{ margin: 20 }}
+                />
+              )}
+            </>
+          ) : (
+            <View style={styles.noReviewContainer}>
+              <View style={styles.iconContainer}>
+                <NotepadText color={Colors.noReviews} size={width * 0.08} />
+              </View>
+              <Text style={styles.noReviewText}>
+                {t("profile.profile.noReviews")}
+              </Text>
+            </View>
+          )}
+          {isFetchingNextPage && (
+            <ActivityIndicator
+              size="large"
+              color={Colors.tags}
+              style={{ margin: 20 }}
+            />
+          )}
+        </>
       )}
     </ScrollView>
-    </>
   );
-}
+};
+
+
 
 const styles = StyleSheet.create({
   container: {

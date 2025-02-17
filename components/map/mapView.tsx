@@ -1,8 +1,9 @@
-import React, { useState, forwardRef, useCallback } from "react";
-import Mapbox, { LocationPuck, MapView, Viewport } from "@rnmapbox/maps";
-import { StyleSheet, View, ActivityIndicator, Dimensions } from "react-native";
+// mapView.tsx
+import React, { useCallback, forwardRef } from "react";
+import Mapbox, { LocationPuck, MapView } from "@rnmapbox/maps";
+import { StyleSheet, View, Dimensions } from "react-native";
 
-const { width, height } = Dimensions.get("window");
+const { width } = Dimensions.get("window");
 
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN || "");
 
@@ -14,9 +15,9 @@ interface MapViewComponentProps {
 const MapViewComponent = forwardRef<MapView, MapViewComponentProps>(
   ({ children, onMapLoaded }, ref) => {
     const handleMapLoaded = useCallback(() => {
-      
-      onMapLoaded?.(); // Call the onMapLoaded prop if provided
+      onMapLoaded?.();
     }, [onMapLoaded]);
+
     return (
       <View style={styles.container}>
         <MapView
@@ -26,15 +27,15 @@ const MapViewComponent = forwardRef<MapView, MapViewComponentProps>(
           styleURL="mapbox://styles/dpatelshareables/cm1cpsc6000p001qk98k1848a"
           logoEnabled={false}
           pitchEnabled={false}
-          attributionEnabled={true}
+          attributionEnabled
           attributionPosition={{ bottom: width * 0.21, right: 0 }}
           compassEnabled={false}
-          rotateEnabled={true}
+          rotateEnabled
           scaleBarEnabled={false}
           onDidFinishLoadingMap={handleMapLoaded}
         >
           <LocationPuck
-            puckBearingEnabled={true}
+            puckBearingEnabled
             puckBearing="heading"
             pulsing={{ isEnabled: true }}
           />
@@ -53,12 +54,6 @@ const styles = StyleSheet.create({
   },
   map: {
     ...StyleSheet.absoluteFillObject,
-  },
-  loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
   },
 });
 

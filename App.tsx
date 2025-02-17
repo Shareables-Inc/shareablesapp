@@ -14,6 +14,8 @@ import {
   registerForPushNotificationsAsync,
   updatePushNotificationTokenFirebase,
   scheduleWeeklyRestaurantNotification,
+  scheduleWeeklyExploreReminder,
+  scheduleWeeklyPostReminder
 } from "./services/pushNotification.service";
 
 // Import i18n for translations
@@ -105,6 +107,8 @@ const AppContent = () => {
   useEffect(() => {
     if (userProfile?.reviewReminder) {
       scheduleWeeklyRestaurantNotification();
+      scheduleWeeklyExploreReminder();
+      scheduleWeeklyPostReminder();
     }
   }, [userProfile?.reviewReminder]);
 

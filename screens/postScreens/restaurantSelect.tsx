@@ -36,7 +36,7 @@ const RestaurantSelectScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const {t} = useTranslation();
   const route = useRoute();
-  const { postId } = route.params as { postId: string }; // Extract postId from route params
+  const { postId, imageUrls } = route.params as { postId: string; imageUrls: string[] };
   const { user, userProfile } = useAuth();
   const { width } = useWindowDimensions();
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
@@ -144,7 +144,8 @@ const RestaurantSelectScreen = () => {
               country: updatedPostData.establishmentDetails.country,
               tags: selectedTags,
               postId: postId,
-            });
+              imageUrls: imageUrls[0], 
+            });            
           },
           onError: (error) => {
             console.error("Error updating post:", error);

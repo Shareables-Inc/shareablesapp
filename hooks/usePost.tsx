@@ -78,19 +78,44 @@ export const usePostById = (postId: string) => {
   });
 };
 
-// Fetch posts by user
-export function usePostsByUser(userId: string): UseQueryResult<Post[], Error> {
-  return useQuery({
-    queryKey: ["userPosts", userId],
-    queryFn: async () => {
-      const posts = await postService.getPostsByUser(userId);
-      // Filter out posts without images
-      return posts.filter((post) => post.imageUrls.length > 0);
+
+export function usePostsByUser(userId: string, limit = 6) {
+  return useInfiniteQuery<
+    { posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined },
+    Error,
+    { posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined },
+    (string | number)[]
+  >({
+    queryKey: ["userPosts", userId, limit],
+    queryFn: async ({ pageParam = undefined }) => {
+      const result = await postService.getPostsByUserPaginated(
+        userId,
+        limit,
+        pageParam as QueryDocumentSnapshot<DocumentData> | undefined
+      );
+
+      const validPosts = result.posts.filter(
+        (post) => post.imageUrls && post.imageUrls.length > 0
+      );
+
+      const imagesToPreload = validPosts.flatMap((post) => [
+        { uri: post.profilePicture },
+        ...post.imageUrls.map((url) => ({ uri: url })),
+      ]);
+      FastImage.preload(imagesToPreload);
+
+      return {
+        posts: validPosts,
+        lastVisible: result.lastVisible,
+      };
     },
+    getNextPageParam: (lastPage) => lastPage.lastVisible,
     enabled: !!userId,
-    refetchOnWindowFocus: true,
+    initialPageParam: undefined,
   });
 }
+
+
 
 
 // Create a new post

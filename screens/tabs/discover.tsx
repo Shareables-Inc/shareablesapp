@@ -5,7 +5,7 @@ import React, {
   useState,
   useMemo,
 } from "react";
-import { View, StyleSheet, Animated } from "react-native";
+import { View, StyleSheet, Animated, Button } from "react-native";
 import {
   NavigationProp,
   useIsFocused,
@@ -37,54 +37,33 @@ import {
   useGetEstablishments,
 } from "../../hooks/useEstablishment";
 import { EstablishmentCard } from "../../models/establishment";
-import { queryClient } from "../../utils/query.client";
 
 function DiscoverScreen() {
   const { user } = useAuth();
-
-  const {
-    location,
-    fetchLocation,
-    isLoading: isUserLocationLoading,
-    error,
-  } = useLocationStore();
+  const { location, fetchLocation, error } = useLocationStore();
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [selectedFilter, setSelectedFilter] = useState<
-    "save" | "post" | "following" | null
-  >(null);
+  const [selectedFilter, setSelectedFilter] = useState<"save" | "post" | "following" | null>(null);
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const restaurantListRef = useRef<BottomSheetModal>(null);
   const establishmentService = new EstablishmentService();
   const [restaurants, setRestaurants] = useState<any[]>([]);
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<EstablishmentCard | null>(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<EstablishmentCard | null>(null);
   const mapRef = useRef<MapView>(null);
   const cameraRef = useRef<Camera>(null);
-
   const { dismiss } = useBottomSheetModal();
   const { data: userSaves } = useGetUserSaves(user?.uid!);
-  // to get array of establishments based on userSaves
   const { data: saveEstablishments } = useGetEstablishments(
     userSaves?.saves.map((save) => save.establishmentId) || []
   );
-  const [selectedRestaurantId, setSelectedRestaurantId] = useState<
-    string | null
-  >(null);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
   const { data: posts } = usePostsByUser(user?.uid!);
-
   const { data: followingPosts } = useFollowingPosts(user?.uid!);
-
-  const [previousFilter, setPreviousFilter] = useState<
-    "save" | "post" | "following" | null
-  >(null);
+  const [previousFilter, setPreviousFilter] = useState<"save" | "post" | "following" | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const setReturnToCurrentLocation = useLocationStore(
-    (state) => state.setReturnToCurrentLocation
-  );
+  const setReturnToCurrentLocation = useLocationStore((state) => state.setReturnToCurrentLocation);
   const isFocused = useIsFocused();
-  const { refetch, data: establishmentProfileData } =
-    useEstablishmentProfileData(selectedRestaurantId!);
+  const { refetch, data: establishmentProfileData } = useEstablishmentProfileData(selectedRestaurantId!);
 
   useEffect(() => {
     if (isFocused) {
@@ -94,34 +73,22 @@ function DiscoverScreen() {
 
   useEffect(() => {
     setReturnToCurrentLocation(() => {
-      // Implement the logic to return to current location using cameraRef
       if (cameraRef.current && location) {
         cameraRef.current.setCamera({
-          centerCoordinate: [
-            location.coords.longitude,
-            location.coords.latitude,
-          ],
+          centerCoordinate: [location.coords.longitude, location.coords.latitude],
           zoomLevel: 14,
         });
       }
     });
-
-    // Cleanup function to reset the returnToCurrentLocation when the component unmounts
     return () => setReturnToCurrentLocation(() => {});
-  }, [setReturnToCurrentLocation]);
+  }, [setReturnToCurrentLocation, location]);
 
-  // 1. Memoize the query results
-  const memoizedSaveEstablishments = useMemo(
-    () => saveEstablishments || [],
-    [saveEstablishments]
-  );
-  const memoizedPosts = useMemo(() => posts || [], [posts]);
-  const memoizedFollowingPosts = useMemo(
-    () => followingPosts || [],
-    [followingPosts]
-  );
+  // Memoize query results
+  const memoizedSaveEstablishments = useMemo(() => saveEstablishments || [], [saveEstablishments]);
+  const memoizedPosts = useMemo(() => posts ? posts.pages.flatMap((page) => page.posts) : [], [posts]);
+  const memoizedFollowingPosts = useMemo(() => followingPosts ? followingPosts.pages.flatMap((page) => page.posts) : [], [followingPosts]);
 
-  // 2. Optimize the effect that updates restaurants
+  // Update restaurants state based on selected filter
   useEffect(() => {
     if (selectedFilter === previousFilter) {
       setRestaurants([
@@ -150,14 +117,8 @@ function DiscoverScreen() {
       }
       setPreviousFilter(selectedFilter);
     }
-  }, [
-    selectedFilter,
-    memoizedSaveEstablishments,
-    memoizedPosts,
-    memoizedFollowingPosts,
-  ]);
+  }, [selectedFilter, memoizedSaveEstablishments, memoizedPosts, memoizedFollowingPosts]);
 
-  // Set camera focus when location is available
   const handleOpenReviewPost = (post: Post) => {
     dismiss();
     setSelectedRestaurant(null);
@@ -170,20 +131,15 @@ function DiscoverScreen() {
         centerCoordinate: [longitude, latitude],
         zoomLevel: 15,
         animationDuration: 1000,
-        padding: {
-          paddingBottom: 200,
-          paddingLeft: 0,
-          paddingRight: 0,
-          paddingTop: 0,
-        },
+        padding: { paddingBottom: 200, paddingLeft: 0, paddingRight: 0, paddingTop: 0 },
       });
     }
   }, []);
 
-  // 3. Memoize getPrioritizedMarkers
-  const getPrioritizedMarkers = useCallback(() => {
-    const allMarkers: (MarkerType | MarkerTypeWithImage)[] = [
-      ...(memoizedSaveEstablishments?.map((save) => ({
+  // Combine markers without region filtering.
+  const getPrioritizedMarkers = useCallback((): MarkerTypeWithImage[] => {
+    const allMarkers: MarkerTypeWithImage[] = [
+      ...memoizedSaveEstablishments.map((save) => ({
         id: save.id,
         establishmentId: save.id,
         latitude: save.latitude,
@@ -194,10 +150,10 @@ function DiscoverScreen() {
         priceRange: save.priceRange || 0,
         tags: save.tags,
         averageRating: save.averageRating,
-        userProfilePicture: null,
+        userProfilePicture: "", // default value for saves
         type: "save" as const,
-      })) || []),
-      ...(memoizedFollowingPosts?.map((post) => ({
+      })),
+      ...memoizedFollowingPosts.map((post) => ({
         id: post.establishmentDetails.id,
         userProfilePicture: post.profilePicture,
         establishmentId: post.establishmentDetails.id,
@@ -210,8 +166,8 @@ function DiscoverScreen() {
         tags: post.tags,
         averageRating: post.establishmentDetails.averageRating.toString(),
         type: "following" as const,
-      })) || []),
-      ...(memoizedPosts?.map((post) => ({
+      })),
+      ...memoizedPosts.map((post) => ({
         id: post.id,
         establishmentId: post.establishmentDetails.id,
         latitude: post.establishmentDetails.latitude,
@@ -224,40 +180,36 @@ function DiscoverScreen() {
         tags: post.tags,
         averageRating: post.establishmentDetails.averageRating.toString(),
         type: "post" as const,
-      })) || []),
+      })),
     ];
 
-    // Deduplicate markers based on establishmentId
-    return uniqBy(allMarkers, "establishmentId");
+    console.log("Total markers before filtering:", allMarkers.length);
+    // No region filtering now.
+    console.log("Markers after filtering:", allMarkers.length);
+    return uniqBy(allMarkers, "establishmentId") as MarkerTypeWithImage[];
   }, [memoizedSaveEstablishments, memoizedFollowingPosts, memoizedPosts]);
 
   useEffect(() => {
     if (restaurantListRef.current) {
-      restaurantListRef.current.expand(); // Programmatically open modal
+      restaurantListRef.current.expand();
     }
   }, []);
 
   const handleMapLoaded = useCallback(() => {
-
     setIsMapLoaded(true);
-
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 1000, // Adjust duration as needed
+      duration: 1000,
       useNativeDriver: true,
     }).start();
-  }, [location, fadeAnim]);
+  }, [fadeAnim]);
 
-  const [shouldPresentBottomSheet, setShouldPresentBottomSheet] =
-    useState(false);
+  const [shouldPresentBottomSheet, setShouldPresentBottomSheet] = useState(false);
 
   const handleMarkerPress = useCallback(
     async (marker) => {
       try {
-        const establishment =
-          await establishmentService.getEstablishmentCardData(
-            marker.establishmentId
-          );
+        const establishment = await establishmentService.getEstablishmentCardData(marker.establishmentId);
         if (establishment) {
           setSelectedRestaurant(establishment);
           bottomSheetRef.current?.present();
@@ -267,17 +219,15 @@ function DiscoverScreen() {
         console.error("Error in handleMarkerPress", error);
       }
     },
-    [focusCamera, queryClient, bottomSheetRef, selectedRestaurantId]
+    [focusCamera, establishmentService]
   );
 
-  // 4. Optimize the effect for selectedRestaurantId
   useEffect(() => {
     if (selectedRestaurantId && !establishmentProfileData) {
       refetch();
     }
   }, [selectedRestaurantId, refetch, establishmentProfileData]);
 
-  // 5. Optimize the effect for presenting bottom sheet
   useEffect(() => {
     if (shouldPresentBottomSheet && selectedRestaurant) {
       bottomSheetRef.current?.present();
@@ -289,18 +239,17 @@ function DiscoverScreen() {
     (marker: MarkerType) => {
       if (restaurantListRef.current?.present) {
         restaurantListRef.current?.collapse();
-       
       }
       handleMarkerPress(marker);
     },
     [handleMarkerPress]
   );
 
+  // Remove region-related code (handleRegionChange, search button, etc.)
+
   if (error) {
     return <LocationErrorMessage />;
   }
-
-
 
   return (
     <View style={styles.container}>
@@ -311,25 +260,16 @@ function DiscoverScreen() {
         onMarkerPress={handleMarkerPress}
         markerFilter={selectedFilter}
         onMapLoaded={handleMapLoaded}
+        // Remove onRegionDidChange prop since region filtering is removed.
       />
-
-      {/* {!isMapLoaded && !error && (
-        <Animated.View style={[styles.loadingOverlay, { opacity: fadeAnim }]}>
-          <View style={styles.loadingContent}>
-            <ActivityIndicator size="large" color={Colors.highlightText} />
-            <Text style={styles.loadingText}>Building map...</Text>
-          </View>
-        </Animated.View>
-      )} */}
       {selectedRestaurant && (
         <CustomBottomSheetModalContent
           bottomSheetRef={bottomSheetRef}
           selectedRestaurant={selectedRestaurant}
           userLocation={location}
-          onOpenReviewPost={handleOpenReviewPost} // Pass the callback here
+          onOpenReviewPost={handleOpenReviewPost}
         />
       )}
-      {/* Persistent Bottom Sheet for the Restaurant List */}
       <PersistentBottomSheetModal ref={restaurantListRef}>
         <RestaurantList
           restaurants={getPrioritizedMarkers()}
@@ -340,7 +280,7 @@ function DiscoverScreen() {
                   longitude: location.coords.longitude,
                 }
               : null
-          } // Make sure userLocation is passed properly
+          }
           onFilterChange={setSelectedFilter}
           selectedFilter={selectedFilter}
           onItemSelect={handleItemSelect}
@@ -351,11 +291,7 @@ function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-
+  container: { flex: 1, backgroundColor: Colors.background },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
@@ -369,10 +305,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,

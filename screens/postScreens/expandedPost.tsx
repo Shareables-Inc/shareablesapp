@@ -43,7 +43,7 @@ import {
   Sparkle,
   Utensils,
   X,
-  HandPlatter,
+  ConciergeBell,
   Ellipsis,
   SquarePen,
   Trash2
@@ -642,7 +642,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
             </View>
             <View style={styles.ratingItem}>
               <View style={styles.ratingType}>
-                <HandPlatter color={Colors.text} size={26} />
+                <ConciergeBell color={Colors.text} size={26} />
                 <Text
                   style={[
                     styles.ratingScore,

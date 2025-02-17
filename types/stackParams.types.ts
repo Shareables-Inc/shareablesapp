@@ -44,6 +44,7 @@ export type RootStackParamList = {
     isEditing?: boolean;
     review?: string;
     ratings?: Ratings;
+    imageUrls: string;
   };
   RestaurantSelect: {
     postId: string;

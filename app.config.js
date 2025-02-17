@@ -41,7 +41,8 @@ export default {
         LSApplicationQueriesSchemes: [
           "maps",
           "comgooglemaps",
-          "waze"
+          "waze",
+          "instagram-stories"
         ],
         NSContactsUsageDescription: "This app uses your contacts to recommend users to follow. We do not store this data.",
         NSPhotoLibraryUsageDescription: "This app uses your photo library to allow you to make posts. We only store the photos that you select for posting.",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Touchable,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -20,15 +20,50 @@ import { Fonts } from "../../utils/fonts";
 import { TextInput } from "react-native-gesture-handler";
 import { useAuth } from "../../context/auth.context";
 import { useEditPost } from "../../hooks/usePost";
-import { Sparkle, Utensils, HandPlatter, Info, CircleArrowLeft, Salad, WheatOff, LeafyGreen, AccessibilityIcon } from "lucide-react-native";
-import {PostService} from "../../services/post.service"
+import {
+  Sparkle,
+  Utensils,
+  HandPlatter,
+  Info,
+  CircleArrowLeft,
+  Salad,
+  WheatOff,
+  LeafyGreen,
+} from "lucide-react-native";
+import { PostService } from "../../services/post.service";
 import { useTranslation } from "react-i18next";
+import ViewShot from "react-native-view-shot";
+import StoryLayout from "../../components/sharing/storyLayout";
+import Share from "react-native-share";
+import { FontAwesome } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
-const ReviewScreen = ({ route }) => {
+interface ReviewScreenProps {
+  route: {
+    params: {
+      restaurantName: string;
+      city: string;
+      country: string;
+      tags: any;
+      postId: string;
+      establishmentId: string;
+      isEditing?: boolean;
+      review?: string;
+      ratings: {
+        ambiance?: number;
+        foodQuality?: number;
+        service?: number;
+        overall?: number;
+      };
+      imageUrls: string;
+    };
+  };
+}
+
+const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
   const { user } = useAuth();
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const postService = new PostService();
   const {
     restaurantName,
@@ -37,13 +72,18 @@ const ReviewScreen = ({ route }) => {
     tags,
     postId: initialPostId,
     establishmentId,
-    isEditing = false, // Flag for edit mode
-    review: initialReview = "", // Default value for review
-    ratings = {}, // Default empty object for ratings
+    isEditing = false,
+    review: initialReview = "",
+    ratings = {},
+    imageUrls,
   } = route.params;
   const navigation = useNavigation();
   const { mutate: editPost } = useEditPost();
 
+  // Reference for ViewShot component
+  const viewShotRef = useRef<any>(null);
+
+  // State variables
   const [review, setReview] = useState<string>(initialReview);
   const [ratingAmbiance, setRatingAmbiance] = useState<number>(
     ratings.ambiance || 0
@@ -58,6 +98,8 @@ const ReviewScreen = ({ route }) => {
     ratings.overall || 0
   );
   const [infoModalVisible, setInfoModalVisible] = useState(false);
+  const [shareModalVisible, setShareModalVisible] = useState(false);
+  const [previewModalVisible, setPreviewModalVisible] = useState(false);
 
   // Accessibility ratings state
   const [isHalal, setIsHalal] = useState(false);
@@ -66,15 +108,21 @@ const ReviewScreen = ({ route }) => {
 
   const toggleInfoModal = () => setInfoModalVisible(!infoModalVisible);
 
-  const handleReviewChange = (text) => {
+  const handleReviewChange = (text: string) => {
     setReview(text);
   };
 
-  const calculateOverallRating = (ambiance, foodQuality, service) => {
+  /** Helper to compute overall rating */
+  const calculateOverallRating = (
+    ambiance: number,
+    foodQuality: number,
+    service: number
+  ) => {
     return ((ambiance + foodQuality + service) / 3).toFixed(1);
   };
 
-  const handleRatingChange = (field, value) => {
+  /** Handle changes in ambiance, food, or service rating. */
+  const handleRatingChange = (field: string, value: number) => {
     if (field === "ambiance") setRatingAmbiance(value);
     if (field === "foodQuality") setRatingFoodQuality(value);
     if (field === "service") setRatingService(value);
@@ -87,33 +135,39 @@ const ReviewScreen = ({ route }) => {
     setOverallRating(parseFloat(newOverallRating));
   };
 
-  const handleAccessibilityToggle = (type) => {
+  /** Toggle the accessibility tags (halal, gluten-free, etc.) */
+  const handleAccessibilityToggle = (type: string) => {
     if (type === "halal") setIsHalal(!isHalal);
     if (type === "glutenfree") setIsGlutenFree(!isGlutenFree);
     if (type === "veg") setIsVeg(!isVeg);
   };
 
+  /** Submit the post or update. */
   const handlePost = async () => {
     if (!review.trim()) {
-      Alert.alert(t("post.expandedPost.incompleteReview"), t("post.expandedPost.incompleteReviewMessage"));
+      Alert.alert(
+        t("post.postReview.incompleteReview"),
+        t("post.postReview.incompleteReviewMessage")
+      );
       return;
     }
 
     if (ratingAmbiance === 0 || ratingFoodQuality === 0 || ratingService === 0) {
       Alert.alert(
-        t("post.expandedPost.incompleteRatings"),
-        t("post.expandedPost.incompleteRatingsMessage")
+        t("post.postReview.incompleteRatings"),
+        t("post.postReview.incompleteRatingsMessage")
       );
       return;
     }
 
-    const overallRating = calculateOverallRating(
+    const overallRatingCalculated = calculateOverallRating(
       ratingAmbiance,
       ratingFoodQuality,
       ratingService
     );
 
     try {
+      // Update the post (or create, if your logic differs).
       editPost({
         id: initialPostId,
         data: {
@@ -123,7 +177,7 @@ const ReviewScreen = ({ route }) => {
             ambiance: ratingAmbiance,
             foodQuality: ratingFoodQuality,
             service: ratingService,
-            overall: overallRating,
+            overall: overallRatingCalculated,
           },
           accessibility: {
             halal: isHalal,
@@ -134,57 +188,107 @@ const ReviewScreen = ({ route }) => {
         establishmentId,
       });
 
-      navigation.navigate("MainTabNavigator", {
-        screen: "Home",
-        params: { screen: "Home" },
-      });
+      // After posting, show the share modal
+      setShareModalVisible(true);
     } catch (error) {
       console.error("Error in handlePost:", error);
-      Alert.alert(t("post.expandedPost.postError"), t("post.expandedPost.postErrorMessage"));
+      Alert.alert(
+        t("post.postReview.postError"),
+        t("post.postReview.postErrorMessage")
+      );
     }
   };
 
+  /** Capture screenshot and share to Instagram Stories. */
+  const shareToInstagramStories = async () => {
+    try {
+      const capturedImage = await viewShotRef.current.capture();
+      const base64Image = `data:image/png;base64,${capturedImage}`;
+      const shareOptions = {
+        social: Share.Social.INSTAGRAM_STORIES,
+        method: (Share as any).InstagramStories?.SHARE_BACKGROUND_IMAGE,
+        backgroundImage: base64Image,
+        appId: "com.shareablesinc.shareablesdev", // or your app's package
+      } as any;
+      await Share.shareSingle(shareOptions);
+    } catch (error) {
+      console.error("Error sharing to Instagram Stories:", error);
+      Alert.alert("Sharing Error", "Could not share to Instagram Stories.");
+    } finally {
+      navigation.navigate("MainTabNavigator", {screen:"Home"});
+    }
+  };
+
+  const handleDontShare = () => {
+    // Simply navigate to MainTabNavigator (Home)
+    navigation.navigate("MainTabNavigator", { screen: "Home" });
+  };
+
+  /** If user discards, delete the post (if that's your logic) and go back. */
   const handleBackPress = useCallback(() => {
     Alert.alert(
-      t("post.expandedPost.discardPost"),
-      t("post.expandedPost.discardPostMessage"),
+      t("post.postReview.discardPost"),
+      t("post.postReview.discardPostMessage"),
       [
         { text: t("general.cancel"), style: "cancel" },
         {
-          text: t("post.expandedPost.discard"),
+          text: t("post.postReview.discard"),
           onPress: async () => {
             try {
-              await postService.deletePost(initialPostId); // Use initialPostId instead of postId
+              await postService.deletePost(initialPostId);
               console.log("Post deleted successfully");
               navigation.navigate("MainTabNavigator", {
-                screen: "Post", 
+                screen: "Post",
               });
             } catch (error) {
               console.error("Error deleting post:", error);
-              Alert.alert(t("general.error"), t("post.expandedPost.discardError"));
+              Alert.alert(
+                t("general.error"),
+                t("post.postReview.discardError")
+              );
             }
           },
         },
       ]
     );
-  }, [initialPostId, postService, navigation]);
-  
+  }, [initialPostId, postService, navigation, t]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.background }}>
+      {/** Hidden view for capturing the full-size StoryLayout */}
+      <View style={{ position: "absolute", top: -9999 }}>
+        <ViewShot
+          ref={viewShotRef}
+          options={{ format: "png", quality: 0.9, result: "base64" }}
+        >
+          <StoryLayout
+            imageUrl={imageUrls}
+            restaurantName={restaurantName}
+            ratingAmbiance={ratingAmbiance}
+            ratingFoodQuality={ratingFoodQuality}
+            ratingService={ratingService}
+            isPreview={false} 
+          />
+        </ViewShot>
+      </View>
+
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
+          {/* Header */}
           <View style={styles.headerContainer}>
             <TouchableOpacity onPress={handleBackPress} activeOpacity={1}>
               <CircleArrowLeft color={Colors.text} size={28} />
             </TouchableOpacity>
             <TouchableOpacity onPress={handlePost} style={styles.postButton}>
               <Text style={styles.postButtonText}>
-                {isEditing ? t("post.expandedPost.update") : t("post.expandedPost.post")}
+                {isEditing
+                  ? t("post.postReview.update")
+                  : t("post.postReview.post")}
               </Text>
             </TouchableOpacity>
           </View>
 
+          {/* Main Content */}
           <View style={styles.contentContainer}>
             <KeyboardAvoidingView
               behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -194,7 +298,6 @@ const ReviewScreen = ({ route }) => {
               <Text style={styles.restaurantInfo}>
                 {restaurantName} | {city}, {country}
               </Text>
-
               <TextInput
                 placeholder={t("post.postReview.review")}
                 style={styles.reviewInput}
@@ -205,18 +308,24 @@ const ReviewScreen = ({ route }) => {
               />
             </KeyboardAvoidingView>
 
+            {/* Ratings Header */}
             <View style={styles.headersContainer}>
               <View style={styles.scoresContainer}>
-                <Text style={styles.ratingHeader}>{t("post.postReview.scores")}</Text>
+                <Text style={styles.ratingHeader}>
+                  {t("post.postReview.scores")}
+                </Text>
                 <TouchableOpacity onPress={toggleInfoModal}>
                   <Info style={styles.infoIcon} color={Colors.tags} size={18} />
                 </TouchableOpacity>
               </View>
               <View style={styles.overallContainer}>
-                <Text style={styles.priceHeader}>{t("post.postReview.overall")}</Text>
+                <Text style={styles.priceHeader}>
+                  {t("post.postReview.overall")}
+                </Text>
               </View>
             </View>
 
+            {/* Info Modal */}
             <Modal
               animationType="slide"
               transparent={true}
@@ -226,33 +335,129 @@ const ReviewScreen = ({ route }) => {
               <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
                   <Text style={styles.modalTitle}>
-                  {t("post.postReview.icons")}
+                    {t("post.postReview.icons")}
                   </Text>
                   <View style={styles.modalContent}>
                     <View style={styles.iconRow}>
                       <Sparkle color={Colors.charcoal} size={25} />
-                      <Text style={styles.iconDescription}>{t("post.postReview.ambiance")}</Text>
+                      <Text style={styles.iconDescription}>
+                        {t("post.postReview.ambiance")}
+                      </Text>
                     </View>
                     <View style={styles.iconRow}>
                       <Utensils color={Colors.charcoal} size={25} />
-                      <Text style={styles.iconDescription}>{t("post.postReview.food")}</Text>
+                      <Text style={styles.iconDescription}>
+                        {t("post.postReview.food")}
+                      </Text>
                     </View>
                     <View style={styles.iconRow}>
                       <HandPlatter color={Colors.charcoal} size={25} />
-                      <Text style={styles.iconDescription}>{t("post.postReview.service")}</Text>
+                      <Text style={styles.iconDescription}>
+                        {t("post.postReview.service")}
+                      </Text>
                     </View>
                   </View>
                   <TouchableOpacity
                     onPress={toggleInfoModal}
                     style={styles.closeButton}
                   >
-                    <Text style={styles.closeButtonText}>{t("post.postReview.gotIt")}</Text>
+                    <Text style={styles.closeButtonText}>
+                      {t("post.postReview.gotIt")}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
             </Modal>
 
+            {/* Share Modal (with scaled-down preview) */}
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={shareModalVisible}
+              onRequestClose={() => setShareModalVisible(false)}
+            >
+              <View style={styles.modalBackground}>
+                <View style={styles.modalContainer}>
+                  {/* <Text style={styles.modalTitle}>Share Your Post</Text> */}
+                  
+                  {/* SCALED PREVIEW */}
+                  <View style={styles.previewContainer}>
+                    <StoryLayout
+                      imageUrl={imageUrls}
+                      restaurantName={restaurantName}
+                      ratingAmbiance={ratingAmbiance}
+                      ratingFoodQuality={ratingFoodQuality}
+                      ratingService={ratingService}
+                      isPreview 
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={shareToInstagramStories}
+                    style={styles.shareButton}
+                  >
+                    <View style={styles.shareButtonContent}>
+                      <FontAwesome
+                        name="instagram"
+                        size={20}
+                        color={Colors.background}
+                        style={styles.instagramIcon}
+                      />
+                      <Text style={styles.shareButtonText}>
+                        Share to Instagram
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity onPress={handleDontShare} style={styles.shareCancelButton}>
+                    <Text style={styles.shareCancelButtonText}>
+                      Don't Share
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+
+            {/* Optional Preview Modal (full screen) */}
+            <Modal
+              animationType="slide"
+              transparent={false}
+              visible={previewModalVisible}
+              onRequestClose={() => {
+                setPreviewModalVisible(false);
+              }}
+            >
+              <View style={{ flex: 1, backgroundColor: Colors.background }}>
+                <TouchableOpacity
+                  onPress={() => setPreviewModalVisible(false)}
+                  style={{ padding: 15 }}
+                >
+                  <Text style={{ color: Colors.tags, fontSize: 16 }}>
+                    Close Preview
+                  </Text>
+                </TouchableOpacity>
+                <Text
+                  style={{
+                    color: Colors.tags,
+                    textAlign: "center",
+                    marginVertical: 10,
+                  }}
+                >
+                  Preview Modal is Visible
+                </Text>
+                <StoryLayout
+                  imageUrl={imageUrls}
+                  restaurantName={restaurantName}
+                  ratingAmbiance={ratingAmbiance}
+                  ratingFoodQuality={ratingFoodQuality}
+                  ratingService={ratingService}
+                />
+              </View>
+            </Modal>
+
+            {/* Ratings */}
             <View style={styles.ratingsContainer}>
+              {/* Ambiance */}
               <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.7}
@@ -277,6 +482,8 @@ const ReviewScreen = ({ route }) => {
                   style={styles.ratingIcon}
                 />
               </View>
+
+              {/* Food Quality */}
               <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -289,7 +496,9 @@ const ReviewScreen = ({ route }) => {
                   onPress={() =>
                     handleRatingChange(
                       "foodQuality",
-                      ratingFoodQuality === 10 ? 0 : ratingFoodQuality + 1
+                      ratingFoodQuality === 10
+                        ? 0
+                        : ratingFoodQuality + 1
                     )
                   }
                 >
@@ -302,6 +511,7 @@ const ReviewScreen = ({ route }) => {
                 />
               </View>
 
+              {/* Service */}
               <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -327,6 +537,7 @@ const ReviewScreen = ({ route }) => {
                 />
               </View>
 
+              {/* Overall */}
               <View style={styles.ratingSection}>
                 <TouchableOpacity
                   activeOpacity={0.8}
@@ -342,46 +553,98 @@ const ReviewScreen = ({ route }) => {
               </View>
             </View>
 
+            {/* Accessibility Toggles */}
             <View style={styles.accessibilitySection}>
               <View style={styles.accessibilityRatingsContainer}>
-              <TouchableOpacity
-                style={[
-                  styles.accessibilityRatingSquareHalal,
-                  isHalal && styles.selectedAccessibilitySquareHalal,
-                ]}
-                onPress={() => handleAccessibilityToggle("halal")}
-              >
-                <View style={[styles.circleIconContainer, isHalal && styles.circleIconContainerSelected]}>
-                  <Salad size={17} color={Colors.text} style={styles.accessibilityIcon} />
-                </View>
-                <Text style={[styles.ratingText, isHalal && styles.ratingTextSelected]}>{t("post.postReview.halal")}</Text>
-              </TouchableOpacity>
+                {/* Halal */}
+                <TouchableOpacity
+                  style={[
+                    styles.accessibilityRatingSquareHalal,
+                    isHalal && styles.selectedAccessibilitySquareHalal,
+                  ]}
+                  onPress={() => handleAccessibilityToggle("halal")}
+                >
+                  <View
+                    style={[
+                      styles.circleIconContainer,
+                      isHalal && styles.circleIconContainerSelected,
+                    ]}
+                  >
+                    <Salad
+                      size={17}
+                      color={Colors.text}
+                      style={styles.accessibilityIcon}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.ratingText,
+                      isHalal && styles.ratingTextSelected,
+                    ]}
+                  >
+                    {t("post.postReview.halal")}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  styles.accessibilityRatingSquareGluten,
-                  isGlutenFree && styles.selectedAccessibilitySquareGluten,
-                ]}
-                onPress={() => handleAccessibilityToggle("glutenfree")}
-              >
-                <View style={[styles.circleIconContainer, isGlutenFree && styles.circleIconContainerSelected]}>
-                  <WheatOff size={17} color={Colors.text} style={styles.accessibilityIcon} />
-                </View>
-                <Text style={[styles.ratingText, isGlutenFree && styles.ratingTextSelected]}>{t("post.postReview.gluten")}</Text>
-              </TouchableOpacity>
+                {/* Gluten-Free */}
+                <TouchableOpacity
+                  style={[
+                    styles.accessibilityRatingSquareGluten,
+                    isGlutenFree && styles.selectedAccessibilitySquareGluten,
+                  ]}
+                  onPress={() => handleAccessibilityToggle("glutenfree")}
+                >
+                  <View
+                    style={[
+                      styles.circleIconContainer,
+                      isGlutenFree && styles.circleIconContainerSelected,
+                    ]}
+                  >
+                    <WheatOff
+                      size={17}
+                      color={Colors.text}
+                      style={styles.accessibilityIcon}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.ratingText,
+                      isGlutenFree && styles.ratingTextSelected,
+                    ]}
+                  >
+                    {t("post.postReview.gluten")}
+                  </Text>
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                style={[
-                  styles.accessibilityRatingSquareVeg,
-                  isVeg && styles.selectedAccessibilitySquareVeg,
-                ]}
-                onPress={() => handleAccessibilityToggle("veg")}
-              >
-                <View style={[styles.circleIconContainer, isVeg && styles.circleIconContainerSelected]}>
-                  <LeafyGreen size={17} color={Colors.text} style={styles.accessibilityIcon} />
-                </View>
-                <Text style={[styles.ratingText, isVeg && styles.ratingTextSelected]}>{t("post.postReview.vegan")}</Text>
-              </TouchableOpacity>
+                {/* Vegetarian/Vegan */}
+                <TouchableOpacity
+                  style={[
+                    styles.accessibilityRatingSquareVeg,
+                    isVeg && styles.selectedAccessibilitySquareVeg,
+                  ]}
+                  onPress={() => handleAccessibilityToggle("veg")}
+                >
+                  <View
+                    style={[
+                      styles.circleIconContainer,
+                      isVeg && styles.circleIconContainerSelected,
+                    ]}
+                  >
+                    <LeafyGreen
+                      size={17}
+                      color={Colors.text}
+                      style={styles.accessibilityIcon}
+                    />
+                  </View>
+                  <Text
+                    style={[
+                      styles.ratingText,
+                      isVeg && styles.ratingTextSelected,
+                    ]}
+                  >
+                    {t("post.postReview.vegan")}
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -390,6 +653,8 @@ const ReviewScreen = ({ route }) => {
     </SafeAreaView>
   );
 };
+
+export default ReviewScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -404,7 +669,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: width * 0.05,
     flexDirection: "row",
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
   restaurantInfo: {
     fontFamily: Fonts.SemiBold,
@@ -505,27 +770,6 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     marginRight: width * 0.38,
   },
-  modalBackground: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContainer: {
-    width: width * 0.7,
-    padding: 15,
-    backgroundColor: Colors.background,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontFamily: Fonts.SemiBold,
-    fontSize: width * 0.05,
-    marginBottom: 15,
-  },
-  modalContent: {
-    alignItems: "flex-start",
-  },
   iconRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -552,12 +796,6 @@ const styles = StyleSheet.create({
     marginTop: height * 0.05,
     paddingHorizontal: width * 0.05,
     alignSelf: "flex-start",
-  },
-  accessibilityHeader: {
-    fontSize: width * 0.05,
-    fontFamily: Fonts.SemiBold,
-    color: Colors.charcoal,
-    marginBottom: height * 0.02,
   },
   accessibilityRatingsContainer: {
     flexDirection: "row",
@@ -619,28 +857,82 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
   circleIconContainer: {
-    width: 30, 
+    width: 30,
     height: 30,
-    borderRadius: 90, 
+    borderRadius: 90,
     borderColor: Colors.text,
     backgroundColor: Colors.background,
-    borderWidth: 1, 
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
   circleIconContainerSelected: {
-    width: 30, 
+    width: 30,
     height: 30,
-    borderRadius: 90, 
+    borderRadius: 90,
     borderColor: Colors.background,
     backgroundColor: Colors.background,
-    borderWidth: 1, 
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
   },
-  accessibilityIcon: {
+  accessibilityIcon: {},
+  modalBackground: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modalContainer: {
+    width: width * 0.8,
+    padding: 20,
+    backgroundColor: Colors.background,
+    borderRadius: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontFamily: Fonts.SemiBold,
+    fontSize: width * 0.06,
+    textAlign: "center",
+  },
+  modalContent: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  previewContainer: {
+    transform: [{ scale: 0.7 }],
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 15,
+    marginTop: width * -0.2,
+  },
+  shareButton: {
+    backgroundColor: Colors.charcoal,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginBottom: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  shareButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  instagramIcon: {
+    marginRight: 8,
+  },
+  shareButtonText: {
+    color: Colors.background,
+    fontFamily: Fonts.SemiBold,
+    fontSize: width * 0.045,
+  },
+  shareCancelButton: {
+    marginTop: 5,
+  },
+  shareCancelButtonText: {
+    color: Colors.tags,
+    fontFamily: Fonts.SemiBold,
+    fontSize: width * 0.045,
   },
 });
-
-export default ReviewScreen;
-

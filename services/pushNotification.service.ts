@@ -32,6 +32,43 @@ export async function scheduleWeeklyRestaurantNotification() {
   });
 }
 
+export async function scheduleWeeklyExploreReminder() {
+  // Cancel any existing scheduled notifications to prevent duplication
+  await cancelAllScheduledNotifications();
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Can't decide where to eat?",
+      body: "Check out your Explore page!",
+    },
+    trigger: {
+      weekday: 7, 
+      hour: 14, 
+      minute: 30,
+      repeats: true,
+    },
+  });
+}
+
+export async function scheduleWeeklyPostReminder() {
+  // Cancel any existing scheduled notifications to prevent duplication
+  await cancelAllScheduledNotifications();
+
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: "Went out this weekend?",
+      body: "Let your friends know what's good!",
+    },
+    trigger: {
+      weekday: 2, 
+      hour: 12, 
+      minute: 0,
+      repeats: true,
+    },
+  });
+}
+
+
 async function registerForPushNotificationsAsync() {
   if (Platform.OS === "android") {
     Notifications.setNotificationChannelAsync("default", {

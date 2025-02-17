@@ -6,12 +6,16 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  Image,
 } from "react-native";
-import { MapPin, Bookmark, User, MapPinCheckInside, CircleUserRound } from "lucide-react-native"; // Use the Flame icon instead of User for trending
+import {
+  Bookmark,
+  MapPinCheckInside,
+  CircleUserRound,
+} from "lucide-react-native"; // Use the Flame icon instead of User for trending
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
 import { MarkerType } from "../discover/MapViewWithMarkers";
-import { Circle, Path, Svg } from "react-native-svg";
 import { useTranslation } from "react-i18next";
 
 interface RestaurantListProps {
@@ -24,7 +28,6 @@ interface RestaurantListProps {
 
 const { width, height } = Dimensions.get("window");
 
-
 const RestaurantList = ({
   restaurants,
   userLocation,
@@ -32,7 +35,8 @@ const RestaurantList = ({
   selectedFilter,
   onItemSelect,
 }: RestaurantListProps) => {
-  const {t} = useTranslation();
+  const { t } = useTranslation();
+
   const handleFilterPress = (filterType: "save" | "post" | "following") => {
     if (selectedFilter === filterType) {
       onFilterChange(null); // Unselect the filter
@@ -40,6 +44,7 @@ const RestaurantList = ({
       onFilterChange(filterType);
     }
   };
+
   const calculateDistance = (
     lat1: number,
     lon1: number,
@@ -82,18 +87,49 @@ const RestaurantList = ({
     return `${distance} km`;
   };
 
-  const filteredRestaurants = React.useMemo(() => {
-    if (!selectedFilter) return restaurants;
-    return restaurants.filter(
-      (restaurant) => restaurant.type === selectedFilter
-    );
-  }, [restaurants, selectedFilter]);
+  /**
+   * Filter by selected type (if any), then sort by distance (ascending).
+   */
+  const filteredAndSortedRestaurants = React.useMemo(() => {
+    // First filter
+    let result = selectedFilter
+      ? restaurants.filter((r) => r.type === selectedFilter)
+      : restaurants;
+
+    // Then sort by distance if userLocation is available
+    if (userLocation) {
+      result = [...result].sort((a, b) => {
+        const distanceA =
+          a.latitude && a.longitude
+            ? calculateDistance(
+                userLocation.latitude,
+                userLocation.longitude,
+                a.latitude,
+                a.longitude
+              )
+            : Infinity;
+        const distanceB =
+          b.latitude && b.longitude
+            ? calculateDistance(
+                userLocation.latitude,
+                userLocation.longitude,
+                b.latitude,
+                b.longitude
+              )
+            : Infinity;
+        return distanceA - distanceB;
+      });
+    }
+
+    return result;
+  }, [restaurants, selectedFilter, userLocation]);
 
   const renderItem = ({ item: restaurant }: { item: MarkerType }) => {
     const distanceText = calculateDistanceText(restaurant, userLocation);
 
     return (
       <View style={styles.container}>
+
         <TouchableOpacity onPress={() => onItemSelect(restaurant)}>
           <View style={styles.header}>
             <View style={styles.titleContainer}>
@@ -101,7 +137,8 @@ const RestaurantList = ({
                 {restaurant.establishmentName || "Unknown Name"}
               </Text>
               <Text style={styles.location}>
-                {restaurant.city || "Unknown City"}{" "}–{" "}<Text style={styles.distance}>{distanceText}</Text>
+                {restaurant.city || "Unknown City"} –{" "}
+                <Text style={styles.distance}>{distanceText}</Text>
               </Text>
             </View>
             <View style={styles.ratingContainer}>
@@ -147,7 +184,7 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("save")}
           >
-            <Bookmark size={25} color="white" strokeWidth={2.5}/>
+            <Bookmark size={25} color="white" strokeWidth={2.5} />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={1}
@@ -158,7 +195,7 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("post")}
           >
-            <MapPinCheckInside size={25} color="white" strokeWidth={2.5}/>
+            <MapPinCheckInside size={25} color="white" strokeWidth={2.5} />
           </TouchableOpacity>
           <TouchableOpacity
             activeOpacity={1}
@@ -169,14 +206,14 @@ const RestaurantList = ({
             ]}
             onPress={() => handleFilterPress("following")}
           >
-            <CircleUserRound size={25} color="white" strokeWidth={2.5}/>
+            <CircleUserRound size={25} color="white" strokeWidth={2.5} />
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Restaurant List */}
       <FlatList
-        data={filteredRestaurants}
+        data={filteredAndSortedRestaurants}
         keyExtractor={(item) => item.establishmentId}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
@@ -197,6 +234,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  topPostsContainer: {
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  topPostImage: {
+    width: 80,
+    height: 80,
+    marginRight: 10,
+    borderRadius: 8,
   },
   titleContainer: {
     flex: 1,

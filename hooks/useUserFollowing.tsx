@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryResult } from "@tanstack/react-query";
 import { FollowingService } from "../services/following.service";
 import type { Post } from "../models/post";
@@ -30,7 +30,7 @@ export function useUserCounts(userId: string) {
   });
 }
 
-// Hook to check if the current user is following another user
+// Hook to check if current user is following another.
 export function useIsFollowing(userId: string, followingId: string) {
   return useQuery({
     queryKey: ["isFollowing", userId, followingId],
@@ -39,16 +39,13 @@ export function useIsFollowing(userId: string, followingId: string) {
   });
 }
 
-// Hook to get posts from friends of the user
+// Hook to get posts from friends of the user.
 export function useFriendDiscoverPosts(userId: string) {
   return useQuery({
     queryKey: ["friendDiscoverPosts", userId],
     queryFn: async () => {
       const response = await followingService.getFollowingPosts(userId);
-      // Extract posts from the response
       const posts = response.posts;
-
-      // Filter out posts without images
       return posts.filter((post) => post.imageUrls && post.imageUrls.length > 0);
     },
     enabled: !!userId,
@@ -56,25 +53,37 @@ export function useFriendDiscoverPosts(userId: string) {
 }
 
 
-// Hook to get posts from users that the current user follows
 export const useFollowingPosts = (
-  currentUserId: string
-): UseQueryResult<Post[], Error> => {
-  return useQuery({
-    queryKey: ["followingByUser", currentUserId],
-    queryFn: async (): Promise<Post[]> => {
+  currentUserId: string,
+  limit = 30,
+  region?: { ne: [number, number]; sw: [number, number] }
+) => {
+  return useInfiniteQuery<
+    { posts: Post[]; lastVisible: any },
+    Error
+  >({
+    queryKey: ["followingByUser", currentUserId, limit, region || {}],
+    queryFn: async ({ pageParam = undefined }): Promise<{ posts: Post[]; lastVisible: any }> => {
       if (!currentUserId) throw new Error("User not authenticated");
-
-      const response = await followingService.getFollowingPosts(currentUserId);
-      // Extract posts from the response
-      const posts = response.posts;
-
-      // Filter out posts without images
-      return posts.filter((post) => post.imageUrls && post.imageUrls.length > 0);
+      // Pass the region parameter to your backend service.
+      const response = await followingService.getFollowingPostsPaginated(
+        currentUserId,
+        limit,
+        pageParam,
+        region
+      );
+      const posts = response.posts.filter(
+        (post: Post) => post.imageUrls && post.imageUrls.length > 0
+      );
+      return { posts, lastVisible: response.lastVisible };
     },
+    getNextPageParam: (lastPage) => lastPage.lastVisible,
+    initialPageParam: undefined,
     enabled: !!currentUserId,
   });
 };
+
+
 
 
 // Hook to handle follow/unfollow actions

@@ -64,17 +64,21 @@ const PostScreen = () => {
   
         for (const uri of selectedImageUris) {
           const processedUri = await processImage(uri);
-  
           const uploadedUrl = await uploadImageToFirebase(processedUri);
   
           if (uploadedUrl) {
-            const { isSafe, reason } = await analyzeImageWithVisionAPI(uploadedUrl);
-  
-            if (isSafe) {
+            if (__DEV__) {
+              // In development, bypass the objectionable content check.
               safeImages.push(uploadedUrl);
             } else {
-              rejectedImages.push(uploadedUrl);
-              console.warn(`Image rejected (${reason}): ${uploadedUrl}`);
+              // In production, analyze the image with the Vision API.
+              const { isSafe, reason } = await analyzeImageWithVisionAPI(uploadedUrl);
+              if (isSafe) {
+                safeImages.push(uploadedUrl);
+              } else {
+                rejectedImages.push(uploadedUrl);
+                console.warn(`Image rejected (${reason}): ${uploadedUrl}`);
+              }
             }
           }
         }
@@ -104,6 +108,7 @@ const PostScreen = () => {
       }
     }
   };
+  
   
   
   
@@ -201,7 +206,8 @@ const PostScreen = () => {
         onSuccess: (id) => {
           setUploadedImageUrls([]); // Clear uploaded images
           navigation.navigate("RestaurantSelect", {
-            postId: id, // Pass the created post ID
+            postId: id,
+            imageUrls: uploadedImageUrls
           });
         },
         onError: (error) => {
@@ -287,7 +293,7 @@ const PostScreen = () => {
 
             {uploadedImageUrls.length > 0 && (
               <TouchableOpacity onPress={handleNextPress} style={styles.nextButton} activeOpacity={1}>
-                <Text style={styles.nextButtonText}>{t("post.post.nextStep")}</Text>
+                <Text style={styles.nextButtonText}>{t("general.nextStep")}</Text>
               </TouchableOpacity>
             )}
           </View>

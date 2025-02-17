@@ -286,6 +286,49 @@ export class PostService {
     return posts;
   }
 
+  async getPostsByUserPaginated(
+    userId: string,
+    pageSize = 6,
+    pageParam?: QueryDocumentSnapshot<DocumentData>
+  ): Promise<{ posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined }> {
+    let q = query(
+      this.postsCollection,
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc"),
+      limit(pageSize)
+    );
+    
+    if (pageParam) {
+      q = query(q, startAfter(pageParam));
+    }
+  
+    const querySnapshot = await getDocs(q);
+    // If no more documents, stop pagination.
+    if (querySnapshot.empty) {
+      return { posts: [], lastVisible: undefined };
+    }
+  
+    const posts: Post[] = querySnapshot.docs.map((doc) => this.documentToPost(doc));
+  
+    // Preload profile pictures for each post
+    for (const post of posts) {
+      const storageRef = ref(storage, `profilePictures/${post.userId}`);
+      try {
+        const url = await getDownloadURL(storageRef);
+        post.profilePicture = url;
+      } catch (error) {
+        console.error("Error fetching profile picture:", error);
+        // Optionally, assign a fallback URL here.
+      }
+    }
+  
+    const newLastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+    return { posts, lastVisible: newLastVisible };
+  }
+  
+  
+  
+
   async getMostRecentPosts(userId: string): Promise<Post[]> {
     const q = query(
       this.postsCollection,
@@ -410,3 +453,4 @@ export class PostService {
     } as unknown as PostComment;
   }
 }
+

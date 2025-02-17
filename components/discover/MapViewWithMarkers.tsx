@@ -1,3 +1,4 @@
+// MapViewWithMarkers.tsx
 import React, { useCallback, useMemo } from "react";
 import { Camera, MapView } from "@rnmapbox/maps";
 import MapViewComponent from "../map/mapView";
@@ -13,15 +14,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import { StyleSheet } from "react-native";
 
 const CRAFT_BRASSERIE_ID = "wPMUrAhXuc7vy6uA2ljG";
-
-interface MapViewWithMarkersProps {
-  mapRef: React.RefObject<MapView>;
-  cameraRef: React.RefObject<Camera>;
-  markers: MarkerTypeWithImage[];
-  markerFilter: "save" | "following" | "post" | null;
-  onMarkerPress: (marker: any) => void;
-  onMapLoaded: () => void;
-}
 
 export type MarkerType = {
   type: "save" | "following" | "post" | null;
@@ -42,6 +34,16 @@ export type MarkerTypeWithImage = MarkerType & {
   userProfilePicture: string;
 };
 
+interface MapViewWithMarkersProps {
+  mapRef: React.RefObject<MapView>;
+  cameraRef: React.RefObject<Camera>;
+  markers: MarkerTypeWithImage[];
+  markerFilter: "save" | "following" | "post" | null;
+  onMarkerPress: (marker: any) => void;
+  onMapLoaded: () => void;
+  onRegionDidChange?: (region: { ne: [number, number]; sw: [number, number] }) => void;
+}
+
 const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
   mapRef,
   markers,
@@ -49,6 +51,7 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
   onMarkerPress,
   markerFilter,
   onMapLoaded,
+  onRegionDidChange,
 }) => {
   const { location, fetchLocation } = useLocationStore();
 
@@ -77,19 +80,15 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
       title: marker.establishmentName ?? "",
     };
 
-    // Prioritize The Craft Brasserie & Grille by its `establishmentId`
     if (marker.establishmentId === CRAFT_BRASSERIE_ID) {
       return <CraftBrasserieMarker {...props} />;
     }
 
-    // Handle other marker types
     switch (marker.type) {
       case "save":
         return <BookmarkMarker {...props} />;
       case "following":
-        return (
-          <UserMarker {...props} image={marker.userProfilePicture} />
-        );
+        return <UserMarker {...props} image={marker.userProfilePicture} />;
       case "post":
         return <PlacesReviewedMarker {...props} />;
       default:
@@ -98,7 +97,10 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
   };
 
   return (
-    <MapViewComponent ref={mapRef} onMapLoaded={onMapLoaded}>
+    <MapViewComponent
+      ref={mapRef}
+      onMapLoaded={onMapLoaded}
+    >
       {location && (
         <Camera
           ref={cameraRef}
