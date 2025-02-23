@@ -149,7 +149,9 @@ function DiscoverScreen() {
         country: save.country,
         priceRange: save.priceRange || 0,
         tags: save.tags,
-        averageRating: save.averageRating,
+        averageRating: save.averageRating != null
+          ? save.averageRating.toString()
+          : "0",
         userProfilePicture: "", // default value for saves
         type: "save" as const,
       })),
@@ -164,7 +166,9 @@ function DiscoverScreen() {
         country: post.establishmentDetails.country,
         priceRange: post.establishmentDetails.priceRange || 0,
         tags: post.tags,
-        averageRating: post.establishmentDetails.averageRating.toString(),
+        averageRating: post.establishmentDetails.averageRating != null
+          ? post.establishmentDetails.averageRating.toString()
+          : "0",
         type: "following" as const,
       })),
       ...memoizedPosts.map((post) => ({
@@ -178,7 +182,9 @@ function DiscoverScreen() {
         priceRange: post.establishmentDetails.priceRange || 0,
         userProfilePicture: post.profilePicture,
         tags: post.tags,
-        averageRating: post.establishmentDetails.averageRating.toString(),
+        averageRating: post.establishmentDetails.averageRating != null
+          ? post.establishmentDetails.averageRating.toString()
+          : "0",
         type: "post" as const,
       })),
     ];

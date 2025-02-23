@@ -27,14 +27,14 @@ import { EstablishmentService } from "../../services/establishment.service";
 import { mapRetrieveResponseToEstablishment } from "../../helpers/parseData";
 import { RootStackParamList } from "../../types/stackParams.types";
 import { CircleArrowLeft } from "lucide-react-native";
-import {PostService} from "../../services/post.service"
+import { PostService } from "../../services/post.service";
 import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get("window");
 
 const RestaurantSelectScreen = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const route = useRoute();
   const { postId, imageUrls } = route.params as { postId: string; imageUrls: string[] };
   const { user, userProfile } = useAuth();
@@ -104,6 +104,7 @@ const RestaurantSelectScreen = () => {
     [user]
   );
 
+  // Update the post with establishment details including rating fields.
   const updateExistingPost = useCallback(
     (establishmentId: string) => {
       if (!postId || !establishmentId) {
@@ -116,7 +117,6 @@ const RestaurantSelectScreen = () => {
         establishmentDetails: {
           id: establishmentId,
           address: retrievedSuggestion?.address!,
-          averageRating: 0,
           city: retrievedSuggestion?.city!,
           country: retrievedSuggestion?.country!,
           hours: [],
@@ -126,12 +126,21 @@ const RestaurantSelectScreen = () => {
           priceRange: 0,
           status: "",
           website: "",
+          // Only include cumulative fields if the establishment is new.
+          ...(retrievedSuggestion?.id === "" && {
+            postCount: 0,
+            totalRating: "0.0",
+            averageRating: "0.0",
+          }),
         },
         tags: selectedTags,
       };
+      
+      
+      
   
       updatePost(
-        { id: postId, establishmentId, data: updatedPostData }, // Added establishmentId to the mutation parameters
+        { id: postId, establishmentId, data: updatedPostData },
         {
           onSuccess: () => {
             setRetrievedSuggestion(null);
@@ -144,7 +153,7 @@ const RestaurantSelectScreen = () => {
               country: updatedPostData.establishmentDetails.country,
               tags: selectedTags,
               postId: postId,
-              imageUrls: imageUrls[0], 
+              imageUrls: imageUrls[0],
             });            
           },
           onError: (error) => {
@@ -154,10 +163,10 @@ const RestaurantSelectScreen = () => {
         }
       );
     },
-    [updatePost, postId, selectedTags, navigation, retrievedSuggestion]
+    [updatePost, postId, selectedTags, navigation, retrievedSuggestion, imageUrls]
   );
   
-
+  // When moving to the next screen, create a new establishment if necessary.
   const handleNextPress = useCallback(async () => {
     if (!retrievedSuggestion) {
       Alert.alert(t("general.error"), t("post.restaurantSelect.restaurantSelectError"));
@@ -172,6 +181,8 @@ const RestaurantSelectScreen = () => {
     try {
       let establishmentId: string;
 
+      // If the retrieved suggestion already has an id, use it;
+      // otherwise, create a new establishment.
       if (retrievedSuggestion.id !== "") {
         establishmentId = retrievedSuggestion.id;
       } else {
@@ -197,21 +208,20 @@ const RestaurantSelectScreen = () => {
 
   const handleCategoryPress = (category: "cuisines" | "foodOccasions" | "restaurantVibes") => {
     setActiveCategory(category === activeCategory ? null : category);
-  }
+  };
 
   const handleBackPress = useCallback(() => {
     Alert.alert(
       t("post.restaurantSelect.discardPost"),
       t("post.restaurantSelect.discardPostMessage"),
       [
-        { text: t("general.Cancel"), style: "cancel" },
+        { text: t("general.cancel"), style: "cancel" },
         {
           text: t("post.restaurantSelect.discard"),
           onPress: async () => {
             try {
               await postService.deletePost(postId);
               console.log("Post deleted successfully");
-              // Navigate back or refresh the UI as needed
               navigation.navigate("MainTabNavigator", {
                 screen: "Post",
               });
@@ -223,18 +233,17 @@ const RestaurantSelectScreen = () => {
         },
       ]
     );
-  }, [postId, postService, navigation]);
+  }, [postId, postService, navigation, t]);
   
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.nextButtonContainer}>
-      <TouchableOpacity onPress={handleBackPress} activeOpacity={1}>
-      <CircleArrowLeft size={28} color={Colors.text} />
-      </TouchableOpacity>
-      <TouchableOpacity onPress={handleNextPress} activeOpacity={1}>
-        <Text style={styles.nextButton}>{t("general.next")}</Text>
-      </TouchableOpacity>
+        <TouchableOpacity onPress={handleBackPress} activeOpacity={1}>
+          <CircleArrowLeft size={28} color={Colors.text} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleNextPress} activeOpacity={1}>
+          <Text style={styles.nextButton}>{t("general.next")}</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.header}>
         <Text style={styles.title}>{t("post.restaurantSelect.where")}</Text>
@@ -326,7 +335,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: width * 0.05
+    paddingHorizontal: width * 0.05,
   },
   nextButton: {
     color: Colors.highlightText,

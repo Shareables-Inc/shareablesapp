@@ -23,6 +23,7 @@ import {
   useNavigation,
   RouteProp,
   NavigationProp,
+  useFocusEffect,
 } from "@react-navigation/native";
 import Colors from "../../utils/colors";
 import { Fonts } from "../../utils/fonts";
@@ -59,9 +60,10 @@ import {
   useToggleLike,
 } from "../../hooks/useLikes";
 import ExpandedPostSkeleton from "../../components/skeleton/expandedPostSkeleton";
-import {PostService} from "../../services/post.service"
-import { useFocusEffect } from "@react-navigation/native";
+import { PostService } from "../../services/post.service";
 import { useTranslation } from "react-i18next";
+// Import EstablishmentService so we can update cumulative ratings on deletion.
+import { EstablishmentService } from "../../services/establishment.service";
 
 const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = height * 0.13;
@@ -77,7 +79,7 @@ type ExpandedPostScreenProps = {
 
 const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   const { user, userProfile } = useAuth();
-  const {t} = useTranslation();
+  const { t } = useTranslation();
   const { postId } = route.params as { postId: string };
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { data: expandedPost, isLoading, refetch } = usePostById(postId);
@@ -92,10 +94,8 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState<any[]>([]);
-
   const { data: postData } = usePostById(postId);
   const [realTimeLikeCount, setRealTimeLikeCount] = useState(0);
-
   const [optimisticLikeCount, setOptimisticLikeCount] = useState(0);
   const [optimisticIsLiked, setOptimisticIsLiked] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,7 +113,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   useFocusEffect(
     React.useCallback(() => {
-      // Refetch the post data when the screen comes into focus
       refetch();
     }, [refetch])
   );
@@ -139,15 +138,12 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           setRealTimeLikeCount(postData.likeCount || 0);
         }
       });
-
-      // Cleanup function
       return () => unsubscribe();
     }
   }, [postId]);
 
   const handleLike = async () => {
     const newIsLiked = !optimisticIsLiked;
-    // Optimistically update the like state and count immediately
     setOptimisticIsLiked(newIsLiked);
     setRealTimeLikeCount((prev) => (newIsLiked ? prev + 1 : prev - 1));
   
@@ -157,7 +153,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           { postId, userId: user.uid },
           {
             onError: () => {
-              // Revert optimistic update on error
               setOptimisticIsLiked(!newIsLiked);
               setRealTimeLikeCount((prev) => prev - 1);
             },
@@ -168,7 +163,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           { postId, userId: user.uid },
           {
             onError: () => {
-              // Revert optimistic update on error
               setOptimisticIsLiked(!newIsLiked);
               setRealTimeLikeCount((prev) => prev + 1);
             },
@@ -177,7 +171,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       }
     }
   };
-  
 
   const handleScroll = (event: {
     nativeEvent: { contentOffset: { x: any } };
@@ -208,7 +201,7 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   const openRestaurantProfile = () => {
     if (expandedPost?.establishmentDetails.id) {
       navigation.navigate("RestaurantProfile", {
-        establishmentId: expandedPost?.establishmentDetails.id,
+        establishmentId: expandedPost.establishmentDetails.id,
       });
     }
   };
@@ -217,7 +210,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const fullScreenOpacity = useRef(new Animated.Value(0)).current;
   const [isModalVisible, setModalVisible] = useState(false);
-
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const pan = useRef(new Animated.ValueXY()).current;
 
@@ -290,37 +282,28 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
 
   const getDaysAgo = (timestamp: any) => {
     if (!timestamp || !timestamp.toDate) {
-      return t("post.expandedPost.justNow"); // Fallback if timestamp is not yet set or not a Firestore Timestamp
+      return t("post.expandedPost.justNow");
     }
-
     const now = new Date();
-    const commentDate = timestamp.toDate(); // Convert Firestore Timestamp to JS Date
+    const commentDate = timestamp.toDate();
     const diffTime = Math.abs(now.getTime() - commentDate.getTime());
-
-    // Check if the comment is within the last 10 minutes (600,000 milliseconds)
     const tenMinutes = 1000 * 60 * 10;
     if (diffTime < tenMinutes) {
       return t("post.expandedPost.now");
     }
-
-    // Check if the comment is within the last 24 hours (86,400,000 milliseconds)
     const oneDay = 1000 * 60 * 60 * 24;
     if (diffTime < oneDay) {
       return t("post.expandedPost.today");
     }
-
-    // Calculate the number of days ago
     const diffDays = Math.floor(diffTime / oneDay);
-    return diffDays + "d"; // Show number of days followed by "d"
+    return diffDays + "d";
   };
 
   const handleAddComment = async () => {
     try {
       if (comment.trim() === "") {
-        // Prevent adding empty comments
         return;
       }
-
       if (user?.uid && postId) {
         const commentData = {
           postId: postId,
@@ -328,12 +311,12 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           userName: userProfile!.username,
           userProfilePicture: userProfile!.profilePicture,
           comment: comment.trim(),
-          createdAt: serverTimestamp(), // Use Firestore serverTimestamp()
+          createdAt: serverTimestamp(),
         };
 
         await addDoc(collection(db, "comments"), commentData);
         setComments([...comments, commentData]);
-        setComment(""); // Clear the input after adding the comment
+        setComment("");
       } else {
         console.error("Post ID or currentUser is undefined");
       }
@@ -355,7 +338,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       Alert.alert(t("general.error"), t("post.expandedPost.editError"));
       return;
     }
-  
     setModalVisible(false);
     navigation.navigate("Review", {
       isEditing: true,
@@ -374,12 +356,34 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
       },
     });
   };
-  
-  
-  
 
   const postService = new PostService();
 
+  // Helper function to update establishment cumulative fields upon deletion
+  const updateEstablishmentOnPostDeletion = async (establishmentId: string, deletedOverall: number) => {
+    try {
+      const establishmentService = new EstablishmentService();
+      const estData = await establishmentService.getEstablishmentById(establishmentId);
+      if (estData) {
+        const prevTotal = typeof estData.totalRating === "string" ? Number(estData.totalRating) : estData.totalRating || 0;
+        let prevCount = typeof estData.postCount === "string" ? Number(estData.postCount) : estData.postCount || 0;
+        const newTotal = prevTotal - deletedOverall;
+        const newCount = prevCount - 1;
+        const newAverage = newCount > 0 ? newTotal / newCount : 0;
+        await establishmentService.updateEstablishment(establishmentId, {
+          totalRating: newTotal.toString(),
+          postCount: newCount,
+          averageRating: newAverage.toString(),
+        });
+        console.log("Establishment ratings updated on deletion:", { newTotal, newCount, newAverage });
+      }
+    } catch (error) {
+      console.error("Failed to update establishment ratings on post deletion:", error);
+      throw error;
+    }
+  };
+
+  // Updated handleDeletePost: update establishment fields then delete post.
   const handleDeletePost = () => {
     Alert.alert(
       t("post.expandedPost.delete"),
@@ -390,9 +394,16 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           text: t("general.delete"),
           onPress: async () => {
             try {
+              if (!expandedPost || !expandedPost.establishmentDetails?.id) {
+                throw new Error("Missing establishment data.");
+              }
+              const establishmentId = expandedPost.establishmentDetails.id;
+              const postOverall = Number(expandedPost.ratings.overall);
+              // First, update the establishment cumulative fields.
+              await updateEstablishmentOnPostDeletion(establishmentId, postOverall);
+              // Then, delete the post.
               await postService.deletePost(postId);
               console.log("Post deleted successfully");
-              // Navigate back or refresh the UI as needed
               navigation.goBack();
             } catch (error) {
               console.error("Error deleting post:", error);
@@ -483,8 +494,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
               >
                 <ArrowLeft color={Colors.text} size={25} />
               </TouchableOpacity>
-
-              {/* Conditionally render ellipsis icon for the post owner only */}
               {expandedPost?.userId === user?.uid && (
                 <TouchableOpacity
                   activeOpacity={1}
@@ -587,7 +596,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
                   style={styles.userImage}
                 />
               </TouchableOpacity>
-
               <View style={styles.userNameContainer}>
                 <Text style={styles.userName}>
                   {expandedPost?.username}'s {t("post.expandedPost.review")}
@@ -674,7 +682,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
             <View style={styles.commentsHeader}>
               <Text style={styles.commentsTitle}>{t("post.expandedPost.comments")}</Text>
             </View>
-
             {comments.map((comment, index) => (
               <View key={index} style={styles.commentContainer}>
                 <TouchableOpacity
@@ -721,7 +728,6 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
           />
         </View>
         
-        {/* Edit/Delete Modal */}
         {expandedPost?.userId === user?.uid && (
           <Modal
             isVisible={isModalVisible}
@@ -1104,8 +1110,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   fullscreenImageContainer: {
-    width: width, // Full screen width
-    height: height, // Full screen height
+    width: width,
+    height: height,
     justifyContent: "center",
     alignItems: "center",
   },

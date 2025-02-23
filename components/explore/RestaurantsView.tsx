@@ -23,11 +23,15 @@ import { useGetFeaturedEstablishments } from "../../hooks/useEstablishment";
 import { useAuth } from "../../context/auth.context";
 import { UserProfile } from "../../models/userProfile";
 import { useTranslation } from "react-i18next";
+// Import your location store
+import { useLocationStore } from "../../store/useLocationStore";
 
 const { width } = Dimensions.get("window");
 
+// Update the props to include an optional userLocation.
 interface RestaurantsViewProps {
   location: string;
+  userLocation?: { latitude: number; longitude: number } | null;
 }
 
 // New interface for discount details
@@ -37,11 +41,18 @@ interface DiscountDetail {
   contactValue: string;
 }
 
-const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
+const RestaurantsView: React.FC<RestaurantsViewProps> = ({
+  location,
+  userLocation = null,
+}) => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const userService = new UserService();
   const { userProfile } = useAuth();
+  // Get location from store if not provided via props.
+  const locationStore = useLocationStore();
+  const currentLocation =
+    userLocation || locationStore.location?.coords || null;
 
   const {
     data: featuredEstablishments,
@@ -56,12 +67,12 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   // ====== DISCOUNT CAROUSEL & MODAL STATE ======
-  // Replace discountImages with discountDetails and update file paths and contact info as needed.
   const discountDetails: DiscountDetail[] = [
     {
       image: require("../../assets/images/discounts/discountBaro.png"),
       contactType: "website",
-      contactValue: "https://sipandsavour.beehiiv.com/p/free-margarita-baro-petty-cash", // Update to your actual URL
+      contactValue:
+        "https://sipandsavour.beehiiv.com/p/free-margarita-baro-petty-cash",
     },
     {
       image: require("../../assets/images/discounts/discountCubana.png"),
@@ -71,24 +82,25 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     {
       image: require("../../assets/images/discounts/discountMilky.png"),
       contactType: "website",
-      contactValue: "https://sipandsavour.beehiiv.com/p/milkys-25-off?utm_campaign=25-off-milky-s-cafes&utm_medium=newsletter&utm_source=sipandsavour.beehiiv.com",
+      contactValue:
+        "https://sipandsavour.beehiiv.com/p/milkys-25-off?utm_campaign=25-off-milky-s-cafes&utm_medium=newsletter&utm_source=sipandsavour.beehiiv.com",
     },
   ];
   const [activeSlide, setActiveSlide] = useState(0);
   const discountScrollRef = useRef<ScrollView>(null);
 
-  // Modal state
+  // Modal state for discount content
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDiscount, setSelectedDiscount] = useState<DiscountDetail | null>(null);
+  const [selectedDiscount, setSelectedDiscount] = useState<DiscountDetail | null>(
+    null
+  );
 
-  // Update active slide based on scroll position
   const handleScroll = (event: any) => {
     const offsetX = event.nativeEvent.contentOffset.x;
     const currentIndex = Math.round(offsetX / (width * 0.9));
     setActiveSlide(currentIndex);
   };
 
-  // Auto-swipe every 4.5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       let nextSlide = activeSlide + 1;
@@ -105,7 +117,6 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     return () => clearInterval(interval);
   }, [activeSlide, discountDetails.length]);
 
-  // Open modal when a discount is pressed
   const handleDiscountPress = (discount: DiscountDetail) => {
     setSelectedDiscount(discount);
     setModalVisible(true);
@@ -130,10 +141,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        refetchFeaturedEstablishments(),
-        fetchTopFollowedUsers(),
-      ]);
+      await Promise.all([refetchFeaturedEstablishments(), fetchTopFollowedUsers()]);
     } catch (error) {
       console.error("Error refreshing data:", error);
     } finally {
@@ -154,8 +162,7 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
   };
 
   const getTopTenEstablishments = (): FeaturedEstablishment[] => {
-    if (!featuredEstablishments || featuredEstablishments.length === 0)
-      return [];
+    if (!featuredEstablishments || featuredEstablishments.length === 0) return [];
 
     const sortedEstablishments = [...featuredEstablishments].sort(
       (a, b) => parseFloat(b.averageRating) - parseFloat(a.averageRating)
@@ -165,6 +172,51 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
     );
     return uniqueEstablishments.slice(0, 10);
   };
+
+  // ---- Helper Functions for Distance Calculation ----
+  const deg2rad = (deg: number): number => deg * (Math.PI / 180);
+
+  const calculateDistance = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ): number => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(deg2rad(lat1)) *
+        Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const d = R * c; // Distance in km
+    return Math.round(d * 10) / 10;
+  };
+
+  const calculateDistanceText = (
+    establishment: FeaturedEstablishment
+  ): string => {
+    if (!currentLocation) {
+      return "Distance Unavailable";
+    }
+    // Parse the establishment's latitude/longitude (in case they're strings)
+    const lat = parseFloat(establishment.latitude as any);
+    const lon = parseFloat(establishment.longitude as any);
+    if (isNaN(lat) || isNaN(lon)) {
+      return "Distance Unavailable";
+    }
+    const distance = calculateDistance(
+      currentLocation.latitude,
+      currentLocation.longitude,
+      lat,
+      lon
+    );
+    return `${distance} km`;
+  };
+  // ---- End of Helper Functions ----
 
   const renderTopFollowedUser = ({
     item,
@@ -185,7 +237,11 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
           style={styles.topPosterImage}
         />
         <View style={styles.posterTextContainer}>
-          <Text style={styles.topPosterUsername} numberOfLines={1} ellipsizeMode="tail">
+          <Text
+            style={styles.topPosterUsername}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             @{item.username}
           </Text>
           <Text style={styles.topPosterFollowers}>
@@ -219,11 +275,22 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
             />
           </View>
         </TouchableOpacity>
-        <Text style={styles.restaurantNameText} numberOfLines={1} ellipsizeMode="tail">
+        <Text
+          style={styles.restaurantNameText}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {item.name || "Unknown Restaurant"}
         </Text>
-        <Text style={styles.averageRatingText} numberOfLines={1} ellipsizeMode="tail">
+        {/* <Text
+          style={styles.averageRatingText}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
           {item.averageRating || "N/A"}
+        </Text> */}
+        <Text style={styles.postCountText}>
+          {item.postCount || 0} {item.postCount === 1 ? 'review' : 'reviews'}  -  {calculateDistanceText(item)}
         </Text>
       </View>
     );
@@ -241,98 +308,117 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({ location }) => {
       style={styles.scrollViewContent}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.tags} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          tintColor={Colors.tags}
+        />
       }
     >
-      <Text style={styles.sectionTitleDiscount}>{t("explore.weeklyDiscount")}</Text>
-
-      {/* Discount Carousel with Auto Swipe */}
-      <ScrollView
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        style={styles.discountCarousel}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        ref={discountScrollRef}
-      >
-        {discountDetails.map((discount, index) => (
-          <TouchableOpacity
-            key={index}
-            activeOpacity={0.8}
-            onPress={() => handleDiscountPress(discount)}
+      {/* Discounts Section (only for Toronto) */}
+      {location === "Toronto" && (
+        <>
+          <Text style={styles.sectionTitleDiscount}>
+            {t("explore.weeklyDiscount")}
+          </Text>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            style={styles.discountCarousel}
+            onScroll={handleScroll}
+            scrollEventThrottle={16}
+            ref={discountScrollRef}
           >
-            <View style={styles.discountCard}>
-              <FastImage source={discount.image} style={styles.discountImage} resizeMode="cover" />
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Dot Indicators */}
-      <View style={styles.dotsContainer}>
-        {discountDetails.map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.dot,
-              i === activeSlide ? styles.activeDot : styles.inactiveDot,
-            ]}
-          />
-        ))}
-      </View>
-
-      {/* Modal for discount content */}
-      <Modal
-        transparent={true}
-        visible={modalVisible}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            {selectedDiscount && (
-              <>
-                {selectedDiscount.contactType === "eml" ||
-                selectedDiscount.contactType === "website" ? (
-                  // Display the website (or EML file) using a WebView
-                  <View style={{ width: "100%", height: width * 1.5 }}>
-                    <WebView
-                      source={{ uri: selectedDiscount.contactValue }}
-                      style={{ flex: 1 }}
-                    />
-                  </View>
-                ) : null}
-              </>
-            )}
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text style={styles.closeButtonText}>Close</Text>
-            </TouchableOpacity>
+            {discountDetails.map((discount, index) => (
+              <TouchableOpacity
+                key={index}
+                activeOpacity={0.8}
+                onPress={() => handleDiscountPress(discount)}
+              >
+                <View style={styles.discountCard}>
+                  <FastImage
+                    source={discount.image}
+                    style={styles.discountImage}
+                    resizeMode="cover"
+                  />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={styles.dotsContainer}>
+            {discountDetails.map((_, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.dot,
+                  i === activeSlide ? styles.activeDot : styles.inactiveDot,
+                ]}
+              />
+            ))}
           </View>
-        </View>
-      </Modal>
+          <Modal
+            transparent={true}
+            visible={modalVisible}
+            animationType="slide"
+            onRequestClose={() => setModalVisible(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                {selectedDiscount && (
+                  <>
+                    {selectedDiscount.contactType === "eml" ||
+                    selectedDiscount.contactType === "website" ? (
+                      <View style={{ width: "100%", height: width * 1.5 }}>
+                        <WebView
+                          source={{ uri: selectedDiscount.contactValue }}
+                          style={{ flex: 1 }}
+                        />
+                      </View>
+                    ) : null}
+                  </>
+                )}
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  activeOpacity={0.7}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={styles.closeButtonText}>{t("general.close")}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        </>
+      )}
 
-      <Text style={styles.sectionTitleFeatured}>{t("explore.topRestaurants")}</Text>
+      {/* Featured Restaurants Section (always visible) */}
+      <Text style={styles.sectionTitleFeatured}>
+        {t("explore.topRestaurants")}
+      </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ paddingRight: width * 0.03, flexDirection: "row" }}>
-          {getTopTenEstablishments().slice(0, 5).map((item) => (
-            <View key={item.id}>{renderFeaturedRestaurants({ item })}</View>
-          ))}
+          {getTopTenEstablishments()
+            .slice(0, 5)
+            .map((item) => (
+              <View key={item.id}>{renderFeaturedRestaurants({ item })}</View>
+            ))}
         </View>
       </ScrollView>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View style={{ paddingRight: width * 0.03, flexDirection: "row" }}>
-          {getTopTenEstablishments().slice(5, 10).map((item) => (
-            <View key={item.id}>{renderFeaturedRestaurants({ item })}</View>
-          ))}
+          {getTopTenEstablishments()
+            .slice(5, 10)
+            .map((item) => (
+              <View key={item.id}>{renderFeaturedRestaurants({ item })}</View>
+            ))}
         </View>
       </ScrollView>
 
-      <Text style={styles.sectionTitleFoodies}>{t("explore.localFoodies")}</Text>
+      {/* Local Foodies Section */}
+      <Text style={styles.sectionTitleFoodies}>
+        {t("explore.localFoodies")}
+      </Text>
       {isTopFollowedLoading ? (
         <ActivityIndicator size="small" color={Colors.tags} />
       ) : (
@@ -454,8 +540,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   topPosterImage: {
-    width: width * 0.12,
-    height: width * 0.12,
+    width: width * 0.14,
+    height: width * 0.14,
     borderRadius: 90,
     marginRight: width * 0.02,
   },
@@ -463,12 +549,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   topPosterUsername: {
-    fontSize: width * 0.035,
+    fontSize: width * 0.04,
     fontFamily: Fonts.Regular,
     color: Colors.charcoal,
   },
   topPosterFollowers: {
-    fontSize: width * 0.035,
+    fontSize: width * 0.04,
     fontFamily: Fonts.SemiBold,
     color: Colors.text,
     marginTop: 2,
@@ -479,12 +565,12 @@ const styles = StyleSheet.create({
   featuredRestaurantCardContainer: {
     width: "100%",
     paddingLeft: width * 0.05,
-    marginRight: -(width * 0.02),
+    marginRight: -(width * 0.01),
     marginTop: width * 0.01,
   },
   featuredRestaurantCard: {
     width: width * 0.55,
-    height: width * 0.33,
+    height: width * 0.32,
     borderRadius: 12,
     overflow: "hidden",
   },
@@ -495,7 +581,7 @@ const styles = StyleSheet.create({
   },
   restaurantNameText: {
     marginTop: width * 0.02,
-    fontSize: width * 0.04,
+    fontSize: width * 0.045,
     fontFamily: Fonts.SemiBold,
     color: Colors.charcoal,
     textAlign: "left",
@@ -509,6 +595,13 @@ const styles = StyleSheet.create({
     textAlign: "left",
     width: width * 0.35,
     marginBottom: width * 0.01,
+  },
+  postCountText: {
+    fontSize: width * 0.04,
+    fontFamily: Fonts.Regular,
+    color: Colors.text,
+    textAlign: "left",
+    marginBottom: width * 0.05,
   },
   featuredRestaurantOverlay: {
     position: "absolute",
@@ -542,7 +635,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 25,
     borderRadius: 10,
-    marginTop: 10
+    marginTop: 10,
   },
   closeButtonText: {
     color: Colors.background,

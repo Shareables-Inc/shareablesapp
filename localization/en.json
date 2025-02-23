@@ -10,7 +10,8 @@
     "invalid": "Invalid Input",
     "updateFail": "Update Failed",
     "success": "Success",
-    "required": "Required"
+    "required": "Required",
+    "close": "Close"
   },
   "tabNavigator": {
     "home": "Home",
@@ -425,5 +426,139 @@
       "unsaved": "You have unsaved changes",
       "request": "Send Request"
     }
-  }
+  },
+    "tags": {
+      "cuisines": {
+        "italian": "Italian",
+        "chinese": "Chinese",
+        "mexican": "Mexican",
+        "japanese": "Japanese",
+        "american": "American",
+        "indian": "Indian",
+        "french": "French",
+        "mediterranean": "Mediterranean",
+        "thai": "Thai",
+        "spanish": "Spanish",
+        "middleEastern": "Middle Eastern",
+        "greek": "Greek",
+        "korean": "Korean",
+        "lebanese": "Lebanese",
+        "turkish": "Turkish",
+        "vietnamese": "Vietnamese",
+        "caribbean": "Caribbean",
+        "brazilian": "Brazilian",
+        "argentinian": "Argentinian",
+        "moroccan": "Moroccan",
+        "pakistani": "Pakistani",
+        "german": "German",
+        "peruvian": "Peruvian",
+        "malaysian": "Malaysian",
+        "ethiopian": "Ethiopian",
+        "cuban": "Cuban",
+        "russian": "Russian",
+        "british": "British",
+        "australian": "Australian"
+      },
+      "occasions": {
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner",
+        "brunch": "Brunch",
+        "birthday": "Birthday",
+        "anniversary": "Anniversary",
+        "dateNight": "Date Night",
+        "superHungry": "Super Hungry",
+        "stayOnDiet": "Stay on Diet",
+        "glutenFree": "Gluten-Free",
+        "forLargeGroups": "For Large Groups",
+        "dancing": "Dancing",
+        "happyHour": "Happy Hour",
+        "lateNightEats": "Late Night Eats",
+        "engagementParty": "Engagement Party",
+        "newYears": "New Years",
+        "graduation": "Graduation",
+        "holidays": "Holidays",
+        "thanksgiving": "Thanksgiving",
+        "christmas": "Christmas",
+        "easter": "Easter",
+        "halloween": "Halloween",
+        "getWorkDone": "Get Work Done",
+        "celebration": "Celebration",
+        "clientDinner": "Client Dinner",
+        "valentinesDay": "Valentine’s Day",
+        "seasonal": "Seasonal",
+        "gameDay": "Game Day",
+        "beforeAConcert": "Before a Concert",
+        "casualHangout": "Casual Hangout",
+        "newToTown": "New to Town",
+        "entertainment": "Entertainment",
+        "preGame": "Pre-Game"
+      },
+      "vibes": {
+        "casual": "Casual",
+        "familyFriendly": "Family-Friendly",
+        "bistro": "Bistro",
+        "cafe": "Café",
+        "social": "Social",
+        "outdoorPatio": "Outdoor/Patio",
+        "bar": "Bar",
+        "craftBeerHouse": "Craft Beer House",
+        "gastropub": "Gastropub",
+        "sportsBar": "Sports Bar",
+        "diveBar": "Dive Bar",
+        "diner": "Diner",
+        "buffet": "Buffet",
+        "lounge": "Lounge",
+        "cocktailBar": "Cocktail Bar",
+        "rooftop": "Rooftop",
+        "liveMusic": "Live Music",
+        "romantic": "Romantic",
+        "speakeasy": "Speakeasy",
+        "farmToTable": "Farm-to-Table",
+        "winery": "Winery",
+        "steakhouse": "Steakhouse",
+        "beachfront": "Beachfront",
+        "cityStaple": "City Staple",
+        "rustic": "Rustic",
+        "modern": "Modern",
+        "industrial": "Industrial",
+        "upscale": "Upscale",
+        "games": "Games"
+      }
+    },
+    "notifications": {
+      "friday": {
+        "headline": "Dinner Plans?",
+        "body": "Capture & Share your experience with friends!"
+      },
+      "saturday": {
+        "headline": "Can't decide where to eat?",
+        "body": "Check out your Explore page!"
+      },
+      "monday": {
+        "headline": "Went out this weekend?",
+        "body": "Let your friends know what's good!"
+      },
+      "comment": {
+        "headline": "commented on your review"
+      },
+      "follow": {
+        "headline": "started following you",
+        "body": "They trust your taste in food!"
+      },
+      "like": {
+        "headline": "Your review was worth some love!",
+        "body": "liked your post"
+      },
+      "friend": {
+        "headline": "posted",
+        "body": "Check our their latest review!"
+      }
+    },
+    "permissions": {
+      "contacts": "This app uses your contacts to recommend users to follow. We do not store this data.",
+      "photos": "This app uses your photo library to allow you to make posts. We only store the photos that you select for posting.",
+      "camera": "This app uses your camera to either add photos to your post or create a new profile image.",
+      "location": "Allow Shareables to use your location to determine what restaurants surround you on the map page."
+    }
 }

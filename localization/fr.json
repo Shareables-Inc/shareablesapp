@@ -10,7 +10,8 @@
     "invalid": "Entrée invalide",
     "updateFail": "Mise à jour échouée",
     "success": "Succès",
-    "required": "Requis"
+    "required": "Requis",
+    "close": "Fermer"
   },
   "tabNavigator": {
     "home": "Accueil",
@@ -425,5 +426,139 @@
       "unsaved": "Vous avez des modifications non enregistrées",
       "request": "Soumettre"
     }
+  },
+    "tags": {
+      "cuisines": {
+        "italian": "Italienne",
+        "chinese": "Chinoise",
+        "mexican": "Mexicaine",
+        "japanese": "Japonaise",
+        "american": "Américaine",
+        "indian": "Indienne",
+        "french": "Française",
+        "mediterranean": "Méditerranéenne",
+        "thai": "Thaïlandaise",
+        "spanish": "Espagnole",
+        "middleEastern": "Moyen-Orientale",
+        "greek": "Grecque",
+        "korean": "Coréenne",
+        "lebanese": "Libanaise",
+        "turkish": "Turque",
+        "vietnamese": "Vietnamienne",
+        "caribbean": "Caribéenne",
+        "brazilian": "Brésilienne",
+        "argentinian": "Argentine",
+        "moroccan": "Marocaine",
+        "pakistani": "Pakistanaise",
+        "german": "Allemande",
+        "peruvian": "Péruvienne",
+        "malaysian": "Malaisienne",
+        "ethiopian": "Éthiopienne",
+        "cuban": "Cubaine",
+        "russian": "Russe",
+        "british": "Britannique",
+        "australian": "Australienne"
+      },
+      "occasions": {
+        "breakfast": "Petit-déjeuner",
+        "lunch": "Déjeuner",
+        "dinner": "Dîner",
+        "brunch": "Brunch",
+        "birthday": "Anniversaire",
+        "anniversary": "Anniversaire",
+        "dateNight": "Soirée en amoureux",
+        "superHungry": "Très affamé",
+        "stayOnDiet": "En diète",
+        "glutenFree": "Sans gluten",
+        "forLargeGroups": "Pour grands groupes",
+        "dancing": "Soirée dansante",
+        "happyHour": "Happy Hour",
+        "lateNightEats": "Repas tardifs",
+        "engagementParty": "Fête de fiançailles",
+        "newYears": "Nouvel An",
+        "graduation": "Remise des diplômes",
+        "holidays": "Fêtes",
+        "thanksgiving": "Thanksgiving",
+        "christmas": "Noël",
+        "easter": "Pâques",
+        "halloween": "Halloween",
+        "getWorkDone": "Pour travailler",
+        "celebration": "Célébration",
+        "clientDinner": "Dîner d'affaires",
+        "valentinesDay": "Saint-Valentin",
+        "seasonal": "Saisonnier",
+        "gameDay": "Jour de match",
+        "beforeAConcert": "Avant un concert",
+        "casualHangout": "Rencontre décontractée",
+        "newToTown": "Nouveau en ville",
+        "entertainment": "Divertissement",
+        "preGame": "Avant-match"
+      },
+      "vibes": {
+        "casual": "Décontracté",
+        "familyFriendly": "Familial",
+        "bistro": "Bistrot",
+        "cafe": "Café",
+        "social": "Social",
+        "outdoorPatio": "En terrasse",
+        "bar": "Bar",
+        "craftBeerHouse": "Microbrasserie",
+        "gastropub": "Gastropub",
+        "sportsBar": "Bar sportif",
+        "diveBar": "Bar de quartier",
+        "diner": "Diner",
+        "buffet": "Buffet",
+        "lounge": "Lounge",
+        "cocktailBar": "Bar à cocktails",
+        "rooftop": "Toit-terrasse",
+        "liveMusic": "Musique live",
+        "romantic": "Romantique",
+        "speakeasy": "Bar clandestin",
+        "farmToTable": "De la ferme à la table",
+        "winery": "Cave à vin",
+        "steakhouse": "Steakhouse",
+        "beachfront": "En bord de mer",
+        "cityStaple": "Incontournable en ville",
+        "rustic": "Rustique",
+        "modern": "Moderne",
+        "industrial": "Industriel",
+        "upscale": "Haut de gamme",
+        "games": "Jeux"
+      }
+    },
+      "notifications": {
+        "friday": {
+          "headline": "Des plans pour dîner?",
+          "body": "Capturez et partagez votre expérience avec vos amis!"
+        },
+        "saturday": {
+          "headline": "Vous ne savez pas où manger?",
+          "body": "Consultez votre page Explorer!"
+        },
+        "monday": {
+          "headline": "Sorti ce week-end?",
+          "body": "Faites savoir à vos amis ce qui vaut le coup!"
+        },
+        "comment": {
+          "headline": "a commenté votre avis"
+        },
+        "follow": {
+          "headline": "a commencé à vous suivre",
+          "body": "Ils font confiance à votre goût pour la nourriture!"
+        },
+        "like": {
+          "headline": "Votre avis mérite de l'amour!",
+          "body": "a aimé votre publication"
+        },
+        "friend": {
+          "headline": "a publié",
+          "body": "Découvrez leur dernier avis!"
+        }
+    },
+      "permissions": {
+        "contacts": "Cette application utilise vos contacts pour recommander des utilisateurs à suivre. Nous ne stockons pas ces données.",
+        "photos": "Cette application utilise votre bibliothèque de photos pour vous permettre de créer des publications. Nous ne stockons que les photos que vous sélectionnez pour la publication.",
+        "camera": "Cette application utilise votre appareil photo pour ajouter des photos à votre publication ou créer une nouvelle image de profil.",
+        "location": "Autorisez Shareables à utiliser votre position pour déterminer quels restaurants vous entourent sur la page de la carte."
+      }
   }
-}

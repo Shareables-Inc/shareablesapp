@@ -179,6 +179,58 @@ export class PostService {
     }
   }
 
+  async updatePostRestaurant(
+    postId: string,
+    establishmentId: string,
+    updateData: Partial<Post>
+  ): Promise<void> {
+    try {
+      await runTransaction(db, async (transaction) => {
+        const postRef = doc(this.postsCollection, postId);
+        const establishmentRef = doc(this.establishmentsCollection, establishmentId);
+  
+        const postDoc = await transaction.get(postRef);
+        const establishmentDoc = await transaction.get(establishmentRef);
+  
+        if (!postDoc.exists()) {
+          throw new Error("Post does not exist!");
+        }
+  
+        if (!establishmentDoc.exists()) {
+          throw new Error("Establishment does not exist!");
+        }
+  
+        // Update the post document
+        transaction.set(
+          postRef,
+          {
+            ...updateData,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
+  
+        // Update establishment only with non-cumulative fields (e.g. tags)
+        const establishmentData = establishmentDoc.data();
+        const currentTags = establishmentData.tags || [];
+        const newTags = updateData.tags || [];
+        // Remove duplicates by merging the arrays and converting to a Set
+        const uniqueTags = Array.from(new Set([...currentTags, ...newTags]));
+  
+        transaction.update(establishmentRef, {
+          tags: uniqueTags,
+          updatedAt: serverTimestamp(),
+        });
+      });
+  
+      console.log("Post review updated successfully (without modifying cumulative ratings).");
+    } catch (error) {
+      console.error("Error updating post review:", error);
+      throw error;
+    }
+  }
+  
+
   async editPost(
     postId: string,
     establishmentId: string,

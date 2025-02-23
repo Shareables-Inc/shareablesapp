@@ -176,9 +176,11 @@ const PostScreen = () => {
       profilePicture: user!.uid + ".jpeg",
       username: userProfile?.username!,
       establishmentDetails: {
-        id: "", // Blank until a restaurant is selected on the next screen
+        id: "", 
         address: "",
         averageRating: 0,
+        totalRating: 0,
+        postCount: 0,
         city: "",
         country: "",
         longitude: 0,

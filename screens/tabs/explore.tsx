@@ -58,17 +58,15 @@ const SearchScreen = () => {
     "Kingston",
     "Laval",
     "London",
-    "Markham",
     "Mississauga",
     "Montreal",
-    "Niagara",
     "Oakville",
     "Ottawa",
+    "Quebec City",
     "Scarborough",
     "Toronto",
     "Waterloo",
     "Windsor",
-    "York",
   ];
 
   return (

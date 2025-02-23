@@ -11,7 +11,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
@@ -36,6 +35,8 @@ import ViewShot from "react-native-view-shot";
 import StoryLayout from "../../components/sharing/storyLayout";
 import Share from "react-native-share";
 import { FontAwesome } from "@expo/vector-icons";
+// NEW: Import the establishment service
+import { EstablishmentService } from "../../services/establishment.service";
 
 const { width, height } = Dimensions.get("window");
 
@@ -50,13 +51,14 @@ interface ReviewScreenProps {
       establishmentId: string;
       isEditing?: boolean;
       review?: string;
-      ratings: {
+      ratings?: {
         ambiance?: number;
         foodQuality?: number;
         service?: number;
         overall?: number;
       };
       imageUrls: string;
+      isNewEstablishment?: boolean; // NEW flag
     };
   };
 }
@@ -76,6 +78,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
     review: initialReview = "",
     ratings = {},
     imageUrls,
+    isNewEstablishment, // Extract the flag here
   } = route.params;
   const navigation = useNavigation();
   const { mutate: editPost } = useEditPost();
@@ -112,13 +115,13 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
     setReview(text);
   };
 
-  /** Helper to compute overall rating */
+  /** Helper to compute overall rating as a number */
   const calculateOverallRating = (
     ambiance: number,
     foodQuality: number,
     service: number
-  ) => {
-    return ((ambiance + foodQuality + service) / 3).toFixed(1);
+  ): number => {
+    return parseFloat(((ambiance + foodQuality + service) / 3).toFixed(1));
   };
 
   /** Handle changes in ambiance, food, or service rating. */
@@ -127,12 +130,12 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
     if (field === "foodQuality") setRatingFoodQuality(value);
     if (field === "service") setRatingService(value);
 
-    const newOverallRating = calculateOverallRating(
+    const newOverall = calculateOverallRating(
       field === "ambiance" ? value : ratingAmbiance,
       field === "foodQuality" ? value : ratingFoodQuality,
       field === "service" ? value : ratingService
     );
-    setOverallRating(parseFloat(newOverallRating));
+    setOverallRating(newOverall);
   };
 
   /** Toggle the accessibility tags (halal, gluten-free, etc.) */
@@ -141,6 +144,42 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
     if (type === "glutenfree") setIsGlutenFree(!isGlutenFree);
     if (type === "veg") setIsVeg(!isVeg);
   };
+
+  // NEW: Minimal helper to update cumulative ratings using numbers
+  const updateEstablishmentCumulativeRating = async (
+    establishmentId: string,
+    newPostRating: number
+  ) => {
+    const establishmentService = new EstablishmentService();
+    try {
+      const estData = await establishmentService.getEstablishmentById(establishmentId);
+      const prevTotal =
+        typeof estData.totalRating === "string"
+          ? Number(estData.totalRating)
+          : estData.totalRating || 0;
+      let prevCount =
+        typeof estData.postCount === "string"
+          ? Number(estData.postCount)
+          : estData.postCount || 0;
+      // If the establishment is new but cached as having a count of 1 with 0 total,
+      // adjust the count to 0 so that the first post is counted only once.
+      if (prevCount === 1 && prevTotal === 0) {
+        prevCount = 0;
+      }
+      const newTotal = prevTotal + newPostRating;
+      const newCount = prevCount + 1;
+      const newAverage = newTotal / newCount;
+      await establishmentService.updateEstablishment(establishmentId, {
+        totalRating: newTotal.toString(),
+        postCount: newCount,
+        averageRating: newAverage.toString(),
+      });
+      console.log("Establishment ratings updated:", { newTotal, newCount, newAverage });
+    } catch (error) {
+      console.error("Failed to update cumulative rating:", error);
+    }
+  };
+  
 
   /** Submit the post or update. */
   const handlePost = async () => {
@@ -160,6 +199,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
       return;
     }
 
+    // Calculate the overall rating as a number.
     const overallRatingCalculated = calculateOverallRating(
       ratingAmbiance,
       ratingFoodQuality,
@@ -167,29 +207,41 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
     );
 
     try {
-      // Update the post (or create, if your logic differs).
-      editPost({
-        id: initialPostId,
-        data: {
-          review,
-          tags,
-          ratings: {
-            ambiance: ratingAmbiance,
-            foodQuality: ratingFoodQuality,
-            service: ratingService,
-            overall: overallRatingCalculated,
+      // Update the post.
+      editPost(
+        {
+          id: initialPostId,
+          data: {
+            review,
+            tags,
+            ratings: {
+              ambiance: ratingAmbiance,
+              foodQuality: ratingFoodQuality,
+              service: ratingService,
+              overall: overallRatingCalculated.toString(), // stored as string if required
+            },
+            accessibility: {
+              halal: isHalal,
+              glutenFree: isGlutenFree,
+              veg: isVeg,
+            },
           },
-          accessibility: {
-            halal: isHalal,
-            glutenFree: isGlutenFree,
-            veg: isVeg,
-          },
+          establishmentId,
         },
-        establishmentId,
-      });
-
-      // After posting, show the share modal
-      setShareModalVisible(true);
+        {
+          onSuccess: async () => {
+            await updateEstablishmentCumulativeRating(establishmentId, overallRatingCalculated);
+            setShareModalVisible(true);
+          },
+          onError: (error) => {
+            console.error("Error in handlePost:", error);
+            Alert.alert(
+              t("post.postReview.postError"),
+              t("post.postReview.postErrorMessage")
+            );
+          },
+        }
+      );
     } catch (error) {
       console.error("Error in handlePost:", error);
       Alert.alert(
@@ -208,23 +260,22 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
         social: Share.Social.INSTAGRAM_STORIES,
         method: (Share as any).InstagramStories?.SHARE_BACKGROUND_IMAGE,
         backgroundImage: base64Image,
-        appId: "com.shareablesinc.shareablesdev", // or your app's package
+        appId: "com.shareablesinc.shareables",
       } as any;
       await Share.shareSingle(shareOptions);
     } catch (error) {
       console.error("Error sharing to Instagram Stories:", error);
       Alert.alert("Sharing Error", "Could not share to Instagram Stories.");
     } finally {
-      navigation.navigate("MainTabNavigator", {screen:"Home"});
+      navigation.navigate("MainTabNavigator", { screen: "Home" });
     }
   };
 
   const handleDontShare = () => {
-    // Simply navigate to MainTabNavigator (Home)
     navigation.navigate("MainTabNavigator", { screen: "Home" });
   };
 
-  /** If user discards, delete the post (if that's your logic) and go back. */
+  /** If user discards, delete the post and go back. */
   const handleBackPress = useCallback(() => {
     Alert.alert(
       t("post.postReview.discardPost"),
@@ -237,15 +288,10 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
             try {
               await postService.deletePost(initialPostId);
               console.log("Post deleted successfully");
-              navigation.navigate("MainTabNavigator", {
-                screen: "Post",
-              });
+              navigation.navigate("MainTabNavigator", { screen: "Post" });
             } catch (error) {
               console.error("Error deleting post:", error);
-              Alert.alert(
-                t("general.error"),
-                t("post.postReview.discardError")
-              );
+              Alert.alert(t("general.error"), t("post.postReview.discardError"));
             }
           },
         },
@@ -267,7 +313,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
             ratingAmbiance={ratingAmbiance}
             ratingFoodQuality={ratingFoodQuality}
             ratingService={ratingService}
-            isPreview={false} 
+            isPreview={false}
           />
         </ViewShot>
       </View>
@@ -281,9 +327,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
             </TouchableOpacity>
             <TouchableOpacity onPress={handlePost} style={styles.postButton}>
               <Text style={styles.postButtonText}>
-                {isEditing
-                  ? t("post.postReview.update")
-                  : t("post.postReview.post")}
+                {isEditing ? t("post.postReview.update") : t("post.postReview.post")}
               </Text>
             </TouchableOpacity>
           </View>
@@ -357,10 +401,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
                       </Text>
                     </View>
                   </View>
-                  <TouchableOpacity
-                    onPress={toggleInfoModal}
-                    style={styles.closeButton}
-                  >
+                  <TouchableOpacity onPress={toggleInfoModal} style={styles.closeButton}>
                     <Text style={styles.closeButtonText}>
                       {t("post.postReview.gotIt")}
                     </Text>
@@ -378,9 +419,6 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
             >
               <View style={styles.modalBackground}>
                 <View style={styles.modalContainer}>
-                  {/* <Text style={styles.modalTitle}>Share Your Post</Text> */}
-                  
-                  {/* SCALED PREVIEW */}
                   <View style={styles.previewContainer}>
                     <StoryLayout
                       imageUrl={imageUrls}
@@ -388,14 +426,10 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
                       ratingAmbiance={ratingAmbiance}
                       ratingFoodQuality={ratingFoodQuality}
                       ratingService={ratingService}
-                      isPreview 
+                      isPreview
                     />
                   </View>
-
-                  <TouchableOpacity
-                    onPress={shareToInstagramStories}
-                    style={styles.shareButton}
-                  >
+                  <TouchableOpacity onPress={shareToInstagramStories} style={styles.shareButton}>
                     <View style={styles.shareButtonContent}>
                       <FontAwesome
                         name="instagram"
@@ -408,7 +442,6 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
                       </Text>
                     </View>
                   </TouchableOpacity>
-
                   <TouchableOpacity onPress={handleDontShare} style={styles.shareCancelButton}>
                     <Text style={styles.shareCancelButtonText}>
                       Don't Share
@@ -423,9 +456,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
               animationType="slide"
               transparent={false}
               visible={previewModalVisible}
-              onRequestClose={() => {
-                setPreviewModalVisible(false);
-              }}
+              onRequestClose={() => setPreviewModalVisible(false)}
             >
               <View style={{ flex: 1, backgroundColor: Colors.background }}>
                 <TouchableOpacity

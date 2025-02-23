@@ -1,4 +1,4 @@
-// create a class that will handle the establishment api
+// EstablishmentService.ts
 import {
   Establishment,
   EstablishmentCard,
@@ -31,28 +31,38 @@ export class EstablishmentService {
   async createEstablishment(establishment: Establishment, postRating?: number) {
     // Extract the id field and create the document without it
     const { id, ...establishmentWithoutId } = establishment;
-  
-    // Default values for post count and average rating
-    const initialPostCount = postRating ? 1 : 0;
-    const initialAverageRating = postRating || 0.0;
-  
-    // Add the document to Firestore
+
+    // If a post rating is provided, we start with one post
+    const initialPostCount = 0;
+    const initialTotalRating = 0;
+    const initialAverageRating = 0;
+
+    // Add the document to Firestore, including totalRating
     const establishmentDoc = await addDoc(this.establishmentsCollection, {
       ...establishmentWithoutId,
-      postCount: initialPostCount, // Start at 1 if a postRating exists, otherwise 0
-      averageRating: initialAverageRating, // Start with the first post's rating or 0
+      postCount: initialPostCount,
+      totalRating: initialTotalRating,
+      averageRating: initialAverageRating,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
-  
+
     // Update the document with its id
     await updateDoc(establishmentDoc, { id: establishmentDoc.id });
-  
+
     console.log("Establishment created with ID:", establishmentDoc.id);
-  
+
     return establishmentDoc.id;
   }
-  
+
+  async updateEstablishment(establishmentId: string, data: Partial<Establishment>) {
+    // Update the establishment document with the given data
+    const establishmentDoc = doc(this.establishmentsCollection, establishmentId);
+    await updateDoc(establishmentDoc, {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+  }
 
   async getEstablishmentByMapboxId(
     mapboxId: string
@@ -113,17 +123,15 @@ export class EstablishmentService {
     );
   }
 
-  async getFeaturedEstablishments(
-    city: string,
-  ): Promise<FeaturedEstablishment[]> {
+  async getFeaturedEstablishments(city: string): Promise<FeaturedEstablishment[]> {
     try {
-      let establishmentsQuery: Query;
-        establishmentsQuery = query(
-          this.establishmentsCollection,
-          where("city", "==", city),
-          orderBy("updatedAt", "desc"),
-          limit(10) // Limit to 10 establishments
-        );
+      // Query establishments by city, ordered by averageRating descending, limited to 10.
+      const establishmentsQuery = query(
+        this.establishmentsCollection,
+        where("city", "==", city),
+        orderBy("averageRating", "desc"),
+        limit(10)
+      );
   
       const establishmentsSnapshot = await getDocs(establishmentsQuery);
       const establishmentIds = establishmentsSnapshot.docs.map((doc) => doc.id);
@@ -132,22 +140,22 @@ export class EstablishmentService {
         return [];
       }
   
-      // Query posts based on the establishment IDs
+      // Query posts for these establishments.
       const postsQuery = query(
         this.postsCollection,
         where("establishmentDetails.id", "in", establishmentIds),
-        orderBy("createdAt", "desc"),
-        limit(10) // Limit posts to 10
+        orderBy("createdAt", "desc")
       );
   
       const postsSnapshot = await getDocs(postsQuery);
   
-      // Filter the posts to only include those with images
+      // Filter posts that have at least one image.
       const filteredPosts = postsSnapshot.docs.filter((doc) => {
         const postData = doc.data() as Post;
         return postData.imageUrls && postData.imageUrls.length > 0;
       });
   
+      // Merge posts by establishment ID, accumulating images.
       const uniqueEstablishments = new Map();
       filteredPosts.forEach((doc) => {
         const post = doc.data() as Post;
@@ -163,6 +171,7 @@ export class EstablishmentService {
         }
       });
   
+      // Merge establishment document data with any post data.
       const result = establishmentsSnapshot.docs.map((doc) => {
         const establishment = doc.data() as Establishment;
         const postData = uniqueEstablishments.get(establishment.id) || {};
@@ -206,7 +215,6 @@ export class EstablishmentService {
 
     const establishmentData = establishmentSnapshot.data() as Establishment;
 
-    // Query for posts related to this establishment
     const postsQuery = query(
       collection(db, "posts"),
       where("establishmentDetails.id", "==", establishmentId),
@@ -215,7 +223,6 @@ export class EstablishmentService {
     );
     const postsSnapshot = await getDocs(postsQuery);
 
-    // get the profile picture of the user who posted the post
     const profilePicture = await Promise.all(
       postsSnapshot.docs.slice(0, 5).map(async (doc) => {
         const postData = doc.data() as Post;
@@ -228,7 +235,6 @@ export class EstablishmentService {
       })
     );
 
-    // map the profile picture to the that post that equals the post id
     const gallery = postsSnapshot.docs
       .filter(doc => doc.data().imageUrls && doc.data().imageUrls.length > 0)
       .slice(0, 5)
@@ -242,7 +248,6 @@ export class EstablishmentService {
       };
     });
 
-    // map the profile picture to the post for the few image post review
     const fewImagePostReview = postsSnapshot.docs.slice(0, 5).map((doc) => {
       const postData = doc.data() as Post;
       return {
@@ -257,6 +262,7 @@ export class EstablishmentService {
       id: establishmentData.id,
       name: establishmentData.name,
       averageRating: establishmentData.averageRating,
+      totalRating: establishmentData.totalRating,
       city: establishmentData.city,
       country: establishmentData.country,
       address: establishmentData.address,
@@ -264,7 +270,7 @@ export class EstablishmentService {
       latitude: establishmentData.latitude,
       longitude: establishmentData.longitude,
       priceRange: establishmentData.priceRange || 0,
-      distance: "N/A", // This would need to be calculated based on user's location
+      distance: "N/A",
       tags: establishmentData.tags,
       gallery: gallery.length > 0 ? gallery : undefined,
       postCount: establishmentData.postCount,

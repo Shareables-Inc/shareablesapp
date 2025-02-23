@@ -10,6 +10,7 @@ export type FirebaseEstablishment = {
   name: string;
   address: string;
   averageRating: string;
+  totalRating: string;
   city: string;
   country: string;
   description?: string;

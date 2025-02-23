@@ -151,6 +151,24 @@ export function useUpdatePost(): UseMutationResult<
   });
 }
 
+export function useUpdatePostRestaurant(): UseMutationResult<
+  void,
+  Error,
+  { id: string; establishmentId: string; data: Partial<Post> }
+> {
+  return useMutation({
+    mutationFn: ({ id, establishmentId, data }) =>
+      postService.updatePostRestaurant(id, establishmentId, data),
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: ["posts", id] });
+      queryClient.invalidateQueries({ queryKey: ["post", id] });
+      queryClient.invalidateQueries({ queryKey: ["infinitePosts"] });
+      queryClient.invalidateQueries({ queryKey: ["userPosts"] });
+      queryClient.invalidateQueries({ queryKey: ["userLikes", id] });
+    },
+  });
+}
+
 // edit a post
 export function useEditPost(): UseMutationResult<
   void,
