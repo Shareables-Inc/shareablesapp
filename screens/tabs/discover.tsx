@@ -85,8 +85,14 @@ function DiscoverScreen() {
 
   // Memoize query results
   const memoizedSaveEstablishments = useMemo(() => saveEstablishments || [], [saveEstablishments]);
-  const memoizedPosts = useMemo(() => posts ? posts.pages.flatMap((page) => page.posts) : [], [posts]);
-  const memoizedFollowingPosts = useMemo(() => followingPosts ? followingPosts.pages.flatMap((page) => page.posts) : [], [followingPosts]);
+  const memoizedPosts = useMemo(
+    () => (posts ? posts.pages.flatMap((page) => page.posts) : []),
+    [posts]
+  );
+  const memoizedFollowingPosts = useMemo(
+    () => (followingPosts ? followingPosts.pages.flatMap((page) => page.posts) : []),
+    [followingPosts]
+  );
 
   // Update restaurants state based on selected filter
   useEffect(() => {
@@ -136,10 +142,17 @@ function DiscoverScreen() {
     }
   }, []);
 
-  // Combine markers without region filtering.
+  // Combine markers from different sources with filtering to remove incomplete posts
   const getPrioritizedMarkers = useCallback((): MarkerTypeWithImage[] => {
-    const allMarkers: MarkerTypeWithImage[] = [
-      ...memoizedSaveEstablishments.map((save) => ({
+    // Filter and map for saved establishments
+    const saveMarkers = memoizedSaveEstablishments
+      .filter(
+        (save) =>
+          save.latitude &&
+          save.longitude &&
+          save.name // ensure required fields exist
+      )
+      .map((save) => ({
         id: save.id,
         establishmentId: save.id,
         latitude: save.latitude,
@@ -149,13 +162,21 @@ function DiscoverScreen() {
         country: save.country,
         priceRange: save.priceRange || 0,
         tags: save.tags,
-        averageRating: save.averageRating != null
-          ? save.averageRating.toString()
-          : "0",
+        averageRating: save.averageRating != null ? save.averageRating.toString() : "0",
         userProfilePicture: "", // default value for saves
         type: "save" as const,
-      })),
-      ...memoizedFollowingPosts.map((post) => ({
+      }));
+
+    // Filter and map for following posts
+    const followingMarkers = memoizedFollowingPosts
+      .filter(
+        (post) =>
+          post.establishmentDetails &&
+          post.establishmentDetails.latitude &&
+          post.establishmentDetails.longitude &&
+          post.establishmentDetails.name
+      )
+      .map((post) => ({
         id: post.establishmentDetails.id,
         userProfilePicture: post.profilePicture,
         establishmentId: post.establishmentDetails.id,
@@ -166,12 +187,23 @@ function DiscoverScreen() {
         country: post.establishmentDetails.country,
         priceRange: post.establishmentDetails.priceRange || 0,
         tags: post.tags,
-        averageRating: post.establishmentDetails.averageRating != null
-          ? post.establishmentDetails.averageRating.toString()
-          : "0",
+        averageRating:
+          post.establishmentDetails.averageRating != null
+            ? post.establishmentDetails.averageRating.toString()
+            : "0",
         type: "following" as const,
-      })),
-      ...memoizedPosts.map((post) => ({
+      }));
+
+    // Filter and map for user posts
+    const postMarkers = memoizedPosts
+      .filter(
+        (post) =>
+          post.establishmentDetails &&
+          post.establishmentDetails.latitude &&
+          post.establishmentDetails.longitude &&
+          post.establishmentDetails.name
+      )
+      .map((post) => ({
         id: post.id,
         establishmentId: post.establishmentDetails.id,
         latitude: post.establishmentDetails.latitude,
@@ -182,17 +214,23 @@ function DiscoverScreen() {
         priceRange: post.establishmentDetails.priceRange || 0,
         userProfilePicture: post.profilePicture,
         tags: post.tags,
-        averageRating: post.establishmentDetails.averageRating != null
-          ? post.establishmentDetails.averageRating.toString()
-          : "0",
+        averageRating:
+          post.establishmentDetails.averageRating != null
+            ? post.establishmentDetails.averageRating.toString()
+            : "0",
         type: "post" as const,
-      })),
+      }));
+
+    const allMarkers: MarkerTypeWithImage[] = [
+      ...saveMarkers,
+      ...followingMarkers,
+      ...postMarkers,
     ];
 
     console.log("Total markers before filtering:", allMarkers.length);
-    // No region filtering now.
-    console.log("Markers after filtering:", allMarkers.length);
-    return uniqBy(allMarkers, "establishmentId") as MarkerTypeWithImage[];
+    const uniqueMarkers = uniqBy(allMarkers, "establishmentId") as MarkerTypeWithImage[];
+    console.log("Markers after filtering:", uniqueMarkers.length);
+    return uniqueMarkers;
   }, [memoizedSaveEstablishments, memoizedFollowingPosts, memoizedPosts]);
 
   useEffect(() => {
@@ -215,7 +253,9 @@ function DiscoverScreen() {
   const handleMarkerPress = useCallback(
     async (marker) => {
       try {
-        const establishment = await establishmentService.getEstablishmentCardData(marker.establishmentId);
+        const establishment = await establishmentService.getEstablishmentCardData(
+          marker.establishmentId
+        );
         if (establishment) {
           setSelectedRestaurant(establishment);
           bottomSheetRef.current?.present();
@@ -251,8 +291,6 @@ function DiscoverScreen() {
     [handleMarkerPress]
   );
 
-  // Remove region-related code (handleRegionChange, search button, etc.)
-
   if (error) {
     return <LocationErrorMessage />;
   }
@@ -266,7 +304,6 @@ function DiscoverScreen() {
         onMarkerPress={handleMarkerPress}
         markerFilter={selectedFilter}
         onMapLoaded={handleMapLoaded}
-        // Remove onRegionDidChange prop since region filtering is removed.
       />
       {selectedRestaurant && (
         <CustomBottomSheetModalContent

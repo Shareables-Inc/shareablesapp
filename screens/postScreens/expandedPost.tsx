@@ -568,6 +568,9 @@ const ExpandedPostScreen = ({ route }: ExpandedPostScreenProps) => {
                     color={
                       optimisticIsLiked ? Colors.highlightText : Colors.text
                     }
+                    fill={
+                      optimisticIsLiked ? Colors.highlightText : Colors.background
+                    }
                   />
                 </View>
                 <Text style={styles.likeCount}>{realTimeLikeCount}</Text>

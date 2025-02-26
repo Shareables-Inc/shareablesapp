@@ -176,6 +176,7 @@ const RestaurantCard = ({
               <Bookmark
                 size={25}
                 color={isSaved ? Colors.highlightText : Colors.text}
+                fill={isSaved ? Colors.highlightText : Colors.text}
                 onPress={handleSaveEstablishment}
               />
             </View>
