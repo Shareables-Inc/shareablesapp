@@ -69,12 +69,6 @@ const RestaurantsView: React.FC<RestaurantsViewProps> = ({
   // ====== DISCOUNT CAROUSEL & MODAL STATE ======
   const discountDetails: DiscountDetail[] = [
     {
-      image: require("../../assets/images/discounts/discountBaro.png"),
-      contactType: "website",
-      contactValue:
-        "https://sipandsavour.beehiiv.com/p/free-margarita-baro-petty-cash",
-    },
-    {
       image: require("../../assets/images/discounts/discountCubana.png"),
       contactType: "website",
       contactValue: "https://sipandsavour.beehiiv.com/p/la-cubana",

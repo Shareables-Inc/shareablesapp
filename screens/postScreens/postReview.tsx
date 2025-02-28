@@ -168,7 +168,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
       }
       const newTotal = prevTotal + newPostRating;
       const newCount = prevCount + 1;
-      const newAverage = newTotal / newCount;
+      const newAverage = (newTotal / newCount).toFixed(1);
       await establishmentService.updateEstablishment(establishmentId, {
         totalRating: newTotal.toString(),
         postCount: newCount,
@@ -579,7 +579,7 @@ const ReviewScreen: React.FC<ReviewScreenProps> = ({ route }) => {
                       : styles.defaultRatingCircle,
                   ]}
                 >
-                  <Text style={styles.ratingScore}>{overallRating}</Text>
+                  <Text style={styles.ratingScore}>{overallRating.toFixed(1)}</Text>
                 </TouchableOpacity>
               </View>
             </View>

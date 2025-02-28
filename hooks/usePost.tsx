@@ -83,7 +83,47 @@ export function usePostsByUser(userId: string, limit = 6) {
   return useInfiniteQuery<
     { posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined },
     Error,
+    {
+      pages: any; posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined 
+},
+    (string | number)[]
+  >({
+    queryKey: ["userPosts", userId, limit],
+    queryFn: async ({ pageParam = undefined }) => {
+      const result = await postService.getPostsByUserPaginated(
+        userId,
+        limit,
+        pageParam as QueryDocumentSnapshot<DocumentData> | undefined
+      );
+
+      const validPosts = result.posts.filter(
+        (post) => post.imageUrls && post.imageUrls.length > 0
+      );
+
+      const imagesToPreload = validPosts.flatMap((post) => [
+        { uri: post.profilePicture },
+        ...post.imageUrls.map((url) => ({ uri: url })),
+      ]);
+      FastImage.preload(imagesToPreload);
+
+      return {
+        posts: validPosts,
+        lastVisible: result.lastVisible,
+      };
+    },
+    getNextPageParam: (lastPage) => lastPage.lastVisible,
+    enabled: !!userId,
+    initialPageParam: undefined,
+  });
+}
+
+export function usePostsByUserMap(userId: string, limit = 30) {
+  return useInfiniteQuery<
     { posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined },
+    Error,
+    {
+      pages: any; posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined 
+},
     (string | number)[]
   >({
     queryKey: ["userPosts", userId, limit],

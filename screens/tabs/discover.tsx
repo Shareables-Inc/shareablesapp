@@ -14,7 +14,7 @@ import {
 import { Camera, MapView } from "@rnmapbox/maps";
 import { BottomSheetModal, useBottomSheetModal } from "@gorhom/bottom-sheet";
 import { useAuth } from "../../context/auth.context";
-import { usePostsByUser } from "../../hooks/usePost";
+import { usePostsByUserMap } from "../../hooks/usePost";
 import { useFollowingPosts } from "../../hooks/useUserFollowing";
 import { EstablishmentService } from "../../services/establishment.service";
 import { uniqBy } from "lodash";
@@ -39,6 +39,7 @@ import {
 } from "../../hooks/useEstablishment";
 import { EstablishmentCard } from "../../models/establishment";
 
+
 function DiscoverScreen() {
   const { user } = useAuth();
   const { location, fetchLocation, error } = useLocationStore();
@@ -57,7 +58,7 @@ function DiscoverScreen() {
     userSaves?.saves.map((save) => save.establishmentId) || []
   );
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
-  const { data: posts } = usePostsByUser(user?.uid!);
+  const { data: posts } = usePostsByUserMap(user?.uid!);
   const { data: followingPosts } = useFollowingPosts(user?.uid!);
   const [previousFilter, setPreviousFilter] = useState<"save" | "post" | "following" | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
@@ -97,34 +98,25 @@ function DiscoverScreen() {
 
   // Update restaurants state based on selected filter
   useEffect(() => {
-    if (selectedFilter === previousFilter) {
-      setRestaurants([
-        ...memoizedSaveEstablishments,
-        ...memoizedPosts,
-        ...memoizedFollowingPosts,
-      ]);
-      setPreviousFilter(null);
-    } else {
-      switch (selectedFilter) {
-        case "save":
-          setRestaurants(memoizedSaveEstablishments);
-          break;
-        case "post":
-          setRestaurants(memoizedPosts);
-          break;
-        case "following":
-          setRestaurants(memoizedFollowingPosts);
-          break;
-        default:
-          setRestaurants([
-            ...memoizedSaveEstablishments,
-            ...memoizedPosts,
-            ...memoizedFollowingPosts,
-          ]);
-      }
-      setPreviousFilter(selectedFilter);
+    switch (selectedFilter) {
+      case "save":
+        setRestaurants(memoizedSaveEstablishments);
+        break;
+      case "post":
+        setRestaurants(memoizedPosts);
+        break;
+      case "following":
+        setRestaurants(memoizedFollowingPosts);
+        break;
+      default:
+        setRestaurants([
+          ...memoizedSaveEstablishments,
+          ...memoizedPosts,
+          ...memoizedFollowingPosts,
+        ]);
     }
   }, [selectedFilter, memoizedSaveEstablishments, memoizedPosts, memoizedFollowingPosts]);
+  
 
   const handleOpenReviewPost = (post: Post) => {
     dismiss();
@@ -149,87 +141,109 @@ function DiscoverScreen() {
     console.log("Fetched saveEstablishments:", saveEstablishments);
   }, [userSaves, saveEstablishments]);
   
-
+  
   const memoizedMarkers = useMemo((): MarkerTypeWithImage[] => {
-    console.log("Computing Markers..."); // Should only log when data changes
+    console.log("Computing Markers...");
   
-    const saveMarkers = memoizedSaveEstablishments
-      .filter((save) => save.latitude && save.longitude && save.name)
-      .map((save) => ({
-        id: save.id,
-        establishmentId: save.id,
-        latitude: save.latitude,
-        longitude: save.longitude,
-        establishmentName: save.name,
-        city: save.city || "",
-        country: save.country || "",
-        priceRange: save.priceRange || 0,
-        tags: save.tags || [],
-        averageRating: save.averageRating != null ? save.averageRating.toString() : "0",
-        userProfilePicture: "",
-        type: "save" as const,
-      }));
+    // Saved markers – cast using generics
+    const saveMarkers = uniqBy<MarkerTypeWithImage>(
+      memoizedSaveEstablishments
+        .filter((save) => save.latitude && save.longitude && save.name)
+        .map((save) => ({
+          id: save.id,
+          establishmentId: save.id,
+          latitude: save.latitude,
+          longitude: save.longitude,
+          establishmentName: save.name,
+          city: save.city || "",
+          country: save.country || "",
+          priceRange: save.priceRange || 0,
+          tags: save.tags || [],
+          averageRating: save.averageRating != null ? save.averageRating.toString() : "0",
+          userProfilePicture: "",
+          type: "save" as const,
+        })),
+      "id"
+    );
   
-    const followingMarkers = memoizedFollowingPosts
-      .filter(
-        (post) =>
-          post.establishmentDetails &&
-          post.establishmentDetails.latitude &&
-          post.establishmentDetails.longitude &&
-          post.establishmentDetails.name &&
-          !saveMarkers.some((saved) => saved.id === post.establishmentDetails.id)
-      )
-      .map((post) => ({
-        id: post.establishmentDetails.id,
-        establishmentId: post.establishmentDetails.id,
-        userProfilePicture: post.profilePicture,
-        latitude: post.establishmentDetails.latitude,
-        longitude: post.establishmentDetails.longitude,
-        establishmentName: post.establishmentDetails.name,
-        city: post.establishmentDetails.city,
-        country: post.establishmentDetails.country,
-        priceRange: post.establishmentDetails.priceRange || 0,
-        tags: post.tags,
-        averageRating:
-          post.establishmentDetails.averageRating != null
-            ? post.establishmentDetails.averageRating.toString()
-            : "0",
-        type: "following" as const,
-      }));
+    // Following markers – cast using generics
+    const followingMarkers = uniqBy<MarkerTypeWithImage>(
+      memoizedFollowingPosts
+        .filter(
+          (post) =>
+            post.establishmentDetails &&
+            post.establishmentDetails.latitude &&
+            post.establishmentDetails.longitude &&
+            post.establishmentDetails.name &&
+            !saveMarkers.some((saved) => saved.id === post.establishmentDetails.id)
+        )
+        .map((post) => ({
+          id: post.establishmentDetails.id,
+          establishmentId: post.establishmentDetails.id,
+          userProfilePicture: post.profilePicture,
+          latitude: post.establishmentDetails.latitude,
+          longitude: post.establishmentDetails.longitude,
+          establishmentName: post.establishmentDetails.name,
+          city: post.establishmentDetails.city,
+          country: post.establishmentDetails.country,
+          priceRange: post.establishmentDetails.priceRange || 0,
+          tags: post.tags,
+          averageRating:
+            post.establishmentDetails.averageRating != null
+              ? post.establishmentDetails.averageRating.toString()
+              : "0",
+          type: "following" as const,
+        })),
+      "id"
+    );
   
-    const postMarkers = memoizedPosts
-      .filter(
-        (post) =>
-          post.establishmentDetails &&
-          post.establishmentDetails.latitude &&
-          post.establishmentDetails.longitude &&
-          post.establishmentDetails.name &&
-          !saveMarkers.some((saved) => saved.id === post.establishmentDetails.id) &&
-          !followingMarkers.some((following) => following.id === post.establishmentDetails.id)
-      )
-      .map((post) => ({
-        id: post.id,
-        establishmentId: post.establishmentDetails.id,
-        latitude: post.establishmentDetails.latitude,
-        longitude: post.establishmentDetails.longitude,
-        establishmentName: post.establishmentDetails.name,
-        city: post.establishmentDetails.city,
-        country: post.establishmentDetails.country,
-        priceRange: post.establishmentDetails.priceRange || 0,
-        userProfilePicture: post.profilePicture,
-        tags: post.tags,
-        averageRating:
-          post.establishmentDetails.averageRating != null
-            ? post.establishmentDetails.averageRating.toString()
-            : "0",
-        type: "post" as const,
-      }));
+    // Post markers – use establishment id as key to avoid duplicates
+    const postMarkers = uniqBy<MarkerTypeWithImage>(
+      memoizedPosts
+        .filter(
+          (post) =>
+            post.establishmentDetails &&
+            post.establishmentDetails.latitude &&
+            post.establishmentDetails.longitude &&
+            post.establishmentDetails.name &&
+            !saveMarkers.some((saved) => saved.id === post.establishmentDetails.id) &&
+            !followingMarkers.some((following) => following.id === post.establishmentDetails.id)
+        )
+        .map((post) => ({
+          id: post.establishmentDetails.id,
+          establishmentId: post.establishmentDetails.id,
+          latitude: post.establishmentDetails.latitude,
+          longitude: post.establishmentDetails.longitude,
+          establishmentName: post.establishmentDetails.name,
+          city: post.establishmentDetails.city,
+          country: post.establishmentDetails.country,
+          priceRange: post.establishmentDetails.priceRange || 0,
+          userProfilePicture: post.profilePicture,
+          tags: post.tags,
+          averageRating:
+            post.establishmentDetails.averageRating != null
+              ? post.establishmentDetails.averageRating.toString()
+              : "0",
+          type: "post" as const,
+        })),
+      "id"
+    );
   
-    const allMarkers: MarkerTypeWithImage[] = [...saveMarkers, ...followingMarkers, ...postMarkers];
+    const markerPriority = {
+      save: 3,
+      following: 2,
+      post: 1,
+    };
+  
+    const allMarkers: MarkerTypeWithImage[] = [
+      ...saveMarkers,
+      ...followingMarkers,
+      ...postMarkers,
+    ].sort((a, b) => markerPriority[b.type] - markerPriority[a.type]);
   
     console.log("Final Markers Computed:", allMarkers);
     return allMarkers;
-  }, [memoizedSaveEstablishments, memoizedFollowingPosts, memoizedPosts]); // ✅ Recompute only when data changes
+  }, [memoizedSaveEstablishments, memoizedFollowingPosts, memoizedPosts]);
   
 
 

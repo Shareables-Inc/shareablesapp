@@ -369,7 +369,7 @@ export class PostService {
           return { userId: post.userId, url: await getDownloadURL(storageRef) };
         } catch (error) {
           console.error("Error fetching profile picture:", error);
-          return { userId: post.userId, url: "https://example.com/default-profile.jpg" }; // ✅ Use a fallback profile picture
+          return { userId: post.userId, url: "https://example.com/default-profile.jpg" }; 
         }
       });
   
