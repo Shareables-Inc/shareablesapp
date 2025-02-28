@@ -35,6 +35,7 @@ import { useGetUserSaves } from "../../hooks/useUserSave";
 import {
   useEstablishmentProfileData,
   useGetEstablishments,
+  useGetEstablishmentById
 } from "../../hooks/useEstablishment";
 import { EstablishmentCard } from "../../models/establishment";
 
@@ -142,44 +143,46 @@ function DiscoverScreen() {
     }
   }, []);
 
-  // Combine markers from different sources with filtering to remove incomplete posts
-  const getPrioritizedMarkers = useCallback((): MarkerTypeWithImage[] => {
-    // Filter and map for saved establishments
+  useEffect(() => {
+    console.log("User Saves:", userSaves);
+    console.log("Fetching establishments for IDs:", userSaves?.saves.map((s) => s.establishmentId));
+    console.log("Fetched saveEstablishments:", saveEstablishments);
+  }, [userSaves, saveEstablishments]);
+  
+
+  const memoizedMarkers = useMemo((): MarkerTypeWithImage[] => {
+    console.log("Computing Markers..."); // Should only log when data changes
+  
     const saveMarkers = memoizedSaveEstablishments
-      .filter(
-        (save) =>
-          save.latitude &&
-          save.longitude &&
-          save.name // ensure required fields exist
-      )
+      .filter((save) => save.latitude && save.longitude && save.name)
       .map((save) => ({
         id: save.id,
         establishmentId: save.id,
         latitude: save.latitude,
         longitude: save.longitude,
         establishmentName: save.name,
-        city: save.city,
-        country: save.country,
+        city: save.city || "",
+        country: save.country || "",
         priceRange: save.priceRange || 0,
-        tags: save.tags,
+        tags: save.tags || [],
         averageRating: save.averageRating != null ? save.averageRating.toString() : "0",
-        userProfilePicture: "", // default value for saves
+        userProfilePicture: "",
         type: "save" as const,
       }));
-
-    // Filter and map for following posts
+  
     const followingMarkers = memoizedFollowingPosts
       .filter(
         (post) =>
           post.establishmentDetails &&
           post.establishmentDetails.latitude &&
           post.establishmentDetails.longitude &&
-          post.establishmentDetails.name
+          post.establishmentDetails.name &&
+          !saveMarkers.some((saved) => saved.id === post.establishmentDetails.id)
       )
       .map((post) => ({
         id: post.establishmentDetails.id,
-        userProfilePicture: post.profilePicture,
         establishmentId: post.establishmentDetails.id,
+        userProfilePicture: post.profilePicture,
         latitude: post.establishmentDetails.latitude,
         longitude: post.establishmentDetails.longitude,
         establishmentName: post.establishmentDetails.name,
@@ -193,15 +196,16 @@ function DiscoverScreen() {
             : "0",
         type: "following" as const,
       }));
-
-    // Filter and map for user posts
+  
     const postMarkers = memoizedPosts
       .filter(
         (post) =>
           post.establishmentDetails &&
           post.establishmentDetails.latitude &&
           post.establishmentDetails.longitude &&
-          post.establishmentDetails.name
+          post.establishmentDetails.name &&
+          !saveMarkers.some((saved) => saved.id === post.establishmentDetails.id) &&
+          !followingMarkers.some((following) => following.id === post.establishmentDetails.id)
       )
       .map((post) => ({
         id: post.id,
@@ -220,18 +224,14 @@ function DiscoverScreen() {
             : "0",
         type: "post" as const,
       }));
+  
+    const allMarkers: MarkerTypeWithImage[] = [...saveMarkers, ...followingMarkers, ...postMarkers];
+  
+    console.log("Final Markers Computed:", allMarkers);
+    return allMarkers;
+  }, [memoizedSaveEstablishments, memoizedFollowingPosts, memoizedPosts]); // ✅ Recompute only when data changes
+  
 
-    const allMarkers: MarkerTypeWithImage[] = [
-      ...saveMarkers,
-      ...followingMarkers,
-      ...postMarkers,
-    ];
-
-    console.log("Total markers before filtering:", allMarkers.length);
-    const uniqueMarkers = uniqBy(allMarkers, "establishmentId") as MarkerTypeWithImage[];
-    console.log("Markers after filtering:", uniqueMarkers.length);
-    return uniqueMarkers;
-  }, [memoizedSaveEstablishments, memoizedFollowingPosts, memoizedPosts]);
 
   useEffect(() => {
     if (restaurantListRef.current) {
@@ -253,13 +253,23 @@ function DiscoverScreen() {
   const handleMarkerPress = useCallback(
     async (marker) => {
       try {
+        if (!marker.establishmentId) {
+          console.warn("Missing establishmentId for marker:", marker);
+          return;
+        }
+  
+        console.log("Fetching data for establishmentId:", marker.establishmentId);
+  
         const establishment = await establishmentService.getEstablishmentCardData(
           marker.establishmentId
         );
+  
         if (establishment) {
           setSelectedRestaurant(establishment);
           bottomSheetRef.current?.present();
           focusCamera(marker.latitude, marker.longitude);
+        } else {
+          console.warn("No establishment found for ID:", marker.establishmentId);
         }
       } catch (error) {
         console.error("Error in handleMarkerPress", error);
@@ -267,6 +277,7 @@ function DiscoverScreen() {
     },
     [focusCamera, establishmentService]
   );
+  
 
   useEffect(() => {
     if (selectedRestaurantId && !establishmentProfileData) {
@@ -300,7 +311,7 @@ function DiscoverScreen() {
       <MapViewWithMarkers
         mapRef={mapRef}
         cameraRef={cameraRef}
-        markers={getPrioritizedMarkers()}
+        markers={memoizedMarkers}
         onMarkerPress={handleMarkerPress}
         markerFilter={selectedFilter}
         onMapLoaded={handleMapLoaded}
@@ -315,7 +326,7 @@ function DiscoverScreen() {
       )}
       <PersistentBottomSheetModal ref={restaurantListRef}>
         <RestaurantList
-          restaurants={getPrioritizedMarkers()}
+          restaurants={memoizedMarkers}
           userLocation={
             location
               ? {

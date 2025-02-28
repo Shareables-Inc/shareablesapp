@@ -105,6 +105,55 @@ export class EstablishmentService {
     );
   }
 
+  async getEstablishmentsByIds(establishmentIds: string[]): Promise<EstablishmentCard[]> {
+    try {
+      console.log("getEstablishmentsByIds called with:", establishmentIds);
+  
+      if (!establishmentIds || establishmentIds.length === 0) {
+        console.warn("Empty establishment IDs received.");
+        return [];
+      }
+  
+      // Firestore allows at most 30 values in an "in" query. We chunk to avoid issues.
+      const CHUNK_SIZE = 10;
+      const chunks: string[][] = [];
+      for (let i = 0; i < establishmentIds.length; i += CHUNK_SIZE) {
+        chunks.push(establishmentIds.slice(i, i + CHUNK_SIZE));
+      }
+  
+      let establishments: EstablishmentCard[] = [];
+  
+      for (const chunk of chunks) {
+        const establishmentsQuery = query(
+          this.establishmentsCollection,
+          where("id", "in", chunk as string[])
+        );
+  
+        const establishmentsSnapshot = await getDocs(establishmentsQuery);
+  
+        if (!establishmentsSnapshot.empty) {
+          establishments.push(
+            ...establishmentsSnapshot.docs.map((doc) => {
+              const data = doc.data() as EstablishmentCard;
+              return {
+                ...data,
+                id: doc.id, // Ensure we use the document ID explicitly
+              };
+            })
+          );
+        }
+      }
+  
+      console.log("Fetched establishments:", establishments);
+      return establishments;
+    } catch (error) {
+      console.error("Error fetching establishments by IDs:", error);
+      return [];
+    }
+  }
+  
+  
+
   async getEstablishmentsByMapboxId(
     mapboxId: string
   ): Promise<Establishment[]> {

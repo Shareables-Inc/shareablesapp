@@ -132,40 +132,66 @@ export class FollowingService {
     }
   }
 
-  // New method for paginated fetching.
   async getFollowingPostsPaginated(
-userId: string, limitCount: number, pageParam: unknown, region: { ne: [number, number]; sw: [number, number]; } | undefined, lastVisiblePost?: DocumentSnapshot  ): Promise<{ posts: Post[]; lastVisible: DocumentSnapshot | null }> {
+    userId: string,
+    limitCount: number,
+    pageParam: unknown,
+    region: { ne: [number, number]; sw: [number, number] } | undefined,
+    lastVisiblePost?: DocumentSnapshot
+  ): Promise<{ posts: Post[]; lastVisible: DocumentSnapshot | null }> {
     try {
-      const followingIds = await this.getFollowing(userId);
+      // Ensure followingIds is correctly typed
+      const followingIds: string[] = await this.getFollowing(userId);
+      
       if (followingIds.length === 0) {
         return { posts: [], lastVisible: null };
       }
-      let postsQuery = query(
-        this.postsCollection,
-        where("userId", "in", followingIds),
-        orderBy("createdAt", "desc"),
-        limit(limitCount)
-      );
-      if (lastVisiblePost) {
-        postsQuery = query(postsQuery, startAfter(lastVisiblePost));
+  
+      // Split followingIds into chunks of 30 due to Firestore's limit
+      const idChunks: string[][] = [];
+      for (let i = 0; i < followingIds.length; i += 30) {
+        idChunks.push(followingIds.slice(i, i + 30));
       }
-      const postsSnapshot = await getDocs(postsQuery);
-      if (postsSnapshot.empty) {
-        return { posts: [], lastVisible: null };
+  
+      let allPosts: Post[] = [];
+      let lastVisible: DocumentSnapshot | null = null;
+  
+      // Iterate through chunks to fetch posts
+      for (const chunk of idChunks) {
+        let postsQuery = query(
+          this.postsCollection,
+          where("userId", "in", chunk as string[]), // 👈 Type assertion added
+          orderBy("createdAt", "desc"),
+          limit(limitCount)
+        );
+  
+        if (lastVisiblePost) {
+          postsQuery = query(postsQuery, startAfter(lastVisiblePost));
+        }
+  
+        const postsSnapshot = await getDocs(postsQuery);
+        if (!postsSnapshot.empty) {
+          const posts = postsSnapshot.docs.map(
+            (doc) => ({ id: doc.id, ...doc.data() } as Post)
+          );
+          allPosts = allPosts.concat(posts);
+          lastVisible = postsSnapshot.docs[postsSnapshot.docs.length - 1] || lastVisible;
+        }
       }
-      const posts = postsSnapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() } as Post)
-      );
+  
+      // Fetch additional profile pictures and establishment data
       const [profilePictures, establishmentData] = await Promise.all([
-        this.getProfilePictures(posts.map((post) => post.userId)),
+        this.getProfilePictures(allPosts.map((post) => post.userId)),
         this.getEstablishmentData(
-          posts.map((post) => post.establishmentDetails?.id).filter(Boolean)
+          allPosts.map((post) => post.establishmentDetails?.id).filter(Boolean)
         ),
       ]).catch((error) => {
         console.error("Error fetching profile pictures or establishment data:", error);
-        return [{}, {}];
+        return [{}, {}]; // Default empty objects in case of failure
       });
-      const processedPosts = posts.map((post) => ({
+  
+      // Process posts with additional data
+      const processedPosts = allPosts.map((post) => ({
         ...post,
         profilePicture: profilePictures[post.userId],
         establishmentDetails: {
@@ -173,14 +199,18 @@ userId: string, limitCount: number, pageParam: unknown, region: { ne: [number, n
           averageRating: establishmentData[post.establishmentDetails?.id]?.averageRating,
         },
       }));
+  
+      // Remove duplicate posts
       const uniquePosts = this.removeDuplicates(processedPosts);
-      const lastVisible = postsSnapshot.docs[postsSnapshot.docs.length - 1];
+  
       return { posts: uniquePosts, lastVisible };
     } catch (error) {
       console.error("Error fetching following posts:", error);
       return { posts: [], lastVisible: null };
     }
   }
+  
+  
 
   private async getProfilePictures(userIds: string[]): Promise<Record<string, string>> {
     const profilePictures: Record<string, string> = {};

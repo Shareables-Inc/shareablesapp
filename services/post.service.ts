@@ -343,40 +343,54 @@ export class PostService {
     pageSize = 6,
     pageParam?: QueryDocumentSnapshot<DocumentData>
   ): Promise<{ posts: Post[]; lastVisible: QueryDocumentSnapshot<DocumentData> | undefined }> {
-    let q = query(
-      this.postsCollection,
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc"),
-      limit(pageSize)
-    );
-    
-    if (pageParam) {
-      q = query(q, startAfter(pageParam));
-    }
+    try {
+      let q = query(
+        this.postsCollection,
+        where("userId", "==", userId),
+        orderBy("createdAt", "desc"),
+        limit(pageSize)
+      );
   
-    const querySnapshot = await getDocs(q);
-    // If no more documents, stop pagination.
-    if (querySnapshot.empty) {
+      if (pageParam) {
+        q = query(q, startAfter(pageParam));
+      }
+  
+      const querySnapshot = await getDocs(q);
+      if (querySnapshot.empty) {
+        return { posts: [], lastVisible: undefined };
+      }
+  
+      let posts: Post[] = querySnapshot.docs.map((doc) => this.documentToPost(doc));
+  
+      // Fetch profile pictures in parallel instead of sequentially
+      const profilePicturePromises = posts.map(async (post) => {
+        const storageRef = ref(storage, `profilePictures/${post.userId}`);
+        try {
+          return { userId: post.userId, url: await getDownloadURL(storageRef) };
+        } catch (error) {
+          console.error("Error fetching profile picture:", error);
+          return { userId: post.userId, url: "https://example.com/default-profile.jpg" }; // ✅ Use a fallback profile picture
+        }
+      });
+  
+      const profilePictures = await Promise.all(profilePicturePromises);
+  
+      // Map fetched URLs back to posts
+      const profilePictureMap = new Map(profilePictures.map((p) => [p.userId, p.url]));
+      posts = posts.map((post) => ({
+        ...post,
+        profilePicture: profilePictureMap.get(post.userId) || "https://example.com/default-profile.jpg",
+      }));
+  
+      const newLastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+  
+      return { posts, lastVisible: newLastVisible };
+    } catch (error) {
+      console.error("Error fetching user posts:", error);
       return { posts: [], lastVisible: undefined };
     }
-  
-    const posts: Post[] = querySnapshot.docs.map((doc) => this.documentToPost(doc));
-  
-    // Preload profile pictures for each post
-    for (const post of posts) {
-      const storageRef = ref(storage, `profilePictures/${post.userId}`);
-      try {
-        const url = await getDownloadURL(storageRef);
-        post.profilePicture = url;
-      } catch (error) {
-        console.error("Error fetching profile picture:", error);
-        // Optionally, assign a fallback URL here.
-      }
-    }
-  
-    const newLastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-    return { posts, lastVisible: newLastVisible };
   }
+  
   
   
   

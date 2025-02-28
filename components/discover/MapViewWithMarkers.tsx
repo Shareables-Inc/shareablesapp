@@ -41,7 +41,6 @@ interface MapViewWithMarkersProps {
   markerFilter: "save" | "following" | "post" | null;
   onMarkerPress: (marker: any) => void;
   onMapLoaded: () => void;
-  onRegionDidChange?: (region: { ne: [number, number]; sw: [number, number] }) => void;
 }
 
 const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
@@ -51,7 +50,6 @@ const MapViewWithMarkers: React.FC<MapViewWithMarkersProps> = ({
   onMarkerPress,
   markerFilter,
   onMapLoaded,
-  onRegionDidChange,
 }) => {
   const { location, fetchLocation } = useLocationStore();
 

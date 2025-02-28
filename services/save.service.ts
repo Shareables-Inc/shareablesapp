@@ -68,9 +68,18 @@ export class SaveService {
   async getUserSaves(userId: string): Promise<UserSaves | null> {
     const docRef = doc(db, this.userSavesCollection, userId);
     const docSnap = await getDoc(docRef);
-
-    return docSnap.exists() ? (docSnap.data() as UserSaves) : null;
+  
+    if (!docSnap.exists()) {
+      console.warn(`No saved restaurants found for user: ${userId}`);
+      return null;
+    }
+  
+    const data = docSnap.data() as UserSaves;
+    console.log("Fetched User Saves:", data);
+  
+    return data;
   }
+  
 
   async removeSave(userId: string, establishmentId: string): Promise<void> {
     if (!establishmentId) {

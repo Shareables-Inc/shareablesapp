@@ -212,14 +212,14 @@ const RestaurantList = ({
       </View>
 
       {/* Restaurant List */}
-      <FlatList
+      {/* <FlatList
         data={filteredAndSortedRestaurants}
         keyExtractor={(item) => item.establishmentId}
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
         showsVerticalScrollIndicator={false}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+      /> */}
     </View>
   );
 };

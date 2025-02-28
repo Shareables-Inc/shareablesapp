@@ -12,7 +12,7 @@ interface PersistentBottomSheetModalProps {
 
 export const PersistentBottomSheetModal = forwardRef<Ref, PersistentBottomSheetModalProps>(
   ({ children }, ref) => {
-    const snapPoints = useMemo(() => ["10%", "56%"], []); 
+    const snapPoints = useMemo(() => ["10%"], []); 
 
     return (
       <BottomSheet
@@ -32,6 +32,8 @@ export const PersistentBottomSheetModal = forwardRef<Ref, PersistentBottomSheetM
         index={0}
         snapPoints={snapPoints}
         enablePanDownToClose={false} 
+        enableHandlePanningGesture={false}
+        handleComponent={null}
         onChange={(index) => {
           if (index < 0 && ref && 'current' in ref && ref.current) {
             ref.current.snapToIndex(0);

@@ -22,18 +22,29 @@ export const useGetEstablishmentById = (establishmentId: string) => {
 
 
 export const useGetEstablishments = (establishmentIds: string[]) => {
+  console.log("useGetEstablishments called with:", establishmentIds);
+
   return useQuery({
     queryKey: ["establishments", establishmentIds],
     queryFn: async () => {
-      const establishments = await establishmentService.getEstablishment(establishmentIds);
-      // Filter out establishments with postCount of 0
-      return establishments.filter(
-        (establishment) => establishment.postCount > 0
-      );
+      if (!establishmentIds || establishmentIds.length === 0) {
+        console.warn("No establishment IDs provided to fetch.");
+        return [];
+      }
+
+      console.log("Fetching establishments for IDs:", establishmentIds);
+
+      const establishments = await establishmentService.getEstablishmentsByIds(establishmentIds);
+
+      console.log("Fetched establishments:", establishments);
+
+      return establishments;
     },
-    enabled: !!establishmentIds,
+    enabled: establishmentIds.length > 0,
   });
 };
+
+
 
 
 export const useCreateEstablishment = () => {
