@@ -8,7 +8,7 @@ export default ({ config }) => {
     expo: {
       name: "Shareables",
       slug: "shareablesapp",
-      version: "1.1.5",
+      version: "1.1.6",
       orientation: "portrait",
       icon: "./assets/images/icon.png",
       userInterfaceStyle: "light",
