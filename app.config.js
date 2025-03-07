@@ -41,7 +41,7 @@ export default ({ config }) => {
         bundleIdentifier: isProduction
           ? "com.shareablesinc.shareables"
           : "com.shareablesinc.shareablesdev",
-        buildNumber: "1.0.0",
+        buildNumber: "3",
         googleServicesFile: process.env.EXPO_GOOGLE_SERVICES_FILE_IOS,
         infoPlist: {
           ITSAppUsesNonExemptEncryption: false,

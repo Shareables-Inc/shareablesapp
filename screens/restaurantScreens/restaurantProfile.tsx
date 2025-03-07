@@ -276,9 +276,10 @@ const RestaurantProfileScreen = ({ route }: RestaurantProfileScreenProps) => {
     const restaurantName = establishmentData?.name;
         
     // Fallback URL if the user doesn't have the app installed
-    const fallbackUrl = `https://shareablesapp.com/discover.html`; 
+    const fallbackUrl = `https://apps.apple.com/ca/app/shareables/id6523414499`; 
     
-    const message = `${t("profile.restaurantProfile.message1")} ${restaurantName} ${t("profile.restaurantProfile.message2")} ${fallbackUrl}`;
+    const message = t("profile.restaurantProfile.inviteMessage", { restaurantName, fallbackUrl });
+
     
     const url = `sms:?body=${encodeURIComponent(message)}`;
     

@@ -147,9 +147,10 @@ const RestaurantCard = ({
     const restaurantName = restaurant.name;
         
     // Fallback URL if the user doesn't have the app installed
-    const fallbackUrl = `https://shareablesapp.com/discover.html`; 
+    const fallbackUrl = `https://apps.apple.com/ca/app/shareables/id6523414499`; 
     
-    const message = `I just found this restaurant called ${restaurantName} on Shareables. We should go check it out! ${fallbackUrl}`;
+    const message = t("profile.restaurantProfile.inviteMessage", { restaurantName, fallbackUrl });
+
     
     const url = `sms:?body=${encodeURIComponent(message)}`;
     

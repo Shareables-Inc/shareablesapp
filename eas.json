@@ -43,7 +43,7 @@
         "EXPO_PUBLIC_GOOGLE_CLOUD_VISION_API_KEY": "AIzaSyAlZ_gciarM5j7nzqAppThAPdpk4sAchW0"
       },
       "ios": {
-        "image": "xcode:16.0.0"
+        "image": "latest"
       }
     }
   },

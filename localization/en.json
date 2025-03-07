@@ -216,6 +216,7 @@
       "messagingAppError": "Unable to open messaging app.",
       "away": "away",
       "invite": "Invite",
+      "inviteMessage": "I just found this restaurant called {{restaurantName}} on Shareables. We should go check it out! {{fallbackUrl}}",
       "letsGo": "Let's Go",
       "featured": "Featured Gallery",
       "reviews": "Reviews"
@@ -253,7 +254,13 @@
       "create": "Create Your Account",
       "email": "Email",
       "password": "Password",
-      "confirm": "Confirm Password"
+      "confirm": "Confirm Password",
+      "agreeTo": "By checking this box, you are confirming that you have read, understood, and agree to our",
+      "termsLink": "Terms of Service",
+      "termsTitle": "Terms of Service",
+      "privacyLink": "Privacy Policy.",
+      "privacyTitle": "Privacy Policy",
+      "and": "and our"
     },
     "verifyEmail": {
       "emailSent": "Email Sent",
@@ -307,7 +314,7 @@
       "atmosphere": "Atmosphere"
     },
     "inviteContacts": {
-      "textMessage": "Hi! Join me on this amazing app and discover great places to eat. Here's the link to download the app: [app link]",
+      "textMessage": "Hi! Join me on this amazing app and discover great places to eat. Here's the link to download the app:",
       "messagingAppError": "Unable to open messaging app.",
       "research": "Research tells us that ",
       "stat": "85% of people ",

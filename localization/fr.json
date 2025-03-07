@@ -216,6 +216,7 @@
       "messagingAppError": "Impossible d'ouvrir l'application de messagerie.",
       "away": "",
       "invite": "Inviter",
+      "inviteMessage": "Je viens de découvrir ce restaurant appelé {{restaurantName}} sur Shareables. Nous devrions aller le voir ! {{fallbackUrl}}",
       "letsGo": "C'est parti!",
       "featured": "Galerie à la une",
       "reviews": "Avis"
@@ -253,7 +254,13 @@
       "create": "Créez votre compte",
       "email": "Email",
       "password": "Mot de passe",
-      "confirm": "Confirmer le mot de passe"
+      "confirm": "Confirmer le mot de passe",
+      "agreeTo": "En cochant cette case, vous confirmez avoir lu, compris et accepté nos",
+      "termsLink": "Conditions D'utilisation.",
+      "termsTitle": "Conditions D'utilisation",
+      "privacyLink": "Politique de Confidentialité.",
+      "privacyTitle": "Politique de Confidentialité",
+      "and": "et notre"
     },
     "verifyEmail": {
       "emailSent": "Email envoyé",
@@ -307,7 +314,7 @@
       "atmosphere": "Ambiance"
     },
     "inviteContacts": {
-      "textMessage": "Salut! Rejoins-moi sur cette application incroyable et découvre de super endroits pour manger. Voici le lien pour télécharger l'app: [lien de l'app]",
+      "textMessage": "Salut! Rejoins-moi sur cette application incroyable et découvre de super endroits pour manger. Voici le lien pour télécharger l'app:",
       "messagingAppError": "Impossible d'ouvrir l'application de messagerie.",
       "research": "Des études montrent que ",
       "stat": "85% des personnes ",

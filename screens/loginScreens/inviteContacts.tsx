@@ -47,10 +47,10 @@ const InviteContactsScreen = () => {
   };
 
   const sendInvite = async (phoneNumber: string) => {
-    const message = t("login.inviteContacts.textMessage");
+    const message = `${t("login.inviteContacts.textMessage")} https://apps.apple.com/ca/app/shareables/id6523414499`;
     // Encoding the message to ensure that spaces and special characters are handled correctly
     const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
-
+  
     // Using Linking to open the default messaging app with the pre-filled message
     const canOpen = await Linking.canOpenURL(url);
     if (canOpen) {
@@ -59,6 +59,7 @@ const InviteContactsScreen = () => {
       Alert.alert(t("general.error"), t("login.inviteContacts.messagingAppError"));
     }
   };
+  
 
   const navigateToFollowFriends = () => {
     // Extract phone numbers and filter out undefined values
