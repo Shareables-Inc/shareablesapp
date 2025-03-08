@@ -8,7 +8,7 @@ export default ({ config }) => {
     expo: {
       name: "Shareables",
       slug: "shareablesapp",
-      version: "1.1.6",
+      version: "1.1.7",
       orientation: "portrait",
       icon: "./assets/images/icon.png",
       userInterfaceStyle: "light",
@@ -41,7 +41,7 @@ export default ({ config }) => {
         bundleIdentifier: isProduction
           ? "com.shareablesinc.shareables"
           : "com.shareablesinc.shareablesdev",
-        buildNumber: "3",
+        buildNumber: "1",
         googleServicesFile: process.env.EXPO_GOOGLE_SERVICES_FILE_IOS,
         infoPlist: {
           ITSAppUsesNonExemptEncryption: false,
